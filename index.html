@@ -107,55 +107,57 @@
       overflow-y: auto;
     }
     
-    /* ===== FORM STYLES ===== */
-    .form-container {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    
-    .form-section {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 15px;
-      background: #f9f9f9;
-    }
-    
-    .form-section-title {
-      font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: #2c3e50;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 5px;
-    }
-    
-    .form-row {
-      display: flex;
-      margin-bottom: 12px;
-      align-items: center;
-    }
-    
-    .form-row label {
-      width: 120px;
-      font-size: 14px;
-      margin-right: 10px;
-    }
-    
-    .form-row input,
-    .form-row select,
-    .form-row textarea {
-      flex: 1;
-      padding: 8px 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .form-row textarea {
-      min-height: 60px;
-      resize: vertical;
-    }
+    /* Update form-container layout */
+/* Update form-container layout */
+.form-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  font-size: 12px;
+}
+
+.form-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px;
+  background: #f9f9f9;
+}
+
+.form-section-title {
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #2c3e50;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 3px;
+}
+
+.form-row {
+  display: flex;
+  margin-bottom: 4px;
+  align-items: center;
+}
+
+.form-row label {
+  width: 80px;
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  flex: 1;
+  padding: 3px 4px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.form-row textarea {
+  min-height: 40px;
+  resize: vertical;
+}
     
     .auto-input {
       background-color: #f5f5f5;
@@ -650,192 +652,157 @@ table td[style*="color: red"] {
   <!-- ===== ADD/EDIT MODAL ===== -->
   <div class="modal" id="modal">
     <div class="modal-content">
-      <form id="labelForm">
-        <input type="hidden" name="index" id="formIndex"/>
-        
-        <div class="form-container">
-          <!-- Section 1: Informasi Dasar -->
-          <div class="form-section">
-            <div class="form-section-title">Informasi Dasar</div>
+  <form id="labelForm">
+    <input type="hidden" name="index" id="formIndex"/>
 
-            <!-- Tambahkan ini di dalam form-section "Informasi Dasar" -->
-            <div class="form-row">
-              <label for="supplier">Supplier</label>
-              <input name="supplier" value="INHOUSE" required />
-            </div>
+    <!-- Section 1: Informasi Dasar & Dimensi -->
+    <div class="form-container">
 
-            <div class="form-row">
-              <label for="spk">SPK</label>
-              <input name="spk" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="tanggal">Tanggal</label>
-              <input type="date" name="tanggal" class="auto-input" readonly />
-            </div>
+      <!-- Section 1: Info Dasar + Dimensi -->
+      <div class="form-section">
+        <div class="form-section-title">Info & Dimensi</div>
+        <div class="form-row">
+          <label for="supplier">Supplier</label>
+          <input name="supplier" value="INHOUSE" required />
+        </div>
+        <div class="form-row">
+          <label for="spk">SPK</label>
+          <input name="spk" required />
+        </div>
+        <div class="form-row">
+          <label for="tanggal">Tanggal</label>
+          <input type="date" name="tanggal" class="auto-input" readonly />
+        </div>
+        <div class="form-row">
+          <label for="tanggalShift">Tgl Shift</label>
+          <input name="tanggalShift" id="tanggalShift" class="auto-input" readonly />
+        </div>
+        <div class="form-row">
+          <label for="tanggalManual">Tgl Manual</label>
+          <input type="date" name="tanggalManual" id="tanggalManual" />
+        </div>
+        <div class="form-row">
+          <label for="thickness">Thickness</label>
+          <input name="thickness" required />
+        </div>
+        <div class="form-row">
+          <label for="width">Width</label>
+          <input name="width" required />
+        </div>
+        <div class="form-row">
+          <label for="length">Length</label>
+          <input name="length" required />
+        </div>
+        <div class="form-row">
+          <label for="joint">Joint</label>
+          <input name="joint" required />
+        </div>
+        <div class="form-row">
+          <label for="meter">Meter</label>
+          <input name="meter" required />
+        </div>
 
-            <div class="form-row">
-              <label for="tanggalShift">Tanggal Shift</label>
-              <input name="tanggalShift" id="tanggalShift" class="auto-input" readonly />
-            </div>
-            
-            <div class="form-row">
-              <label for="tanggalManual">Tanggal Manual (Opsional)</label>
-              <input type="date" name="tanggalManual" id="tanggalManual" />
-            </div>
-            <div class="form-row">
-              <label for="keterangan">Keterangan</label>
-              <textarea name="keterangan"></textarea>
-            </div>
-          </div>
-          
-          <!-- Section 2: Dimensi Material -->
-          <div class="form-section">
-            <div class="form-section-title">Dimensi Material</div>
-            
-            <div class="form-row">
-              <label for="thickness">Thickness</label>
-              <input name="thickness" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="width">Width</label>
-              <input name="width" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="length">Length</label>
-              <input name="length" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="joint">Joint</label>
-              <input name="joint" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="meter">Meter</label>
-              <input name="meter" required />
-            </div>
-          </div>
-          
-          <!-- Section 3: Spesifikasi Material -->
-          <div class="form-section">
-            <div class="form-section-title">Spesifikasi Material</div>
-            
-            <div class="form-row">
-              <label for="jenis">JENIS</label>
-              <input list="jenisList" name="jenis" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="type">TYPE</label>
-              <select name="type" required>
-                <option>TRANSPARENT</option>
-                <option>METALIZED</option>
-                <option>MATTE</option>
-                <option>GLOSSY</option>
-              </select>
-            </div>
-            
-            <div class="form-row">
-              <label for="od">OD</label>
-              <input name="od" id="odInput" value="OD2.5" />
-            </div>
-            
-            <div class="form-row">
-              <label for="treatment">Treatment</label>
-              <select name="treatment"><option>INSIDE</option></select>
-            </div>
-          </div>
-          
-          <!-- Section 4: Kode Identifikasi -->
-          <div class="form-section">
-            <div class="form-section-title">Kode Identifikasi</div>
-            
-            <div class="form-row">
-              <label for="mesin">Mesin</label>
-              <select name="mesin" id="mesinSelect" required onchange="updateAutoFields()">
-                <option value="SLITTING">SLITTING</option>
-                <option value="REWIND">REWIND</option>
-                <option value="SML">SML</option>
-              </select>
-            </div>
+        <div class="form-section-title">Hasil & Sub Kode</div>
+        <div class="form-row">
+          <label for="netto">Netto</label>
+          <input name="netto" class="auto-input" readonly />
+        </div>
+        <div class="form-row">
+          <label for="paperCore">Paper Core</label>
+          <input name="paperCore" class="auto-input" readonly />
+        </div>
+        <div class="form-row">
+          <label for="kodePack">Kode Pack</label>
+          <input name="kodePack" class="auto-input" readonly />
+        </div>
+        <div class="form-row">
+          <label for="status">Status</label>
+          <input name="status" class="auto-input" readonly />
+        </div>
+      </div>
 
-            <div class="form-row">
-              <label for="kode">Kode Formula</label>
-              <input name="kode" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="lot">No Lot</label>
-              <input name="lot" required />
-            </div>
-            
-            <div class="form-row">
-              <label for="turunan">Turunan</label>
-              <input name="turunan" required />
-            </div>
-            <hr>
-            <div class="form-row">
-  <label>Sub Kode Pack</label>
-  <div class="radio-group">
-    <div class="radio-option">
-      <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()">
-      <label>
-        Masukan Angka
-        <input type="text" name="subKodeNumeric" id="subKodeNumeric" class="radio-numeric-input" 
-               oninput="formatSubKode(this)" maxlength="4">
-      </label>
-    </div>
-    
-    <div class="radio-option">
-      <input type="radio" name="subKodeType" value="reject" onchange="handleSubKode()">
-      <label>REJECT</label>
-    </div>
-    
-    <div class="radio-option">
-      <input type="radio" name="subKodeType" value="hold" onchange="handleSubKode()">
-      <label>HOLD</label>
-    </div>
-  </div>
-  <input type="hidden" name="subKode" id="subKodeValue">
-</div>
+      <!-- Section 2: Spesifikasi & Kode Identifikasi -->
+      <div class="form-section">
+        <div class="form-section-title">Spesifikasi & ID</div>
+        <div class="form-row">
+          <label for="jenis">JENIS</label>
+          <input list="jenisList" name="jenis" required />
+        </div>
+        <div class="form-row">
+          <label for="type">TYPE</label>
+          <select name="type" required>
+            <option>TRANSPARENT</option>
+            <option>METALIZED</option>
+            <option>MATTE</option>
+            <option>GLOSSY</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="od">OD</label>
+          <input name="od" id="odInput" value="OD2.5" />
+        </div>
+        <div class="form-row">
+          <label for="treatment">Treatment</label>
+          <select name="treatment"><option>INSIDE</option></select>
+        </div>
+        <div class="form-row">
+          <label for="mesin">Mesin</label>
+          <select name="mesin" id="mesinSelect" required onchange="updateAutoFields()">
+            <option value="SLITTING">SLITTING</option>
+            <option value="REWIND">REWIND</option>
+            <option value="SML">SML</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="kode">Kode Formula</label>
+          <input name="kode" required />
+        </div>
+        <div class="form-row">
+          <label for="lot">No Lot</label>
+          <input name="lot" required />
+        </div>
+        <div class="form-row">
+          <label for="turunan">Turunan</label>
+          <input name="turunan" required />
+        </div>
+        <div class="form-section-title mt-10">Sub Kode Pack</div>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()" />
+            <label>
+              Angka
+              <input type="text" name="subKodeNumeric" id="subKodeNumeric"
+                     oninput="formatSubKode(this)" maxlength="4"
+                     class="radio-numeric-input" style="width: 70px;" />
+            </label>
           </div>
-          
-          <!-- Section 5: Hasil Perhitungan -->
-          <div class="form-section">
-            <div class="form-section-title">Hasil Perhitungan</div>
-            
-            <div class="form-row">
-              <label for="netto">Netto</label>
-              <input name="netto" class="auto-input" readonly />
-            </div>
-            
-            <div class="form-row">
-              <label for="paperCore">Paper Core</label>
-              <input name="paperCore" class="auto-input" readonly />
-            </div>
-            
-            <div class="form-row">
-              <label for="kodePack">Kode Pack</label>
-              <input name="kodePack" class="auto-input" readonly />
-            </div>
-            
-            <div class="form-row">
-              <label for="status">Status</label>
-              <input name="status" class="auto-input" readonly />
-            </div>
+          <div class="radio-option">
+            <input type="radio" name="subKodeType" value="reject" onchange="handleSubKode()" />
+            <label>REJECT</label>
           </div>
-          
-          <!-- Action Buttons -->
-          <div class="form-buttons">
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <button type="button" onclick="closeModal()" class="btn btn-danger">Batal</button>
+          <div class="radio-option">
+            <input type="radio" name="subKodeType" value="hold" onchange="handleSubKode()" />
+            <label>HOLD</label>
           </div>
         </div>
-      </form>
+        <input type="hidden" name="subKode" id="subKodeValue" />
+        <div class="form-section-title">Keterangan</div>
+        <div class="form-row">
+          <textarea name="keterangan" style="height: 20px; font-size: 11px;"></textarea>
+        </div>
+      </div>
+
+     
+
+      <!-- Tombol Aksi -->
+      <div class="form-buttons" style="grid-column: span 2;">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+        <button type="button" onclick="closeModal()" class="btn btn-danger">Batal</button>
+      </div>
+
     </div>
+  </form>
+</div>
   </div>
 
   <!-- ===== PREVIEW MODAL ===== -->
