@@ -521,51 +521,107 @@ table td[style*="color: red"] {
   margin: 0mm;
 }
 
+/* ===== RESPONSIVE NAVIGATION ===== */
+@media (max-width: 960px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
+  .nav-links {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .search-storage-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .search-container input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-toggle {
+    display: inline-block;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .form-row label {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
   </style>
 </head>
 <body>
   <!-- ===== NAVIGATION ===== -->
   <nav>
-    
-    <div class="nav-left">
-      <h2>Manajemen Label</h2>
-      <button class="nav-toggle" onclick="toggleNav()">☰</button>
+  <div class="nav-left">
+    <h2>Manajemen Label</h2>
+    <button class="nav-toggle" onclick="toggleNav()">☰</button>
+  </div>
+
+  <div class="nav-links" id="navLinks">
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+      Tambah Data
+    </button>
+
+    <div class="bulk-actions" id="bulkActions">
+      <button class="btn btn-secondary" onclick="previewSelected()">
+        <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5Z"/></svg>
+        Preview
+      </button>
+      <button class="btn btn-danger" onclick="deleteSelected()">
+        <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+        Hapus
+      </button>
     </div>
 
-    
-
-    <!-- Replace the current nav-links div with this -->
-<div class="nav-links" id="navLinks">
-  <button class="btn btn-primary" onclick="openModal()">
-    <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-    Tambah Data
-  </button>
-  
-  <div class="bulk-actions" id="bulkActions">
-    <button class="btn btn-secondary" onclick="previewSelected()">
-      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
-      Preview
-    </button>
-    
-    <button class="btn btn-danger" onclick="deleteSelected()">
-      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
-      Hapus
+    <button class="btn btn-warning" onclick="exportToExcel()">
+      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+      Export Excel
     </button>
   </div>
-  
-  <button class="btn btn-warning" onclick="exportToExcel()">
-    <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-    Export Excel
-  </button>
-</div>
 
-    <!-- Add this after the nav-links div -->
-<div class="search-container">
-  <input type="text" id="searchInput" placeholder="Cari data..." oninput="searchData()">
-</div>
-
-  </nav>
+  <!-- Search & Storage Info - Responsive -->
+  <div class="search-storage-wrapper">
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Cari data..." oninput="searchData()" />
+    </div>
+    <div id="storageInfo" title="Kapasitas localStorage yang digunakan"
+         style="font-size:12px; margin-top:8px;">
+      Memori: <span id="storagePercent">0%</span>
+      <div id="storageBar" style="height:5px; background:#ccc; border-radius:3px; overflow:hidden;">
+        <div id="storageFill" style="height:100%; width:0%; background:#4CAF50;"></div>
+      </div>
+    </div>
+  </div>
+</nav>
 
   
 
@@ -803,7 +859,7 @@ table td[style*="color: red"] {
     
     // ===== INITIALIZATION =====
     document.addEventListener('DOMContentLoaded', function() {
-      renderTable();
+      updateLocalStorageAndMonitor();
       setupEventListeners();
     });
     
@@ -1058,6 +1114,73 @@ function renderTable() {
     tbody.appendChild(row);
   });
 }
+
+// ===== STORAGE MONITORING =====
+// ===== UPDATE STORAGE USAGE =====
+function updateStorageUsage() {
+  const used = JSON.stringify(localStorage).length;
+  const quota = 5 * 1024 * 1024; // 5MB
+  const percent = Math.min((used / quota) * 100, 100);
+  const percentStr = percent.toFixed(1) + '%';
+
+  document.getElementById('storagePercent').textContent = percentStr;
+  document.getElementById('storageFill').style.width = percentStr;
+
+  if (percent < 70) {
+    document.getElementById('storageFill').style.backgroundColor = '#4CAF50';
+  } else if (percent < 90) {
+    document.getElementById('storageFill').style.backgroundColor = '#FFA726';
+  } else {
+    document.getElementById('storageFill').style.backgroundColor = '#EF5350';
+    if (!document.getElementById('storageWarning')) {
+      showStorageFullWarning();
+    }
+  }
+}
+
+function showStorageFullWarning() {
+  const warning = document.createElement('div');
+  warning.id = 'storageWarning';
+  warning.style = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #EF5350;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-in-out;
+    max-width: 400px;
+    text-align: center;
+  `;
+  warning.innerHTML = `
+    ⚠️ Penyimpanan hampir penuh.<br/>
+    Pertimbangkan ekspor atau migrasi data.
+    <button onclick="this.parentElement.remove()" style="
+      margin-top: 10px;
+      background: white;
+      color: #EF5350;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    ">&times;</button>
+  `;
+  document.body.appendChild(warning);
+
+  setTimeout(() => {
+    if (warning.parentNode) warning.remove();
+  }, 10000);
+}
+
+// Auto-update saat data berubah
+function updateLocalStorageAndMonitor() {
+  renderTable(); // Pastikan tabel selalu terupdate
+  updateStorageUsage();
+}
     
     function toggleAll(checkbox) {
       document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
@@ -1068,7 +1191,7 @@ function renderTable() {
         const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
         data.splice(index, 1);
         localStorage.setItem(DATA_KEY, JSON.stringify(data));
-        renderTable();
+        updateLocalStorageAndMonitor();;
       }
     }
     
@@ -1085,7 +1208,7 @@ function renderTable() {
 
       data.push(duplicatedItem);
       localStorage.setItem(DATA_KEY, JSON.stringify(data));
-      renderTable();
+      updateLocalStorageAndMonitor();;
     }
     
     // ===== FORM HANDLING =====
@@ -1114,7 +1237,7 @@ function renderTable() {
       
       localStorage.setItem(DATA_KEY, JSON.stringify(data));
       closeModal();
-      renderTable();
+      updateLocalStorageAndMonitor();;
         // Reset form termasuk tanggal manual
   form.reset();
   form.tanggalManual.value = '';
@@ -1237,7 +1360,7 @@ ${item.mesin === 'SML' ? `
 
   const worksheetData = data.map((item, index) => ({
     No: index + 1,
-    Tanggal:'=DATEVALUE("'+ new Date(item.tanggal).toLocaleDateString('en-GB')+'")',
+    Tanggal:new Date(item.tanggal).toLocaleDateString('en-GB'),
     Mesin: item.mesin,
     Supplier: item.supplier || 'INHOUSE',
     SPK: item.spk,
@@ -1319,7 +1442,7 @@ function deleteSelected() {
     });
     
     localStorage.setItem(DATA_KEY, JSON.stringify(data));
-    renderTable();
+    updateLocalStorageAndMonitor();;
     updateBulkActionsVisibility();
   }
 }
