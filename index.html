@@ -515,7 +515,7 @@
 
 /* Add this to your CSS */
 table td[style*="color: red"] {
-  background-color: yellow !important;
+  background-color: red !important;
 }
 
 @page {
@@ -1072,7 +1072,7 @@ function renderTable() {
       <td>${item.spk}</td>
       <td>${item.lot}<text style="color: red;">${item.turunan}</text></td>
       <td>${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}</td>
-      <td${isDuplicate ? ' style="color: red; font-weight: bold;"' : ''}>${item.kodePack}<text style="color: red;">${item.subKode}</text></td>
+      <td${isDuplicate ? ' style="background-color: red; color: yellow; font-weight: bold;"' : ''}>${item.kodePack}<text ${isDuplicate ? ' style="color: yellow; font-weight: bold;"' : 'style="color: red; font-weight: bold; "'}>${item.subKode}</text></td>
       <td>${getMonthName(item.tanggal)}</td>
       <td>
         <button class="btn btn-primary" onclick="openModal(${data.length - index - 1})">Edit</button>
