@@ -1,376 +1,1364 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4CAF50">
-    <title>QR Scanner Android</title>
-    <style>
-        body {
-            font-family: 'Roboto', Arial, sans-serif;
-            max-width: 100%;
-            margin: 0;
-            padding: 15px;
-            background-color: #f5f5f5;
-        }
-        
-        h1 {
-            color: #333;
-            text-align: center;
-            font-size: 24px;
-        }
-        
-        #scanner-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 15px auto;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            background-color: #000;
-        }
-        
-        #qr-video {
-            width: 100%;
-            display: block;
-        }
-        
-        #scan-region {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            border: 3px dashed rgba(255, 255, 255, 0.7);
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-        
-        #result {
-            margin: 15px 0;
-            padding: 12px;
-            background-color: #e8f5e9;
-            border-radius: 8px;
-            font-size: 14px;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: 500;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            padding: 12px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-            min-width: 120px;
-        }
-        
-        button:hover {
-            background-color: #388E3C;
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        #stop-btn {
-            background-color: #f44336;
-        }
-        
-        #stop-btn:hover {
-            background-color: #d32f2f;
-        }
-        
-        #clear-btn {
-            background-color: #607d8b;
-        }
-        
-        #clear-btn:hover {
-            background-color: #455a64;
-        }
-        
-        .permission-help {
-            background-color: #fff3e0;
-            border-left: 4px solid #ffa000;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        @media (max-width: 480px) {
-            th, td {
-                padding: 8px 6px;
-                font-size: 13px;
-            }
-            
-            button {
-                padding: 10px 15px;
-                min-width: 100px;
-                font-size: 13px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans&display=swap" rel="stylesheet">
+   <link rel="icon" href="gambar/favicon.ico" type="image/x-icon">
+  <title>Manajemen Label - PT. Saptawarna Cemerlang</title>
+  <style>
+    /* ===== BASE STYLES ===== */
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    /* ===== LAYOUT STYLES ===== */
+    .container {
+      padding: 20px;
+      width: 100%;
+      overflow-x: auto;
+    }
+    
+    /* ===== NAVIGATION ===== */
+    nav {
+      position: sticky;
+      top: 0;
+      background: #f8f8f8;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ccc;
+      z-index: 10;
+    }
+    
+    .nav-left { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+    }
+    
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .nav-toggle {
+      display: none;
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+    /* ===== TABLE STYLES ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: center;
+      position: relative;
+    }
+    
+    th {
+      background-color: #f2f2f2;
+      position: sticky;
+      top: 0;
+    }
+    
+    /* ===== MODAL STYLES ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    /* ===== FORM STYLES ===== */
+    .form-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    
+    .form-section {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      background: #f9f9f9;
+    }
+    
+    .form-section-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #2c3e50;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    
+    .form-row {
+      display: flex;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    
+    .form-row label {
+      width: 120px;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .form-row textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    
+    .auto-input {
+      background-color: #f5f5f5;
+      color: #666;
+      cursor: not-allowed;
+    }
+    
+    .form-buttons {
+      grid-column: span 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    /* ===== BUTTON STYLES ===== */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .btn-primary {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .btn-danger {
+      background-color: #f44336;
+      color: white;
+    }
+    
+    .btn-warning {
+      background-color: #FF9800;
+      color: white;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      opacity: 0.9;
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .button-icon {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* ===== LABEL PREVIEW STYLES ===== */
+    .preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .preview-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .label-preview-content {
+  border: 2px solid black;
+  padding: 10px;
+  margin-bottom: 20px;
+  page-break-inside: avoid;
+  border-bottom: 3px dashed #000; /* Garis putus-putus hitam */
+}
+    
+    .label-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    
+    .label-table td {
+      border: 1px solid black;
+      padding: 4px 6px;
+    }
+    
+    .label-subtitle {
+      font-weight: bold;
+      font-size: 16px;
+      text-align: center;
+    }
+    
+    .label-pass {
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      padding: 0 10px;
+      -webkit-print-color-adjust: exact;
+    }
+    
+    .label-fail {
+      background: yellow;
+      color: red;
+      font-weight: bold;
+      padding: 0 10px;
+      -webkit-print-color-adjust: exact;
+    }
+    
+    .label-reject {
+      background: red;
+      color: white;
+      font-weight: bold;
+      padding: 0 10px;
+      -webkit-print-color-adjust: exact;
+    }
+    
+    /* ===== UTILITY STYLES ===== */
+    .hidden {
+      display: none !important;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .mt-10 {
+      margin-top: 10px;
+    }
+    
+    .mb-10 {
+      margin-bottom: 10px;
+    }
+    
+    /* ===== RESPONSIVE STYLES ===== */
+    @media (max-width: 768px) {
+      .form-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-buttons {
+        grid-column: span 1;
+      }
+      
+      .nav-toggle {
+        display: inline;
+      }
+      
+      .nav-links {
+        width: 100%;
+        flex-direction: column;
+        display: none;
+        margin-top: 10px;
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .form-row label {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+    }
+    
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      
+      #printArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+      }
+    }
+
+     /* ===== RADIO GROUP STYLES ===== */
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+  }
+  
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .radio-option input[type="radio"] {
+    margin: 0;
+  }
+  
+  .radio-option label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  /* Khusus untuk input numeric di radio option */
+  .radio-numeric-input {
+    width: 115px;
+    margin-left: 10px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  .form-row select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+/* Machine Type Styles */
+.machine-slitting {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  -webkit-print-color-adjust: exact;
+}
+
+.machine-rewind {
+  background-color: #2196F3;
+  color: white;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  -webkit-print-color-adjust: exact;
+}
+
+.machine-sml {
+  background-color: #FF9800;
+  color: white;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  -webkit-print-color-adjust: exact;
+}
+
+@media print {
+  @page {
+    size: auto;  /* auto adalah nilai awal */
+    margin: 0mm; /* ini memengaruhi margin halaman */
+  }
+  
+  /* Sembunyikan header/footer browser */
+  body::after {
+    display: none !important;
+  }
+}
+
+/* Tambahkan ini di bagian CSS */
+.qr-code-container {
+  width: 15px !important;
+  height: 15px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.qr-code-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.label-table tr {
+  height: 20px; /* Sesuaikan dengan kebutuhan */
+}
+.label-table td {
+  vertical-align: middle;
+}
+
+@media print {
+  .qr-code-img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Tambahkan di bagian CSS */
+#tanggalManual {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Add this to the CSS */
+.search-container {
+  flex: 1;
+  margin: 0 20px;
+  max-width: 300px;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.bulk-actions {
+  display: none;
+  gap: 10px;
+}
+
+.bulk-actions.visible {
+  display: flex;
+}
+
+/* Add this to your CSS */
+table td[style*="color: red"] {
+  background-color: yellow !important;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0mm;
+}
+
+
+  </style>
 </head>
 <body>
-    <h1>QR Code Scanner Android</h1>
+  <!-- ===== NAVIGATION ===== -->
+  <nav>
     
-    <div class="permission-help">
-        <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
-        <ol>
-            <li>Mengizinkan akses kamera di browser</li>
-            <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
-            <li>Membuka halaman ini melalui HTTPS (https://)</li>
-        </ol>
+    <div class="nav-left">
+      <h2>Manajemen Label</h2>
+      <button class="nav-toggle" onclick="toggleNav()">☰</button>
     </div>
-    
-    <div id="scanner-container">
-        <video id="qr-video" playsinline></video>
-        <div id="scan-region"></div>
-    </div>
-    
-    <div class="button-container">
-        <button id="start-btn">Mulai Scan</button>
-        <button id="stop-btn">Stop Scan</button>
-        <button id="clear-btn">Hapus Data</button>
-    </div>
-    
-    <div id="result">Arahkan kamera ke QR code dengan format: ukuran-no_lot-kode_pack</div>
-    
-    <h2>Data Tersimpan</h2>
-    <table id="data-table">
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Ukuran</th>
-                <th>No. Lot</th>
-                <th>Kode Pack</th>
-                <th>Waktu Scan</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data akan ditambahkan di sini -->
-        </tbody>
-    </table>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script>
-        // Variabel global
-        let videoStream = null;
-        let scanInterval = null;
-        let scanCount = 0;
-        let lastScanned = null;
+    
+
+    <!-- Replace the current nav-links div with this -->
+<div class="nav-links" id="navLinks">
+  <button class="btn btn-primary" onclick="openModal()">
+    <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+    Tambah Data
+  </button>
+  
+  <div class="bulk-actions" id="bulkActions">
+    <button class="btn btn-secondary" onclick="previewSelected()">
+      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+      Preview
+    </button>
+    
+    <button class="btn btn-danger" onclick="deleteSelected()">
+      <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+      Hapus
+    </button>
+  </div>
+  
+  <button class="btn btn-warning" onclick="exportToExcel()">
+    <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+    Export Excel
+  </button>
+</div>
+
+    <!-- Add this after the nav-links div -->
+<div class="search-container">
+  <input type="text" id="searchInput" placeholder="Cari data..." oninput="searchData()">
+</div>
+
+  </nav>
+
+  
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="container">
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" onclick="toggleAll(this)" /></th>
+          <th>No</th>
+          <th>Tanggal</th>
+          <th>Mesin</th>
+          <th>Supplier</th>
+          <th>SPK</th>
+          <th>No. Lot</th>
+          <th>Dimensi</th>
+          <th>Kode Pack</th>
+          <th>Bulan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ===== ADD/EDIT MODAL ===== -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <form id="labelForm">
+        <input type="hidden" name="index" id="formIndex"/>
         
-        // Elemen DOM
-        const videoElement = document.getElementById('qr-video');
-        const resultElement = document.getElementById('result');
-        const tableBody = document.getElementById('table-body');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const clearBtn = document.getElementById('clear-btn');
+        <div class="form-container">
+          <!-- Section 1: Informasi Dasar -->
+          <div class="form-section">
+            <div class="form-section-title">Informasi Dasar</div>
+
+            <!-- Tambahkan ini di dalam form-section "Informasi Dasar" -->
+            <div class="form-row">
+              <label for="supplier">Supplier</label>
+              <input name="supplier" value="INHOUSE" required />
+            </div>
+
+            <div class="form-row">
+              <label for="spk">SPK</label>
+              <input name="spk" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="tanggal">Tanggal</label>
+              <input type="date" name="tanggal" class="auto-input" readonly />
+            </div>
+
+            <div class="form-row">
+              <label for="tanggalShift">Tanggal Shift</label>
+              <input name="tanggalShift" id="tanggalShift" class="auto-input" readonly />
+            </div>
+            
+            <div class="form-row">
+              <label for="tanggalManual">Tanggal Manual (Opsional)</label>
+              <input type="date" name="tanggalManual" id="tanggalManual" />
+            </div>
+            <div class="form-row">
+              <label for="keterangan">Keterangan</label>
+              <textarea name="keterangan"></textarea>
+            </div>
+          </div>
+          
+          <!-- Section 2: Dimensi Material -->
+          <div class="form-section">
+            <div class="form-section-title">Dimensi Material</div>
+            
+            <div class="form-row">
+              <label for="thickness">Thickness</label>
+              <input name="thickness" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="width">Width</label>
+              <input name="width" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="length">Length</label>
+              <input name="length" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="joint">Joint</label>
+              <input name="joint" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="meter">Meter</label>
+              <input name="meter" required />
+            </div>
+          </div>
+          
+          <!-- Section 3: Spesifikasi Material -->
+          <div class="form-section">
+            <div class="form-section-title">Spesifikasi Material</div>
+            
+            <div class="form-row">
+              <label for="jenis">JENIS</label>
+              <input list="jenisList" name="jenis" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="type">TYPE</label>
+              <select name="type" required>
+                <option>TRANSPARENT</option>
+                <option>METALIZED</option>
+                <option>MATTE</option>
+                <option>GLOSSY</option>
+              </select>
+            </div>
+            
+            <div class="form-row">
+              <label for="od">OD</label>
+              <input name="od" id="odInput" value="OD2.5" />
+            </div>
+            
+            <div class="form-row">
+              <label for="treatment">Treatment</label>
+              <select name="treatment"><option>INSIDE</option></select>
+            </div>
+          </div>
+          
+          <!-- Section 4: Kode Identifikasi -->
+          <div class="form-section">
+            <div class="form-section-title">Kode Identifikasi</div>
+            
+            <div class="form-row">
+              <label for="mesin">Mesin</label>
+              <select name="mesin" id="mesinSelect" required onchange="updateAutoFields()">
+                <option value="SLITTING">SLITTING</option>
+                <option value="REWIND">REWIND</option>
+                <option value="SML">SML</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="kode">Kode Formula</label>
+              <input name="kode" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="lot">No Lot</label>
+              <input name="lot" required />
+            </div>
+            
+            <div class="form-row">
+              <label for="turunan">Turunan</label>
+              <input name="turunan" required />
+            </div>
+            <hr>
+            <div class="form-row">
+  <label>Sub Kode Pack</label>
+  <div class="radio-group">
+    <div class="radio-option">
+      <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()">
+      <label>
+        Masukan Angka
+        <input type="text" name="subKodeNumeric" id="subKodeNumeric" class="radio-numeric-input" 
+               oninput="formatSubKode(this)" maxlength="4">
+      </label>
+    </div>
+    
+    <div class="radio-option">
+      <input type="radio" name="subKodeType" value="reject" onchange="handleSubKode()">
+      <label>REJECT</label>
+    </div>
+    
+    <div class="radio-option">
+      <input type="radio" name="subKodeType" value="hold" onchange="handleSubKode()">
+      <label>HOLD</label>
+    </div>
+  </div>
+  <input type="hidden" name="subKode" id="subKodeValue">
+</div>
+          </div>
+          
+          <!-- Section 5: Hasil Perhitungan -->
+          <div class="form-section">
+            <div class="form-section-title">Hasil Perhitungan</div>
+            
+            <div class="form-row">
+              <label for="netto">Netto</label>
+              <input name="netto" class="auto-input" readonly />
+            </div>
+            
+            <div class="form-row">
+              <label for="paperCore">Paper Core</label>
+              <input name="paperCore" class="auto-input" readonly />
+            </div>
+            
+            <div class="form-row">
+              <label for="kodePack">Kode Pack</label>
+              <input name="kodePack" class="auto-input" readonly />
+            </div>
+            
+            <div class="form-row">
+              <label for="status">Status</label>
+              <input name="status" class="auto-input" readonly />
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            <button type="button" onclick="closeModal()" class="btn btn-danger">Batal</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== PREVIEW MODAL ===== -->
+  <div class="preview-modal modal" id="previewModal">
+    <div class="preview-content">
+      <div id="printArea"></div>
+      <div style="text-align: right; margin-top: 10px;">
+        <button class="btn btn-primary" onclick="print()">Print</button>
+        <button class="btn btn-danger" onclick="closePreview()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js "></script>
+
+  <script>
+    // ===== CONSTANTS =====
+    const DATA_KEY = "labelData";
+    const form = document.getElementById("labelForm");
+    let currentEditIndex = -1;
+    
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTable();
+      setupEventListeners();
+    });
+    
+    // ===== EVENT LISTENERS SETUP =====
+    function setupEventListeners() {
+      // Form submission
+      form.addEventListener("submit", handleFormSubmit);
+      
+      // Input changes that trigger calculations
+      document.querySelectorAll('#labelForm input, #labelForm select').forEach(el => {
+        if (!el.readOnly) {
+          el.addEventListener('input', updateAutoFields);
+        }
+      });
+      
+      // Type change for OD field
+      document.querySelector('select[name="type"]').addEventListener('change', handleTypeChange);
+      
+      // Sub kode numeric input
+      document.getElementById('subKodeNumeric').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        handleSubKode();
+      });
+
+      document.getElementById('tanggalManual').addEventListener('change', function() {
+        updateAutoFields();
+      });
+    }
+    
+    // ===== NAVIGATION FUNCTIONS =====
+    function toggleNav() {
+      document.getElementById("navLinks").classList.toggle("active");
+    }
+    
+    // ===== DATA FORMATTING FUNCTIONS =====
+    function getMonthName(dateStr) {
+      const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                     "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      const date = new Date(dateStr);
+      return months[date.getMonth()];
+    }
+    
+    function formatTanggalIndonesia(dateString) {
+      if (!dateString) return '';
+      
+      const bulan = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      const tanggal = date.getDate();
+      const namaBulan = bulan[date.getMonth()];
+      const tahun = date.getFullYear();
+      
+      return `${tanggal} ${namaBulan} ${tahun}`;
+    }
+    
+    // ===== CALCULATION FUNCTIONS =====
+    function generateKodePack(tanggal, mesin) {
+  const d = new Date(tanggal);
+  const bulan = String(d.getMonth() + 1).padStart(2, '0');
+  const tahun = String(d.getFullYear()).slice(-2);
+  
+  // Add prefix based on machine type
+  let prefix = '';
+  if (mesin === 'REWIND') prefix = 'R';
+  if (mesin === 'SML') prefix = 'S';
+  
+  return `${prefix}3B${bulan}${tahun}`;
+}
+    
+    function calculateNetto(thick, width, length) {
+      return ((thick * width * length * 0.91) / 1000000).toFixed(2);
+    }
+    
+    function calculatePaperCore(width) {
+      return (0.00537 * parseFloat(width || 0) + 0.852).toFixed(2);
+    }
+    
+    // ===== SUB KODE HANDLING =====
+    function handleSubKode() {
+      const subKodeValue = document.getElementById('subKodeValue');
+      const selectedType = document.querySelector('input[name="subKodeType"]:checked').value;
+      const numericInput = document.getElementById('subKodeNumeric');
+      
+      // Show/hide numeric input
+      numericInput.style.visibility = selectedType === 'numeric' ? 'visible' : 'hidden';
+      numericInput.disabled = selectedType !== 'numeric';
+      
+      // Set value based on selection
+      switch(selectedType) {
+        case 'numeric':
+          subKodeValue.value = numericInput.value.padStart(4, '0') || '0000';
+          break;
+        case 'reject':
+          subKodeValue.value = 'REJECT';
+          break;
+        case 'hold':
+          subKodeValue.value = '0000';
+          break;
+      }
+      
+      updateStatusBasedOnSubKode();
+    }
+    
+    function updateStatusBasedOnSubKode() {
+      const subKodeValue = document.getElementById('subKodeValue').value;
+      const statusField = document.querySelector('input[name="status"]');
+      
+      if (subKodeValue === 'REJECT') {
+        statusField.value = 'REJECT';
+      } else if (subKodeValue === '0000') {
+        statusField.value = 'HOLD';
+      } else {
+        statusField.value = 'PASS';
+      }
+    }
+    
+    // ===== TYPE CHANGE HANDLER =====
+    function handleTypeChange() {
+      const typeSelect = document.querySelector('select[name="type"]');
+      const odInput = document.getElementById('odInput');
+      
+      if (typeSelect.value === "METALIZED") {
+        odInput.readOnly = false;
+        odInput.classList.remove('auto-input');
+        odInput.required = true;
+        odInput.value = "OD2.5";
+      } else {
+        odInput.readOnly = true;
+        odInput.classList.add('auto-input');
+        odInput.required = false;
+        odInput.value = "";
+      }
+    }
+    
+    // ===== AUTO FIELD UPDATES =====
+    function updateAutoFields() {
+      const tglManual = form.tanggalManual.value;
+      const tglShift = calculateShiftDate();
+      const thick = parseFloat(form.thickness.value) || 0;
+      const width = parseFloat(form.width.value) || 0;
+      const length = parseFloat(form.length.value) || 0;
+      const mesin = form.mesin.value;
+      
+      // Update sub kode first
+      handleSubKode();
+      
+       // Set tanggal shift otomatis
+      document.getElementById('tanggalShift').value = tglManual || tglShift;
+       
+      // Calculate and update other fields
+       form.kodePack.value = generateKodePack(tglManual || tglShift, mesin);
+      form.paperCore.value = calculatePaperCore(width);
+      form.netto.value = calculateNetto(thick, width, length);
+      form.tanggal.value = tglManual || tglShift;
+    }
+    
+    // ===== MODAL FUNCTIONS =====
+    function openModal(index = -1) {
+      form.reset();
+       // Reset tanggal manual
+      form.tanggalManual.value = '';
+      currentEditIndex = index;
+      document.getElementById("modal").style.display = "flex";
+      
+      // Set tanggal shift otomatis
+      updateAutoFields();
+      // Initialize type and sub kode handling
+      handleTypeChange();
+      handleSubKode();
+      
+      if (index >= 0) {
+        const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+        const item = data[index];
         
-        // Event listeners
-        startBtn.addEventListener('click', startScanning);
-        stopBtn.addEventListener('click', stopScanning);
-        clearBtn.addEventListener('click', clearData);
+        // Populate form fields
+        for (let key in item) {
+      if (form[key] && key !== 'tanggalManual') { // Jangan set tanggalManual dari data lama
+        form[key].value = item[key];
+      }
+    }
         
-        // Fungsi untuk memulai scanning (dioptimalkan untuk Android)
-        async function startScanning() {
-            try {
-                // Hentikan stream yang mungkin masih aktif
-                if (videoStream) {
-                    stopScanning();
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                // Minta izin kamera
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                });
-                
-                videoElement.srcObject = videoStream;
-                videoElement.setAttribute('playsinline', 'true'); // Penting untuk iOS/Android
-                await videoElement.play();
-                
-                resultElement.textContent = "Memindai QR code...";
-                
-                // Mulai scanning dengan jsQR
-                scanInterval = setInterval(scanWithjsQR, 300);
-                
-            } catch (err) {
-                resultElement.textContent = "Error: " + err.message;
-                console.error("Error kamera:", err);
-                
-                if (err.name === 'NotAllowedError') {
-                    resultElement.innerHTML += "<br><br>Harap berikan izin akses kamera melalui setelan browser Anda.";
-                }
-            }
+        // Handle special cases for sub kode
+        if (item.subKode === 'REJECT') {
+          document.querySelector('input[name="subKodeType"][value="reject"]').checked = true;
+        } else if (item.subKode === '0000') {
+          document.querySelector('input[name="subKodeType"][value="hold"]').checked = true;
+        } else {
+          document.querySelector('input[name="subKodeType"][value="numeric"]').checked = true;
+          document.getElementById('subKodeNumeric').value = item.subKode.replace(/^0+/, '');
         }
         
-        // Fungsi untuk scan menggunakan jsQR
-        function scanWithjsQR() {
-            if (videoElement.readyState >= videoElement.HAVE_METADATA) {
-                const canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // Gambar frame video ke canvas
-                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                
-                // Ambil data gambar
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Coba decode QR code
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-                
-                if (code) {
-                    // Cegah scan berulang pada QR yang sama dalam 3 detik
-                    if (lastScanned === code.data || (lastScanned && Date.now() - lastScanned.time < 3000)) {
-                        return;
-                    }
-                    
-                    lastScanned = {
-                        data: code.data,
-                        time: Date.now()
-                    };
-                    
-                    processScannedData(code.data);
-                }
-            }
-        }
-        
-        // Fungsi untuk menghentikan scanning
-        function stopScanning() {
-            if (scanInterval) {
-                clearInterval(scanInterval);
-                scanInterval = null;
-            }
-            
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-                videoElement.srcObject = null;
-            }
-            
-            resultElement.textContent = "Scan dihentikan. Tekan 'Mulai Scan' untuk melanjutkan.";
-        }
-        
-        // Fungsi untuk memproses data yang discan
-        function processScannedData(data) {
-            // Format data: ukuran-no_lot-kode_pack
-            const parts = data.split('-');
-            
-            if (parts.length === 3) {
-                const [ukuran, noLot, kodePack] = parts.map(part => part.trim());
-                const waktuScan = new Date().toLocaleString();
-                
-                // Tambahkan ke tabel
-                addToTable(ukuran, noLot, kodePack, waktuScan);
-                
-                // Tampilkan hasil
-                resultElement.innerHTML = `
-                    <strong>? Data berhasil discan:</strong><br>
-                    <b>Ukuran:</b> ${ukuran}<br>
-                    <b>No. Lot:</b> ${noLot}<br>
-                    <b>Kode Pack:</b> ${kodePack}
-                `;
-                
-                // Beri feedback sukses (getar jika didukung)
-                if (navigator.vibrate) {
-                    navigator.vibrate(200);
-                }
-                
-            } else {
-                resultElement.innerHTML = `
-                    <strong style="color: #f44336;">Format QR code tidak valid!</strong><br>
-                    Harap gunakan format: <b>ukuran-no_lot-kode_pack</b><br>
-                    Contoh: <code>XL-12345-PCK789</code>
-                `;
-                
-                // Beri feedback error (getar panjang)
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
-                }
-            }
-        }
-        
-        // Fungsi untuk menambahkan data ke tabel
-        function addToTable(ukuran, noLot, kodePack, waktuScan) {
-            scanCount++;
-            const newRow = document.createElement('tr');
-            
-            newRow.innerHTML = `
-                <td>${scanCount}</td>
-                <td>${ukuran}</td>
-                <td>${noLot}</td>
-                <td>${kodePack}</td>
-                <td>${waktuScan}</td>
-            `;
-            
-            tableBody.appendChild(newRow);
-            
-            // Scroll ke baris baru
-            newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-        
-        // Fungsi untuk menghapus semua data
-        function clearData() {
-            if (confirm("Apakah Anda yakin ingin menghapus semua data?")) {
-                tableBody.innerHTML = '';
-                scanCount = 0;
-                resultElement.textContent = "Semua data telah dihapus";
-            }
-        }
-        
-        // Hentikan kamera saat halaman ditutup
-        window.addEventListener('beforeunload', stopScanning);
-    </script>
+        handleSubKode();
+      }
+      
+      updateAutoFields();
+    }
+    
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+      currentEditIndex = -1;
+    }
+    
+    // ===== DATA TABLE FUNCTIONS =====
+    // Update the renderTable function
+function renderTable() {
+  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const tbody = document.getElementById("dataBody");
+  tbody.innerHTML = "";
+  const duplicateKodePacks = getDuplicateKodePacks(data);
+  
+  [...data].reverse().forEach((item, index) => {
+    const row = document.createElement("tr");
+    let machineClass, machineText;
+    switch(item.mesin) {
+      case 'REWIND':
+        machineClass = 'machine-rewind';
+        machineText = 'REWIND';
+        break;
+      case 'SML':
+        machineClass = 'machine-sml';
+        machineText = 'SML';
+        break;
+      default:
+        machineClass = 'machine-slitting';
+    }
+
+    const isDuplicate = item.status !== 'HOLD' && 
+                        item.status !== 'REJECT' &&
+                        duplicateKodePacks.has(item.kodePack + (item.subKode || ''));
+
+    row.innerHTML = `
+      <td><input type="checkbox" class="row-check" data-index="${data.length - index - 1}" onchange="updateBulkActionsVisibility()"/></td>
+      <td>${data.length - index}</td> <!-- Nomor urut sesuai tampilan -->
+      <td>${formatTanggalIndonesia(item.tanggal)}</td>
+      <td><span class="${machineClass}">${item.mesin}</span></td>
+      <td>${item.supplier || 'INHOUSE'}</td> 
+      <td>${item.spk}</td>
+      <td>${item.lot}<text style="color: red;">${item.turunan}</text></td>
+      <td>${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}</td>
+      <td${isDuplicate ? ' style="color: red; font-weight: bold;"' : ''}>${item.kodePack}<text style="color: red;">${item.subKode}</text></td>
+      <td>${getMonthName(item.tanggal)}</td>
+      <td>
+        <button class="btn btn-primary" onclick="openModal(${data.length - index - 1})">Edit</button>
+        <button class="btn btn-secondary" onclick="duplicateData(${data.length - index - 1})">Duplikat</button>
+        <button class="btn btn-danger" onclick="deleteData(${data.length - index - 1})">Hapus</button>
+      </td>`;
+    tbody.appendChild(row);
+  });
+}
+    
+    function toggleAll(checkbox) {
+      document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
+    }
+    
+    function deleteData(index) {
+      if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+        const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+        data.splice(index, 1);
+        localStorage.setItem(DATA_KEY, JSON.stringify(data));
+        renderTable();
+      }
+    }
+    
+    function duplicateData(index) {
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+      const duplicatedItem = { ...data[index] };
+
+     // Gunakan tanggal shift saat ini untuk data duplikat
+  duplicatedItem.tanggal = calculateShiftDate();
+  // Hapus tanggalManual jika ada
+  if (duplicatedItem.tanggalManual) {
+    delete duplicatedItem.tanggalManual;
+  }
+
+      data.push(duplicatedItem);
+      localStorage.setItem(DATA_KEY, JSON.stringify(data));
+      renderTable();
+    }
+    
+    // ===== FORM HANDLING =====
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+      const formData = new FormData(form);
+      const newData = {};
+      
+       formData.forEach((val, key) => {
+    if (key !== 'tanggalManual') { // Jangan simpan tanggalManual ke storage
+      newData[key] = val;
+    }
+  });
+
+      // Gunakan tanggal manual jika ada, jika tidak gunakan tanggal shift
+      newData.tanggal = newData.tanggalManual || newData.tanggal;
+  
+      
+      if (currentEditIndex >= 0 && currentEditIndex < data.length) {
+        data[currentEditIndex] = newData;
+      } else {
+        data.push(newData);
+      }
+      
+      localStorage.setItem(DATA_KEY, JSON.stringify(data));
+      closeModal();
+      renderTable();
+        // Reset form termasuk tanggal manual
+  form.reset();
+  form.tanggalManual.value = '';
+    }
+    
+    // ===== PREVIEW FUNCTIONS =====
+    function previewSelected() {
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+      const selected = [...document.querySelectorAll(".row-check:checked")].map(cb => data[cb.dataset.index]);
+      
+      if (selected.length === 0) {
+        alert("Pilih setidaknya satu data untuk dipreview");
+        return;
+      }
+      
+      const container = document.getElementById("printArea");
+      container.innerHTML = selected.map(item => createLabelHTML(item)).join("");
+      
+      document.getElementById("previewModal").style.display = "flex";
+    }
+    
+    function createLabelHTML(item) {
+  let machineClass;
+  switch(item.mesin) {
+    case 'REWIND':
+      machineClass = 'machine-rewind';
+      break;
+    case 'SML':
+      machineClass = 'machine-sml';
+      break;
+    default:
+      machineClass = 'machine-slitting';
+  }
+
+  return `
+    <div class="label-preview-content">
+      
+      <table class="label-table" style="margin:0; padding:0; font-size:12px;">
+        <tr>          
+${item.mesin === 'SML' ? `
+    <td class="machine-slitting"> IN LINE SML </td>
+` : '<td></td>'}
+          <td colspan="4" style="padding:2px; text-align:center;">
+            <text style="font-family:'Impact', sans-serif; font-size:24px; color:#d61c1c;">PT. SAPTAWARNA CEMERLANG</text><br>
+            <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;">Rotogravure & Flexible Packaging</text>
+          </td>
+          <td style="padding:2px; font-size:12px; font-weight:bold;">${formatTanggalIndonesia(item.tanggal)}</td>
+          <td style="width:60px; padding:2px; text-align:center;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data= ${encodeURIComponent(
+              `${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}|${item.lot}${item.turunan}|${item.kodePack}${item.subKode}`
+            )}" style="width:50px; height:auto;" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" style="padding:2px; font-weight:bold; font-size:13px;">${item.jenis}(${item.type}) ${item.kode}</td>
+          <td style="padding:2px; font-weight:bold; font-size:13px;">${item.spk}</td>
+          <td rowspan="7" style="text-align:center; vertical-align:middle; padding:2px;">
+            <img src="gambar/${getMonthName(item.tanggal).toLowerCase()}.png" alt="${getMonthName(item.tanggal)}" style="max-height:150px; max-width: 50px;" />
+        </tr>
+        <tr>
+          <td style="padding:2px; font-size:11px;"><strong>Thick</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.thickness}</td>
+          <td style="padding:2px; font-size:11px;"><strong>Netto</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.netto}</td>
+          <td style="padding:2px; font-size:11px;"><strong>Treatment</strong></td>
+          <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.treatment}</td>
+           
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:2px; font-size:11px;"><strong>Width</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.width}</td>
+          <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.paperCore}</td>
+          <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
+          <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.od}</td>
+        </tr>
+        <tr>
+          <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.length}</td>
+          <td style="padding:2px; font-size:11px;"><strong>Joint</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.joint}</td>
+          <td style="padding:2px; font-size:11px;"><strong>Meter</strong></td>
+          <td style="padding:2px; font-size:11px;">${item.meter}</td>
+        </tr>
+        <tr>
+          <td style="padding:2px; background-color:#f0f0f0; font-size:11px;"><strong>${item.supplier || 'INHOUSE'}</strong></td>
+          <td colspan="4" style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.lot}</td>
+          <td style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.turunan}</td>
+        </tr>
+        <tr>
+          <td style="padding:2px; font-size:11px;"><strong>Code Pack:</strong></td>
+          <td colspan="3" style="padding:2px; font-size:11px;">${item.kodePack}<span style="color:red;">${item.subKode}</span></td>
+          <td style="padding:2px; font-size:11px;"><strong>STATUS</strong></td>
+          <td class="${item.status === 'HOLD' ? 'label-fail' : item.status === 'REJECT' ? 'label-reject' : 'label-pass'}" style="font-size:11px;">
+            ${item.status}
+          </td>
+         
+        </tr>
+        <tr>
+          <td style="padding:2px; font-size:11px;"><strong>Ket:</strong></td>
+          <td colspan="5" style="padding:2px; font-size:11px;">${item.keterangan || '-'}</td>
+        </tr>
+      </table>
+    </div>`;
+}
+    
+    function closePreview() {
+      document.getElementById("previewModal").style.display = "none";
+    }
+    
+    // ===== EXPORT FUNCTIONS =====
+    function exportToExcel() {
+  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+
+  if (data.length === 0) {
+    alert("Tidak ada data untuk diexport!");
+    return;
+  }
+
+  const worksheetData = data.map((item, index) => ({
+    No: index + 1,
+    Tanggal:'=DATEVALUE("'+ new Date(item.tanggal).toLocaleDateString('en-GB')+'")',
+    Mesin: item.mesin,
+    Supplier: item.supplier || 'INHOUSE',
+    SPK: item.spk,
+    'No Lot': item.lot,
+    Turunan: item.turunan,
+    Jenis: item.jenis,
+    Type: item.type,
+    OD: item.od,
+    Treatment: item.treatment,
+    Thickness: item.thickness,
+    Width: item.width,
+    Length: item.length,
+    Joint: item.joint,
+    Meter: item.meter,
+    Kode: item.kode,
+    'Kode Pack': item.kodePack,
+    'Sub Kode': item.subKode,
+    Bulan: getMonthName(new Date(item.tanggal)),
+    Status: item.status,
+    Netto: item.netto,
+    'Paper Core': item.paperCore,
+    Keterangan: item.keterangan
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(worksheetData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Data Label");
+  XLSX.writeFile(wb, `LabelData_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+    
+    // ===== UTILITY FUNCTIONS =====
+    function setButtonLoading(button, isLoading) {
+      if (isLoading) {
+        button.classList.add('btn-loading');
+        button.disabled = true;
+        button.innerHTML = '<span style="visibility: hidden;">' + button.textContent + '</span>';
+      } else {
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+        button.innerHTML = button.textContent;
+      }
+    }
+
+    // ===== FUNGSI TANGGAL SHIFT =====
+function calculateShiftDate() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const shiftDate = new Date(now);
+  
+  // Jika sebelum jam 7 pagi, gunakan tanggal kemarin
+  if (currentHour < 7) {
+    shiftDate.setDate(shiftDate.getDate() - 1);
+  }
+  
+  return shiftDate.toISOString().split('T')[0];
+}
+
+// Search function
+function searchData() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const rows = document.querySelectorAll('#dataBody tr');
+  
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
+}
+
+function deleteSelected() {
+  const checkboxes = document.querySelectorAll('.row-check:checked');
+  if (checkboxes.length === 0) return;
+  
+  if (confirm(`Apakah Anda yakin ingin menghapus ${checkboxes.length} data terpilih?`)) {
+    const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+    const indexesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+    
+    indexesToDelete.forEach(index => {
+      data.splice(index, 1);
+    });
+    
+    localStorage.setItem(DATA_KEY, JSON.stringify(data));
+    renderTable();
+    updateBulkActionsVisibility();
+  }
+}
+
+// Update bulk actions visibility based on checked items
+function updateBulkActionsVisibility() {
+  const checkboxes = document.querySelectorAll('.row-check:checked');
+  const bulkActions = document.getElementById('bulkActions');
+  
+  if (checkboxes.length > 0) {
+    bulkActions.classList.add('visible');
+  } else {
+    bulkActions.classList.remove('visible');
+  }
+}
+
+// Modify the toggleAll function to update visibility
+function toggleAll(checkbox) {
+  document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
+  updateBulkActionsVisibility();
+}
+
+// Add this function to check for duplicate kodePack
+function getDuplicateKodePacks(data) {
+  const kodePackCounts = {};
+  const duplicates = new Set();
+  
+  data.forEach(item => {
+    if (item.status !== 'HOLD' && item.status !== 'REJECT') {
+      const key = item.kodePack + (item.subKode || '');
+      kodePackCounts[key] = (kodePackCounts[key] || 0) + 1;
+      if (kodePackCounts[key] > 1) {
+        duplicates.add(key);
+      }
+    }
+  });
+  
+  return duplicates;
+}
+  </script>
 </body>
 </html>
