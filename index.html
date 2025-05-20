@@ -901,9 +901,10 @@ table td[style*="color: red"] {
   return `${prefix}3B${bulan}${tahun}`;
 }
     
-    function calculateNetto(thick, width, length) {
-      return ((thick * width * length * 0.91) / 1000000).toFixed(2);
-    }
+    function calculateNetto(thick, width, length, jenis) {
+  const faktor = ["VMPET", "PET"].includes(jenis) ? 1.34 : 0.91;
+  return ((thick * width * length * faktor) / 1000000).toFixed(2);
+}
     
     function calculatePaperCore(width) {
       return (0.00537 * parseFloat(width || 0) + 0.852).toFixed(2);
@@ -984,7 +985,7 @@ table td[style*="color: red"] {
       // Calculate and update other fields
        form.kodePack.value = generateKodePack(tglManual || tglShift, mesin);
       form.paperCore.value = calculatePaperCore(width);
-      form.netto.value = calculateNetto(thick, width, length);
+      form.netto.value = calculateNetto(thick, width, length, form.jenis.value);
       form.tanggal.value = tglManual || tglShift;
     }
     
