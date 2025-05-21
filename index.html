@@ -483,6 +483,51 @@
   }
 }
 
+@media print {
+  .label-preview-content {
+    max-height: 1050px !important;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+}
+
+@media print {
+  .label-table td {
+    font-size: 10px !important;
+    padding: 2px !important;
+  }
+  .label-table tr {
+    height: 16px !important;
+  }
+}
+
+@media print {
+  .label-table img {
+    max-width: 40px !important;
+    height: auto !important;
+  }
+}
+
+@media print {
+  .label-preview-content {
+    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
+@media print {
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+}
+
 /* Tambahkan di bagian CSS */
 #tanggalManual {
   flex: 1;
