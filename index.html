@@ -110,17 +110,20 @@
     /* Update form-container layout */
 /* Update form-container layout */
 .form-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  display: flex; /* Susunan horizontal */
+  flex-wrap: wrap;
+  gap: 20px;
   font-size: 12px;
 }
 
 .form-section {
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  padding: 8px;
+  padding: 10px;
   background: #f9f9f9;
+  width: calc(33.33% - 15px); /* 3 kolom */
+  box-sizing: border-box;
+  min-width: 280px; /* agar tidak terlalu sempit di layar kecil */
 }
 
 .form-section-title {
@@ -134,29 +137,32 @@
 
 .form-row {
   display: flex;
-  margin-bottom: 4px;
   align-items: center;
+  margin-bottom: 6px;
 }
 
 .form-row label {
-  width: 80px;
-  font-size: 11px;
-  margin-right: 4px;
+  width: 90px;
+  font-size: 12px;
+  margin-right: 6px;
 }
 
 .form-row input,
 .form-row select,
 .form-row textarea {
   flex: 1;
-  padding: 3px 4px;
-  font-size: 11px;
+  padding: 4px 6px;
+  font-size: 12px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-.form-row textarea {
-  min-height: 40px;
-  resize: vertical;
+.form-buttons {
+  grid-column: span 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
     
     .auto-input {
@@ -165,13 +171,7 @@
       cursor: not-allowed;
     }
     
-    .form-buttons {
-      grid-column: span 2;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
+    
     
     /* ===== BUTTON STYLES ===== */
     .btn {
@@ -483,50 +483,6 @@
   }
 }
 
-@media print {
-  .label-preview-content {
-    max-height: 1050px !important;
-    overflow: hidden;
-    page-break-inside: avoid;
-  }
-}
-
-@media print {
-  .label-table td {
-    font-size: 10px !important;
-    padding: 2px !important;
-  }
-  .label-table tr {
-    height: 16px !important;
-  }
-}
-
-@media print {
-  .label-table img {
-    max-width: 40px !important;
-    height: auto !important;
-  }
-}
-
-@media print {
-  .label-preview-content {
-    display: block !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-}
-
-@media print {
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  @page {
-    size: A4 portrait;
-    margin: 0 !important;
-  }
-}
 
 /* Tambahkan di bagian CSS */
 #tanggalManual {
@@ -625,6 +581,16 @@ table td[style*="color: red"] {
     margin-bottom: 5px;
   }
 }
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1100px; /* Lebar maksimal */
+  max-height: 90vh;
+  overflow-y: auto;
+}
   </style>
 </head>
 <body>
@@ -646,6 +612,7 @@ table td[style*="color: red"] {
         <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5Z"/></svg>
         Preview
       </button>
+      
       <button class="btn btn-danger" onclick="deleteSelected()">
         <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
         Hapus
@@ -698,160 +665,205 @@ table td[style*="color: red"] {
   </div>
 
   <!-- ===== ADD/EDIT MODAL ===== -->
-  <div class="modal" id="modal">
-    <div class="modal-content">
-  <form id="labelForm">
-    <input type="hidden" name="index" id="formIndex"/>
+  <!-- ===== ADD/EDIT MODAL ===== -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <form id="labelForm">
+      <input type="hidden" name="index" id="formIndex" />
 
-    <!-- Section 1: Informasi Dasar & Dimensi -->
-    <div class="form-container">
+      <!-- Container Utama -->
+      <div class="form-container">
 
-      <!-- Section 1: Info Dasar + Dimensi -->
-      <div class="form-section">
-        <div class="form-section-title">Info & Dimensi</div>
-        <div class="form-row">
-          <label for="supplier">Supplier</label>
-          <input name="supplier" value="INHOUSE" required />
-        </div>
-        <div class="form-row">
-          <label for="spk">SPK</label>
-          <input name="spk" required />
-        </div>
-        <div class="form-row">
-          <label for="tanggal">Tanggal</label>
-          <input type="date" name="tanggal" class="auto-input" readonly />
-        </div>
-        <div class="form-row">
-          <label for="tanggalShift">Tgl Shift</label>
-          <input name="tanggalShift" id="tanggalShift" class="auto-input" readonly />
-        </div>
-        <div class="form-row">
-          <label for="tanggalManual">Tgl Manual</label>
-          <input type="date" name="tanggalManual" id="tanggalManual" />
-        </div>
-        <div class="form-row">
-          <label for="thickness">Thickness</label>
-          <input name="thickness" required />
-        </div>
-        <div class="form-row">
-          <label for="width">Width</label>
-          <input name="width" required />
-        </div>
-        <div class="form-row">
-          <label for="length">Length</label>
-          <input name="length" required />
-        </div>
-        <div class="form-row">
-          <label for="joint">Joint</label>
-          <input name="joint" required />
-        </div>
-        <div class="form-row">
-          <label for="meter">Meter</label>
-          <input name="meter" required />
+        <!------------------ SECTION 1: Info Dasar ------------------->
+        <div class="form-section">
+          <div class="form-section-title">Info Dasar</div>
+
+          <div class="form-row">
+            <label for="supplier">Supplier</label>
+            <input name="supplier" value="INHOUSE" required />
+          </div>
+
+          <div class="form-row">
+            <label for="spk">SPK</label>
+            <input name="spk" required />
+          </div>
+
+          <div class="form-row">
+            <label for="tanggal">Tanggal</label>
+            <input type="date" name="tanggal" class="auto-input" readonly />
+          </div>
+
+          <div class="form-row">
+            <label for="mesin">Mesin</label>
+            <select name="mesin" id="mesinSelect" required onchange="updateAutoFields()">
+              <option value="SLITTING">SLITTING</option>
+              <option value="REWIND">REWIND</option>
+              <option value="SML">SML</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="jenis">Jenis</label>
+            <input list="jenisList" name="jenis" required />
+          </div>
+
+          <div class="form-row">
+            <label for="type">Type</label>
+            <select name="type" required>
+              <option>TRANSPARENT</option>
+              <option>METALIZED</option>
+              <option>MATTE</option>
+              <option>GLOSSY</option>
+            </select>
+          </div>
+
         </div>
 
-        <div class="form-section-title">Hasil & Sub Kode</div>
-        <div class="form-row">
-          <label for="netto">Netto</label>
-          <input name="netto" class="auto-input" readonly />
+        <!------------------ SECTION 2: Dimensi & Hasil ------------------->
+        <div class="form-section">
+          <div class="form-section-title">Dimensi & Hasil</div>
+
+          <div class="form-row">
+            <label for="thickness">Thickness</label>
+            <input name="thickness" required />
+          </div>
+
+          <div class="form-row">
+            <label for="width">Width</label>
+            <input name="width" required />
+          </div>
+
+          <div class="form-row">
+            <label for="length">Length</label>
+            <input name="length" required />
+          </div>
+
+          <div class="form-row">
+            <label for="meter">Meter</label>
+            <input name="meter" required />
+          </div>
+
+          <div class="form-row">
+            <label for="joint">Joint</label>
+            <input name="joint" required />
+          </div>
+
+          <div class="form-row">
+            <label for="netto">Netto</label>
+            <input name="netto" class="auto-input" readonly />
+          </div>
+
+          <div class="form-row">
+            <label for="paperCore">Paper Core</label>
+            <input name="paperCore" class="auto-input" readonly />
+          </div>
+
         </div>
-        <div class="form-row">
-          <label for="paperCore">Paper Core</label>
-          <input name="paperCore" class="auto-input" readonly />
+
+        <!------------------ SECTION 3: Otomatis & Status ------------------->
+        <div class="form-section">
+          <div class="form-section-title">Otomatis & Status</div>
+
+          <div class="form-row">
+            <label for="tanggalShift">Tgl Shift</label>
+            <input name="tanggalShift" id="tanggalShift" class="auto-input" readonly />
+          </div>
+
+          <div class="form-row">
+            <label for="tanggalManual">Tgl Manual</label>
+            <input type="date" name="tanggalManual" id="tanggalManual" />
+          </div>
+
+          <div class="form-row">
+            <label for="kodePack">Kode Pack</label>
+            <input name="kodePack" class="auto-input" readonly />
+          </div>
+
+          <div class="form-row">
+            <label for="status">Status</label>
+            <input name="status" class="auto-input" readonly />
+          </div>
+          <div class="form-row">
+            <label for="treatment">Treatment</label>
+            <select name="treatment"><option>INSIDE</option></select>
+          </div>
+          <div class="form-row">
+            <label for="od">OD</label>
+            <input name="od" id="odInput" value="OD2.4" />
+          </div>
         </div>
-        <div class="form-row">
-          <label for="kodePack">Kode Pack</label>
-          <input name="kodePack" class="auto-input" readonly />
+
+        <!------------------ SECTION 4: No Lot, Keterangan ------------------->
+        <div class="form-section">
+          <div class="form-section-title">No Lot & Keterangan</div>
+
+          <div class="form-row">
+            <label for="lot">No Lot</label>
+            <input name="lot" required />
+          </div>
+
+          <div class="form-row">
+            <label for="turunan">Turunan</label>
+            <input name="turunan" required />
+          </div>
+
+          <div class="form-row">
+            <label for="kode">Kode Formula</label>
+            <input name="kode" required />
+          </div>
+
+          <div class="form-row">
+            <label for="keterangan">Ket:</label>
+            <textarea name="keterangan" style="height: 50px;"></textarea>
+          </div>
+
         </div>
-        <div class="form-row">
-          <label for="status">Status</label>
-          <input name="status" class="auto-input" readonly />
+
+        <!------------------ SECTION 5: Sub Kode Pack ------------------->
+        <div class="form-section">
+          <div class="form-section-title">Sub Kode Pack</div>
+
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()" />
+              <label>
+                Angka
+                <input type="text" name="subKodeNumeric" id="subKodeNumeric"
+                       oninput="formatSubKode(this)" maxlength="4"
+                       class="radio-numeric-input" style="width: 70px;" />
+              </label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="subKodeType" value="reject" onchange="handleSubKode()" />
+              <label>REJECT</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="subKodeType" value="hold" onchange="handleSubKode()" />
+              <label>HOLD</label>
+            </div>
+            <input type="hidden" name="subKode" id="subKodeValue" />
+          </div>
         </div>
+         <!------------------ SECTION 6: Note ------------------->
+        <div class="form-section">
+          <div class="form-row">
+            <span for="kode">OD STANDARD VMCPP = OD2.4</span>
+          </div>
+          <div class="form-row">
+            <span for="kode">OD STANDARD VMPET = OD3.2</span>
+          </div>
+        </div>
+
       </div>
-
-      <!-- Section 2: Spesifikasi & Kode Identifikasi -->
-      <div class="form-section">
-        <div class="form-section-title">Spesifikasi & ID</div>
-        <div class="form-row">
-          <label for="jenis">JENIS</label>
-          <input list="jenisList" name="jenis" required />
-        </div>
-        <div class="form-row">
-          <label for="type">TYPE</label>
-          <select name="type" required>
-            <option>TRANSPARENT</option>
-            <option>METALIZED</option>
-            <option>MATTE</option>
-            <option>GLOSSY</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="od">OD</label>
-          <input name="od" id="odInput" value="OD2.4" />
-        </div>
-        <div class="form-row">
-          <label for="treatment">Treatment</label>
-          <select name="treatment"><option>INSIDE</option></select>
-        </div>
-        <div class="form-row">
-          <label for="mesin">Mesin</label>
-          <select name="mesin" id="mesinSelect" required onchange="updateAutoFields()">
-            <option value="SLITTING">SLITTING</option>
-            <option value="REWIND">REWIND</option>
-            <option value="SML">SML</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="kode">Kode Formula</label>
-          <input name="kode" required />
-        </div>
-        <div class="form-row">
-          <label for="lot">No Lot</label>
-          <input name="lot" required />
-        </div>
-        <div class="form-row">
-          <label for="turunan">Turunan</label>
-          <input name="turunan" required />
-        </div>
-        <div class="form-section-title mt-10">Sub Kode Pack</div>
-        <div class="radio-group">
-          <div class="radio-option">
-            <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()" />
-            <label>
-              Angka
-              <input type="text" name="subKodeNumeric" id="subKodeNumeric"
-                     oninput="formatSubKode(this)" maxlength="4"
-                     class="radio-numeric-input" style="width: 70px;" />
-            </label>
-          </div>
-          <div class="radio-option">
-            <input type="radio" name="subKodeType" value="reject" onchange="handleSubKode()" />
-            <label>REJECT</label>
-          </div>
-          <div class="radio-option">
-            <input type="radio" name="subKodeType" value="hold" onchange="handleSubKode()" />
-            <label>HOLD</label>
-          </div>
-        </div>
-        <input type="hidden" name="subKode" id="subKodeValue" />
-        <div class="form-section-title">Keterangan</div>
-        <div class="form-row">
-          <textarea name="keterangan" style="height: 20px; font-size: 11px;"></textarea>
-        </div>
-      </div>
-
-     
 
       <!-- Tombol Aksi -->
-      <div class="form-buttons" style="grid-column: span 2;">
+      <div class="form-buttons">
         <button type="submit" class="btn btn-primary">Simpan</button>
         <button type="button" onclick="closeModal()" class="btn btn-danger">Batal</button>
       </div>
-
-    </div>
-  </form>
-</div>
+    </form>
   </div>
+</div>
 
   <!-- ===== PREVIEW MODAL ===== -->
   <div class="preview-modal modal" id="previewModal">
@@ -950,7 +962,7 @@ table td[style*="color: red"] {
 }
     
     function calculateNetto(thick, width, length, jenis) {
-  const faktor = ["VMPET", "PET"].includes(jenis) ? 1.34 : 0.91;
+  const faktor = ["VMPET", "PET"].includes(jenis) ? 1.4 : 0.91;
   return ((thick * width * length * faktor) / 1000000).toFixed(2);
 }
     
@@ -1008,8 +1020,7 @@ table td[style*="color: red"] {
         odInput.required = true;
         odInput.value = "OD2.4";
       } else {
-        odInput.readOnly = true;
-        odInput.classList.add('auto-input');
+        
         odInput.required = false;
         odInput.value = "";
       }
@@ -1298,7 +1309,7 @@ ${item.mesin === 'SML' ? `
 ` : '<td></td>'}
           <td colspan="4" style="padding:2px; text-align:center;">
             <text style="font-family:'Impact', sans-serif; font-size:24px; color:#d61c1c;">PT. SAPTAWARNA CEMERLANG</text><br>
-            <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;">Rotogravure & Flexible Packaging</text>
+            <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;"></text>
           </td>
           <td style="padding:2px; font-size:12px; font-weight:bold;">${formatTanggalIndonesia(item.tanggal)}</td>
           <td style="width:60px; padding:2px; text-align:center;">
@@ -1315,7 +1326,7 @@ ${item.mesin === 'SML' ? `
         </tr>
         <tr>
           <td style="padding:2px; font-size:11px;"><strong>Thick</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.thickness}</td>
+          <td style="padding:2px; font-size:12px;"><strong>${item.thickness}</strong></td>
           <td style="padding:2px; font-size:11px;"><strong>Netto</strong></td>
           <td style="padding:2px; font-size:11px;">${item.netto}</td>
           <td style="padding:2px; font-size:11px;"><strong>Treatment</strong></td>
@@ -1325,7 +1336,7 @@ ${item.mesin === 'SML' ? `
         </tr>
         <tr>
           <td style="padding:2px; font-size:11px;"><strong>Width</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.width}</td>
+          <td style="padding:2px; font-size:12px;"><strong>${item.width}</strong></td>
           <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
           <td style="padding:2px; font-size:11px;">${item.paperCore}</td>
           <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
@@ -1333,7 +1344,7 @@ ${item.mesin === 'SML' ? `
         </tr>
         <tr>
           <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.length}</td>
+          <td style="padding:2px; font-size:12px;"><strong>${item.length}</strong></td>
           <td style="padding:2px; font-size:11px;"><strong>Joint</strong></td>
           <td style="padding:2px; font-size:11px;">${item.joint}</td>
           <td style="padding:2px; font-size:11px;"><strong>Meter</strong></td>
@@ -1346,7 +1357,7 @@ ${item.mesin === 'SML' ? `
         </tr>
         <tr>
           <td style="padding:2px; font-size:11px;"><strong>Code Pack:</strong></td>
-          <td colspan="3" style="padding:2px; font-size:11px;">${item.kodePack}<span style="color:red;">${item.subKode}</span></td>
+          <td colspan="3" style="padding:2px; font-size:12px;"><strong>${item.kodePack}<span style="color:red;">${item.subKode}</span></strong></td>
           <td style="padding:2px; font-size:11px;"><strong>STATUS</strong></td>
           <td class="${item.status === 'HOLD' ? 'label-fail' : item.status === 'REJECT' ? 'label-reject' : 'label-pass'}" style="font-size:11px;">
             ${item.status}
