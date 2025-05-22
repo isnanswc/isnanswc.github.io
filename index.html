@@ -1281,12 +1281,7 @@ function updateLocalStorageAndMonitor() {
       }
       
       const container = document.getElementById("printArea");
-       // Tambahkan satu per satu item
-  selected.forEach(item => {
-    const labelHTML = createLabelHTML(item);
-    container.insertAdjacentHTML("beforeend", labelHTML);
-  });
-
+      container.innerHTML = selected.map(item => createLabelHTML(item)).join("");
       
       document.getElementById("previewModal").style.display = "flex";
     }
