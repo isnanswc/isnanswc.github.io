@@ -6,29 +6,65 @@
     <title>Scanner Kode Promo</title>
     <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
     <style>
+        :root {
+            --primary-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --border-color: #ddd;
+            --light-bg: #f9f9f9;
+            --header-bg: #f2f2f2;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
         h1 {
             text-align: center;
-            color: #333;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+        
+        .scanner-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
         }
         
         .scanner-container {
             position: relative;
             width: 100%;
-            height: 300px;
-            margin: 20px 0;
-            border: 2px solid #ddd;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             overflow: hidden;
+            background-color: #000;
         }
         
         #scanner {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -36,101 +72,220 @@
         
         .controls {
             display: flex;
-            justify-content: center;
+            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
         }
         
         button {
             padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
         }
         
         button:hover {
-            background-color: #45a049;
+            opacity: 0.9;
+            transform: translateY(-2px);
         }
         
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input-group {
+            display: flex;
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
         }
         
         #manualInput {
             padding: 10px;
-            width: 200px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 4px 0 0 4px;
             font-size: 16px;
+        }
+        
+        #manualSubmit {
+            border-radius: 0 4px 4px 0;
+        }
+        
+        #message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .warning {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+        
+        .success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        
+        .data-section {
+            overflow-x: auto;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            min-width: 600px;
         }
         
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px 15px;
             text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
         
         th {
-            background-color: #f2f2f2;
+            background-color: var(--header-bg);
+            font-weight: 600;
         }
         
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: var(--light-bg);
         }
         
-        .warning {
-            color: #ff0000;
-            font-weight: bold;
-            margin: 10px 0;
-            text-align: center;
+        tr:hover {
+            background-color: rgba(76, 175, 80, 0.05);
         }
         
-        .success {
-            color: #4CAF50;
-            font-weight: bold;
-            margin: 10px 0;
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            margin: 0 2px;
+        }
+        
+        .empty-table {
             text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            #manualInput {
+                padding: 8px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Scanner Kode Promo</h1>
-    
-    <div class="controls">
-        <button id="startButton">Mulai Scan</button>
-        <button id="stopButton" disabled>Stop Scan</button>
-        <input type="text" id="manualInput" placeholder="Masukkan kode manual">
-        <button id="manualSubmit">Submit</button>
+    <div class="container">
+        <h1>📷 Scanner Kode Promo</h1>
+        
+        <div class="scanner-section">
+            <div class="scanner-container">
+                <video id="scanner"></video>
+            </div>
+            
+            <div class="controls">
+                <button id="startButton" class="btn-primary">
+                    <span>🎥 Mulai Scan</span>
+                </button>
+                <button id="stopButton" class="btn-danger" disabled>
+                    <span>⏹️ Stop Scan</span>
+                </button>
+                <div class="input-group">
+                    <input type="text" id="manualInput" placeholder="Masukkan kode manual">
+                    <button id="manualSubmit" class="btn-primary">✅ Submit</button>
+                </div>
+                <button id="clearAllBtn" class="btn-danger">
+                    <span>🗑️ Hapus Semua</span>
+                </button>
+            </div>
+            
+            <div id="message"></div>
+        </div>
+        
+        <div class="data-section">
+            <table id="promoTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal Scan</th>
+                        <th>Waktu Scan</th>
+                        <th>Kode Promo</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data akan ditambahkan di sini -->
+                </tbody>
+            </table>
+            <div id="emptyTable" class="empty-table">Belum ada data kode promo</div>
+        </div>
     </div>
-    
-    <div class="scanner-container">
-        <video id="scanner"></video>
-    </div>
-    
-    <div id="message"></div>
-    
-    <table id="promoTable">
-        <thead>
-            <tr>
-                <th>Tanggal Scan</th>
-                <th>Waktu Scan</th>
-                <th>Kode Promo</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- Data akan ditambahkan di sini -->
-        </tbody>
-    </table>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -138,11 +293,17 @@
             const stopButton = document.getElementById('stopButton');
             const manualSubmit = document.getElementById('manualSubmit');
             const manualInput = document.getElementById('manualInput');
+            const clearAllBtn = document.getElementById('clearAllBtn');
             const messageDiv = document.getElementById('message');
             const tableBody = document.getElementById('tableBody');
+            const emptyTable = document.getElementById('emptyTable');
             
             let scannerActive = false;
-            let scannedCodes = new Set();
+            let promoData = [];
+            const STORAGE_KEY = 'promoCodeScannerData';
+            
+            // Load data from local storage
+            loadData();
             
             // Fungsi untuk memulai scanner
             startButton.addEventListener('click', function() {
@@ -152,18 +313,37 @@
                         type: "LiveStream",
                         target: document.querySelector('#scanner'),
                         constraints: {
-                            width: 480,
-                            height: 320,
+                            width: 1280,
+                            height: 720,
                             facingMode: "environment"
                         },
                     },
                     decoder: {
                         readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader"]
                     },
+                    locator: {
+                        patchSize: "medium",
+                        halfSample: true
+                    },
+                    locate: true,
+                    debug: {
+                        showCanvas: false,
+                        showPatches: false,
+                        showFoundPatches: false,
+                        showSkeleton: false,
+                        showLabels: false,
+                        showPatchLabels: false,
+                        showRemainingPatchLabels: false,
+                        boxFromPatches: {
+                            showTransformed: false,
+                            showTransformedBox: false,
+                            showBB: false
+                        }
+                    }
                 }, function(err) {
                     if (err) {
                         console.error(err);
-                        showMessage("Gagal menginisialisasi scanner: " + err, true);
+                        showMessage("Gagal menginisialisasi scanner: " + err.message, true);
                         return;
                     }
                     console.log("Initialization finished. Ready to start");
@@ -194,46 +374,75 @@
             });
             
             // Fungsi untuk input manual
-            manualSubmit.addEventListener('click', function() {
+            manualSubmit.addEventListener('click', processManualInput);
+            manualInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    processManualInput();
+                }
+            });
+            
+            function processManualInput() {
                 const code = manualInput.value.trim();
                 if (code) {
                     processPromoCode(code);
                     manualInput.value = '';
+                    manualInput.focus();
                 }
-            });
+            }
             
             // Fungsi untuk memproses kode promo
             function processPromoCode(code) {
                 // Validasi panjang kode
                 if (code.length !== 10) {
-                    showMessage(`Warning: Kode promo harus 10 karakter (${code.length} karakter terdeteksi)`, true);
+                    showMessage(`⚠️ Warning: Kode promo harus 10 karakter (${code.length} karakter terdeteksi)`, true);
                     return;
                 }
                 
                 // Validasi duplikat
-                if (scannedCodes.has(code)) {
-                    showMessage(`Warning: Kode promo ${code} sudah pernah di-scan sebelumnya`, true);
+                if (promoData.some(item => item.code === code)) {
+                    showMessage(`⚠️ Warning: Kode promo ${code} sudah pernah di-scan sebelumnya`, true);
                     return;
                 }
                 
-                // Tambahkan ke Set untuk menandai sudah di-scan
-                scannedCodes.add(code);
-                
                 // Dapatkan tanggal dan waktu sekarang
                 const now = new Date();
-                const dateStr = now.toLocaleDateString();
-                const timeStr = now.toLocaleTimeString();
+                const dateStr = now.toLocaleDateString('id-ID');
+                const timeStr = now.toLocaleTimeString('id-ID');
                 
-                // Tambahkan ke tabel
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td>${dateStr}</td>
-                    <td>${timeStr}</td>
-                    <td>${code}</td>
-                `;
-                tableBody.appendChild(newRow);
+                // Tambahkan ke array data
+                const newItem = {
+                    id: Date.now(),
+                    date: dateStr,
+                    time: timeStr,
+                    code: code,
+                    timestamp: now.getTime()
+                };
                 
-                showMessage(`Kode promo ${code} berhasil ditambahkan`, false);
+                promoData.unshift(newItem); // Tambahkan di awal array
+                saveData();
+                renderTable();
+                
+                showMessage(`✅ Kode promo ${code} berhasil ditambahkan`, false);
+            }
+            
+            // Fungsi untuk menghapus semua data
+            clearAllBtn.addEventListener('click', function() {
+                if (promoData.length > 0 && confirm('Apakah Anda yakin ingin menghapus semua data?')) {
+                    promoData = [];
+                    saveData();
+                    renderTable();
+                    showMessage("Semua data telah dihapus", false);
+                }
+            });
+            
+            // Fungsi untuk menghapus satu data
+            function deleteItem(id) {
+                if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                    promoData = promoData.filter(item => item.id !== id);
+                    saveData();
+                    renderTable();
+                    showMessage("Data telah dihapus", false);
+                }
             }
             
             // Fungsi untuk menampilkan pesan
@@ -249,6 +458,45 @@
                     }
                 }, 3000);
             }
+            
+            // Fungsi untuk render tabel
+            function renderTable() {
+                if (promoData.length === 0) {
+                    tableBody.innerHTML = '';
+                    emptyTable.style.display = 'block';
+                    return;
+                }
+                
+                emptyTable.style.display = 'none';
+                tableBody.innerHTML = promoData.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.date}</td>
+                        <td>${item.time}</td>
+                        <td>${item.code}</td>
+                        <td>
+                            <button onclick="deleteItem(${item.id})" class="action-btn btn-danger">Hapus</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Fungsi untuk menyimpan data ke local storage
+            function saveData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(promoData));
+            }
+            
+            // Fungsi untuk memuat data dari local storage
+            function loadData() {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (savedData) {
+                    promoData = JSON.parse(savedData);
+                    renderTable();
+                }
+            }
+            
+            // Expose deleteItem to global scope for inline event handlers
+            window.deleteItem = deleteItem;
         });
     </script>
 </body>
