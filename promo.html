@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner Kode Promo</title>
-    <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+    <title>Scanner Kode Promo OCR</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         :root {
             --primary: #4CAF50;
@@ -71,6 +71,10 @@
             object-fit: cover;
         }
         
+        #canvas {
+            display: none;
+        }
+        
         .loading, .permission-message {
             position: absolute;
             top: 0;
@@ -83,6 +87,9 @@
             color: var(--white);
             font-weight: bold;
             background-color: rgba(0,0,0,0.7);
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
         }
         
         .controls {
@@ -121,6 +128,7 @@
         button:disabled {
             background-color: #aaa;
             cursor: not-allowed;
+            opacity: 0.7;
         }
         
         .input-group {
@@ -229,6 +237,28 @@
             font-style: italic;
         }
         
+        .scan-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            border: 3px solid var(--white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .scan-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
         @media (max-width: 480px) {
             button {
                 font-size: 0.9rem;
@@ -244,7 +274,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📷 Scanner Kode Promo</h1>
+        <h1>📷 Scanner Kode Promo OCR</h1>
         
         <div id="permissionGuide" class="permission-guide">
             <h3>Izin Kamera Diperlukan</h3>
@@ -261,18 +291,25 @@
         <div class="scanner-section">
             <div class="scanner-container">
                 <video id="scanner" playsinline></video>
-                <div id="loading" class="loading">Memuat kamera...</div>
+                <canvas id="canvas"></canvas>
+                <div id="loading" class="loading">
+                    <div>Memuat kamera...</div>
+                    <div id="progressText" style="margin-top: 10px; font-size: 0.9rem;"></div>
+                </div>
                 <div id="permissionMessage" class="permission-message">
                     Harap izinkan akses kamera untuk menggunakan scanner
+                </div>
+                <div id="scanButton" class="scan-btn" style="display: none;">
+                    <div style="width: 30px; height: 30px; background-color: var(--danger); border-radius: 50%; border: 2px solid var(--white);"></div>
                 </div>
             </div>
             
             <div class="controls">
                 <button id="startButton" class="btn-primary">
-                    <span>🎥 Mulai Scan</span>
+                    <span>🎥 Mulai Kamera</span>
                 </button>
                 <button id="stopButton" class="btn-danger" disabled>
-                    <span>⏹️ Stop Scan</span>
+                    <span>⏹️ Stop Kamera</span>
                 </button>
                 <div class="input-group">
                     <input type="text" id="manualInput" placeholder="Masukkan kode manual" inputmode="text">
@@ -309,10 +346,13 @@
         // Inisialisasi variabel
         let scannerActive = false;
         let promoData = [];
-        const STORAGE_KEY = 'promoCodeData';
+        let stream = null;
+        const STORAGE_KEY = 'promoCodeDataOCR';
         
         // Elemen DOM
         const elements = {
+            scanner: document.getElementById('scanner'),
+            canvas: document.getElementById('canvas'),
             startButton: document.getElementById('startButton'),
             stopButton: document.getElementById('stopButton'),
             manualSubmit: document.getElementById('manualSubmit'),
@@ -322,10 +362,11 @@
             tableBody: document.getElementById('tableBody'),
             emptyTable: document.getElementById('emptyTable'),
             loading: document.getElementById('loading'),
+            progressText: document.getElementById('progressText'),
             permissionMessage: document.getElementById('permissionMessage'),
-            scannerVideo: document.getElementById('scanner'),
             permissionGuide: document.getElementById('permissionGuide'),
-            retryButton: document.getElementById('retryButton')
+            retryButton: document.getElementById('retryButton'),
+            scanButton: document.getElementById('scanButton')
         };
         
         // Inisialisasi aplikasi
@@ -342,20 +383,21 @@
         
         // Setup event listeners
         function setupEventListeners() {
-            elements.startButton.addEventListener('click', startScanner);
-            elements.stopButton.addEventListener('click', stopScanner);
+            elements.startButton.addEventListener('click', startCamera);
+            elements.stopButton.addEventListener('click', stopCamera);
             elements.manualSubmit.addEventListener('click', processManualInput);
             elements.manualInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') processManualInput();
             });
             elements.clearAllBtn.addEventListener('click', clearAllData);
             elements.retryButton.addEventListener('click', retryCameraAccess);
+            elements.scanButton.addEventListener('click', captureAndScan);
         }
         
-        // Fungsi utama untuk memulai scanner
-        async function startScanner() {
+        // Fungsi utama untuk memulai kamera
+        async function startCamera() {
             try {
-                showLoading(true);
+                showLoading(true, 'Menginisialisasi kamera...');
                 hideMessage();
                 
                 // 1. Cek dan minta izin kamera
@@ -365,16 +407,28 @@
                     return;
                 }
                 
-                // 2. Inisialisasi scanner
-                await initQuagga();
+                // 2. Dapatkan stream kamera
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
                 
-                // 3. Update UI state
+                // 3. Tampilkan stream di video element
+                elements.scanner.srcObject = stream;
+                elements.scanner.play();
+                
+                // 4. Update UI state
                 scannerActive = true;
-                updateScannerUI();
-                showMessage("Scanner aktif. Arahkan kamera ke kode promo.", 'success');
+                updateCameraUI();
+                elements.scanButton.style.display = 'flex';
+                showMessage("Kamera aktif. Arahkan ke kode promo dan ketik tombol scan.", 'success');
                 
             } catch (error) {
-                console.error('Scanner error:', error);
+                console.error('Camera error:', error);
                 handleError(error);
             } finally {
                 showLoading(false);
@@ -390,16 +444,12 @@
                 }
                 
                 // Coba akses kamera
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
+                const testStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true 
                 });
                 
                 // Hentikan stream setelah uji coba
-                stream.getTracks().forEach(track => track.stop());
+                testStream.getTracks().forEach(track => track.stop());
                 return true;
                 
             } catch (error) {
@@ -408,47 +458,71 @@
             }
         }
         
-        // Inisialisasi Quagga Scanner
-        function initQuagga() {
-            return new Promise((resolve, reject) => {
-                Quagga.init({
-                    inputStream: {
-                        name: "Live",
-                        type: "LiveStream",
-                        target: elements.scannerVideo,
-                        constraints: {
-                            facingMode: "environment",
-                            aspectRatio: { ideal: 4/3 }
-                        },
-                    },
-                    decoder: {
-                        readers: [
-                            "code_128_reader",
-                            "ean_reader",
-                            "code_39_reader",
-                            "upc_reader"
-                        ]
-                    },
-                    locate: true,
-                    numOfWorkers: 2
-                }, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
+        // Capture gambar dan proses OCR
+        async function captureAndScan() {
+            if (!scannerActive) return;
+            
+            try {
+                showLoading(true, 'Memproses gambar...');
+                
+                // 1. Capture frame dari video
+                const canvas = elements.canvas;
+                const video = elements.scanner;
+                
+                // Sesuaikan ukuran canvas dengan video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Gambar frame video ke canvas
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // 2. Proses OCR dengan Tesseract.js
+                showLoading(true, 'Mengenali teks...');
+                
+                const result = await Tesseract.recognize(
+                    canvas,
+                    'eng',
+                    {
+                        logger: progress => {
+                            if (progress.status === 'recognizing text') {
+                                const percent = Math.round(progress.progress * 100);
+                                elements.progressText.textContent = `Proses: ${percent}%`;
+                            }
+                        }
                     }
+                );
+                
+                // 3. Ekstrak teks yang ditemukan
+                const detectedText = result.data.text.replace(/\s+/g, '').trim();
+                
+                if (detectedText) {
+                    // Cari kode promo dalam teks (asumsi format tertentu)
+                    const promoCode = extractPromoCode(detectedText);
                     
-                    Quagga.start();
-                    Quagga.onDetected(onBarcodeDetected);
-                    resolve();
-                });
-            });
+                    if (promoCode) {
+                        processPromoCode(promoCode);
+                    } else {
+                        showMessage("Tidak menemukan kode promo yang valid", 'warning');
+                    }
+                } else {
+                    showMessage("Tidak ada teks yang terdeteksi", 'warning');
+                }
+                
+            } catch (error) {
+                console.error('OCR error:', error);
+                showMessage("Gagal memproses gambar: " + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
         
-        // Callback ketika barcode terdeteksi
-        function onBarcodeDetected(result) {
-            if (scannerActive && result?.codeResult?.code) {
-                processPromoCode(result.codeResult.code);
-            }
+        // Fungsi untuk ekstrak kode promo dari teks
+        function extractPromoCode(text) {
+            // Cari pola kode promo (contoh: 10 karakter alfanumerik)
+            const promoRegex = /[A-Z0-9]{10}/;
+            const match = text.match(promoRegex);
+            return match ? match[0] : null;
         }
         
         // Proses kode promo
@@ -496,13 +570,23 @@
             }
         }
         
-        // Fungsi untuk menghentikan scanner
-        function stopScanner() {
+        // Fungsi untuk menghentikan kamera
+        function stopCamera() {
             if (scannerActive) {
-                Quagga.stop();
+                // Hentikan stream kamera
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                // Hentikan video
+                elements.scanner.srcObject = null;
+                
+                // Update UI state
                 scannerActive = false;
-                updateScannerUI();
-                showMessage("Scanner dihentikan", 'success');
+                updateCameraUI();
+                elements.scanButton.style.display = 'none';
+                showMessage("Kamera dihentikan", 'success');
             }
         }
         
@@ -561,16 +645,17 @@
             }
         }
         
-        // Fungsi untuk update UI scanner
-        function updateScannerUI() {
+        // Fungsi untuk update UI kamera
+        function updateCameraUI() {
             elements.startButton.disabled = scannerActive;
             elements.stopButton.disabled = !scannerActive;
         }
         
         // Fungsi untuk menampilkan/menyembunyikan loading
-        function showLoading(show) {
+        function showLoading(show, message = '') {
             elements.loading.style.display = show ? 'flex' : 'none';
             elements.permissionMessage.style.display = 'none';
+            elements.progressText.textContent = message;
         }
         
         // Fungsi untuk menampilkan pesan
@@ -614,7 +699,7 @@
         // Fungsi untuk retry camera access
         async function retryCameraAccess() {
             hidePermissionGuide();
-            await startScanner();
+            await startCamera();
         }
         
         // Cek dukungan kamera
