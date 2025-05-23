@@ -237,6 +237,19 @@
     <div class="container">
         <h1>📷 Scanner Kode Promo</h1>
         
+        <div id="permissionGuide" class="permission-guide">
+            <h3>Izin Kamera Dibutuhkan</h3>
+            <p>Untuk menggunakan scanner, Anda perlu mengizinkan akses kamera:</p>
+            <ol>
+                <li>Klik ikon gembok/link di address bar browser</li>
+                <li>Pilih "Site settings" atau "Izin Situs"</li>
+                <li>Cari opsi "Kamera" dan pilih "Izinkan"</li>
+                <li>Refresh halaman ini setelah mengubah pengaturan</li>
+            </ol>
+            <button id="retryButton" class="retry-btn">Coba Lagi</button>
+        </div>
+        
+        
         <div class="scanner-section">
             <div class="scanner-container">
                 <video id="scanner" playsinline></video>
@@ -285,274 +298,342 @@
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const startButton = document.getElementById('startButton');
-            const stopButton = document.getElementById('stopButton');
-            const manualSubmit = document.getElementById('manualSubmit');
-            const manualInput = document.getElementById('manualInput');
-            const clearAllBtn = document.getElementById('clearAllBtn');
-            const messageDiv = document.getElementById('message');
-            const tableBody = document.getElementById('tableBody');
-            const emptyTable = document.getElementById('emptyTable');
-            const loadingIndicator = document.getElementById('loading');
-            const permissionMessage = document.getElementById('permissionMessage');
-            const scannerVideo = document.getElementById('scanner');
-            
-            let scannerActive = false;
-            let promoData = [];
-            const STORAGE_KEY = 'promoCodeScannerData';
-            
-            // Load data from local storage
-            loadData();
-            
-            // Fungsi untuk memeriksa izin kamera
-            async function checkCameraPermission() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    stream.getTracks().forEach(track => track.stop());
-                    return true;
-                } catch (error) {
-                    console.error('Camera permission denied:', error);
-                    showPermissionMessage();
-                    return false;
-                }
+      // Inisialisasi variabel global
+let scannerActive = false;
+let promoData = [];
+const STORAGE_KEY = 'promoCodeScannerData';
+
+// DOM Elements
+const startButton = document.getElementById('startButton');
+const stopButton = document.getElementById('stopButton');
+const manualSubmit = document.getElementById('manualSubmit');
+const manualInput = document.getElementById('manualInput');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const messageDiv = document.getElementById('message');
+const tableBody = document.getElementById('tableBody');
+const emptyTable = document.getElementById('emptyTable');
+const loadingIndicator = document.getElementById('loading');
+const permissionMessage = document.getElementById('permissionMessage');
+const scannerVideo = document.getElementById('scanner');
+const permissionGuide = document.getElementById('permissionGuide');
+const retryButton = document.getElementById('retryButton');
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', initApp);
+startButton.addEventListener('click', startScanner);
+stopButton.addEventListener('click', stopScanner);
+manualSubmit.addEventListener('click', processManualInput);
+manualInput.addEventListener('keypress', (e) => e.key === 'Enter' && processManualInput());
+clearAllBtn.addEventListener('click', clearAllData);
+retryButton.addEventListener('click', retryCameraAccess);
+
+// Fungsi inisialisasi aplikasi
+function initApp() {
+    loadData();
+    checkCameraSupport();
+    setupMobileOptimizations();
+}
+
+// Fungsi untuk memulai scanner
+async function startScanner() {
+    try {
+        showLoading(true);
+        
+        // 1. Cek izin kamera
+        const hasPermission = await checkCameraPermission();
+        if (!hasPermission) return;
+        
+        // 2. Inisialisasi scanner
+        await initQuaggaScanner();
+        
+        // 3. Update UI state
+        scannerActive = true;
+        toggleScannerUI(true);
+        showMessage("Scanner aktif. Arahkan kamera ke kode promo.", false);
+        
+    } catch (error) {
+        console.error('Scanner error:', error);
+        handleScannerError(error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Fungsi untuk menghentikan scanner
+function stopScanner() {
+    if (scannerActive) {
+        Quagga.stop();
+        scannerActive = false;
+        toggleScannerUI(false);
+        showMessage("Scanner dihentikan.", false);
+    }
+}
+
+// Fungsi untuk memeriksa izin kamera
+async function checkCameraPermission() {
+    try {
+        // Cek dukungan mediaDevices
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error('Browser tidak mendukung akses kamera');
+        }
+        
+        // Cek status izin (jika API Permissions tersedia)
+        if (navigator.permissions) {
+            const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+            if (permissionStatus.state === 'denied') {
+                showPermissionGuide();
+                return false;
             }
-            
-            // Tampilkan pesan izin kamera
-            function showPermissionMessage() {
-                permissionMessage.style.display = 'block';
-                loadingIndicator.style.display = 'none';
-            }
-            
-            // Fungsi untuk memulai scanner
-            startButton.addEventListener('click', async function() {
-                loadingIndicator.style.display = 'block';
-                permissionMessage.style.display = 'none';
-                
-                const hasPermission = await checkCameraPermission();
-                if (!hasPermission) return;
-                
-                try {
-                    await initScanner();
-                    scannerActive = true;
-                    startButton.disabled = true;
-                    stopButton.disabled = false;
-                    showMessage("Scanner aktif. Arahkan kamera ke kode promo.", false);
-                } catch (error) {
-                    console.error('Scanner initialization error:', error);
-                    showMessage("Gagal memulai scanner: " + error.message, true);
-                    loadingIndicator.style.display = 'none';
-                }
-            });
-            
-            // Inisialisasi scanner
-            function initScanner() {
-                return new Promise((resolve, reject) => {
-                    Quagga.init({
-                        inputStream: {
-                            name: "Live",
-                            type: "LiveStream",
-                            target: scannerVideo,
-                            constraints: {
-                                width: { ideal: 1280 },
-                                height: { ideal: 720 },
-                                facingMode: "environment",
-                                aspectRatio: { ideal: 4/3 }
-                            },
-                        },
-                        decoder: {
-                            readers: [
-                                "code_128_reader",
-                                "ean_reader",
-                                "ean_8_reader",
-                                "code_39_reader",
-                                "code_39_vin_reader",
-                                "codabar_reader",
-                                "upc_reader",
-                                "upc_e_reader"
-                            ]
-                        },
-                        locator: {
-                            patchSize: "medium",
-                            halfSample: true
-                        },
-                        locate: true,
-                        numOfWorkers: navigator.hardwareConcurrency || 4
-                    }, function(err) {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-                        
-                        Quagga.start();
-                        loadingIndicator.style.display = 'none';
-                        resolve();
-                    });
-                    
-                    Quagga.onDetected(function(result) {
-                        if (scannerActive) {
-                            const code = result.codeResult.code;
-                            processPromoCode(code);
-                        }
-                    });
-                });
-            }
-            
-            // Fungsi untuk menghentikan scanner
-            stopButton.addEventListener('click', function() {
-                if (scannerActive) {
-                    Quagga.stop();
-                    scannerActive = false;
-                    startButton.disabled = false;
-                    stopButton.disabled = true;
-                    showMessage("Scanner dihentikan.", false);
-                }
-            });
-            
-            // Fungsi untuk input manual
-            manualSubmit.addEventListener('click', processManualInput);
-            manualInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    processManualInput();
-                }
-            });
-            
-            function processManualInput() {
-                const code = manualInput.value.trim();
-                if (code) {
-                    processPromoCode(code);
-                    manualInput.value = '';
-                    manualInput.focus();
-                }
-            }
-            
-            // Fungsi untuk memproses kode promo
-            function processPromoCode(code) {
-                // Validasi panjang kode
-                if (code.length !== 10) {
-                    showMessage(`⚠️ Warning: Kode promo harus 10 karakter (${code.length} karakter terdeteksi)`, true);
-                    return;
-                }
-                
-                // Validasi duplikat
-                if (promoData.some(item => item.code === code)) {
-                    showMessage(`⚠️ Warning: Kode promo ${code} sudah pernah di-scan sebelumnya`, true);
-                    return;
-                }
-                
-                // Dapatkan tanggal dan waktu sekarang
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('id-ID');
-                const timeStr = now.toLocaleTimeString('id-ID');
-                
-                // Tambahkan ke array data
-                const newItem = {
-                    id: Date.now(),
-                    date: dateStr,
-                    time: timeStr,
-                    code: code,
-                    timestamp: now.getTime()
-                };
-                
-                promoData.unshift(newItem); // Tambahkan di awal array
-                saveData();
-                renderTable();
-                
-                showMessage(`✅ Kode promo ${code} berhasil ditambahkan`, false);
-                
-                // Bergetar untuk feedback fisik (hanya di mobile)
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(100);
-                }
-            }
-            
-            // Fungsi untuk menghapus semua data
-            clearAllBtn.addEventListener('click', function() {
-                if (promoData.length > 0 && confirm('Apakah Anda yakin ingin menghapus semua data?')) {
-                    promoData = [];
-                    saveData();
-                    renderTable();
-                    showMessage("Semua data telah dihapus", false);
-                }
-            });
-            
-            // Fungsi untuk menghapus satu data
-            function deleteItem(id) {
-                if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                    promoData = promoData.filter(item => item.id !== id);
-                    saveData();
-                    renderTable();
-                    showMessage("Data telah dihapus", false);
-                }
-            }
-            
-            // Fungsi untuk menampilkan pesan
-            function showMessage(text, isWarning) {
-                messageDiv.textContent = text;
-                messageDiv.className = isWarning ? 'warning' : 'success';
-                
-                // Hapus pesan setelah 3 detik
-                setTimeout(() => {
-                    if (messageDiv.textContent === text) {
-                        messageDiv.textContent = '';
-                        messageDiv.className = '';
-                    }
-                }, 3000);
-            }
-            
-            // Fungsi untuk render tabel
-            function renderTable() {
-                if (promoData.length === 0) {
-                    tableBody.innerHTML = '';
-                    emptyTable.style.display = 'block';
-                    return;
-                }
-                
-                emptyTable.style.display = 'none';
-                tableBody.innerHTML = promoData.map((item, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.date}</td>
-                        <td>${item.time}</td>
-                        <td>${item.code}</td>
-                        <td>
-                            <button onclick="deleteItem(${item.id})" class="action-btn btn-danger">Hapus</button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-            
-            // Fungsi untuk menyimpan data ke local storage
-            function saveData() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(promoData));
-            }
-            
-            // Fungsi untuk memuat data dari local storage
-            function loadData() {
-                const savedData = localStorage.getItem(STORAGE_KEY);
-                if (savedData) {
-                    promoData = JSON.parse(savedData);
-                    renderTable();
-                }
-            }
-            
-            // Expose deleteItem to global scope for inline event handlers
-            window.deleteItem = deleteItem;
-            
-            // Periksa apakah perangkat mobile
-            function isMobile() {
-                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            }
-            
-            // Optimasi untuk perangkat mobile
-            if (isMobile()) {
-                // Tambahkan kelas mobile ke body
-                document.body.classList.add('mobile');
-                
-                // Fokus otomatis ke input manual saat halaman dimuat
-                manualInput.focus();
-            }
+        }
+        
+        // Test akses kamera
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
         });
+        
+        // Hentikan stream setelah test
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+        
+    } catch (error) {
+        console.error('Camera error:', error);
+        handleCameraError(error);
+        return false;
+    }
+}
+
+// Inisialisasi Quagga Scanner
+function initQuaggaScanner() {
+    return new Promise((resolve, reject) => {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: scannerVideo,
+                constraints: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: "environment",
+                    aspectRatio: { ideal: 4/3 }
+                },
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader", 
+                    "code_39_reader",
+                    "code_39_vin_reader",
+                    "codabar_reader",
+                    "upc_reader",
+                    "upc_e_reader"
+                ]
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            locate: true,
+            numOfWorkers: navigator.hardwareConcurrency || 2
+        }, (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            Quagga.start();
+            Quagga.onDetected(onBarcodeDetected);
+            resolve();
+        });
+    });
+}
+
+// Callback ketika barcode terdeteksi
+function onBarcodeDetected(result) {
+    if (scannerActive && result?.codeResult?.code) {
+        processPromoCode(result.codeResult.code);
+    }
+}
+
+// Proses kode promo
+function processPromoCode(code) {
+    // Validasi panjang kode
+    if (code.length !== 10) {
+        showMessage(`⚠️ Kode harus 10 karakter`+${code.length} terdeteksi}, true);
+        return;
+    }
+    
+    // Cek duplikat
+    if (promoData.some(item => item.code === code)) {
+        showMessage(`⚠️ Kode`+${code}+`sudah ada`, true);
+        return;
+    }
+    
+    // Tambahkan ke data
+    const now = new Date();
+    const newItem = {
+        id: Date.now(),
+        date: now.toLocaleDateString('id-ID'),
+        time: now.toLocaleTimeString('id-ID'),
+        code: code,
+        timestamp: now.getTime()
+    };
+    
+    promoData.unshift(newItem);
+    saveData();
+    renderTable();
+    showMessage(`✅ ${code} berhasil ditambahkan`, false);
+    
+    // Feedback haptic untuk mobile
+    if ('vibrate' in navigator) {
+        navigator.vibrate(100);
+    }
+}
+
+// Fungsi untuk input manual
+function processManualInput() {
+    const code = manualInput.value.trim();
+    if (code) {
+        processPromoCode(code);
+        manualInput.value = '';
+        manualInput.focus();
+    }
+}
+
+// Fungsi untuk menghapus data
+function deleteItem(id) {
+    if (confirm('Hapus data ini?')) {
+        promoData = promoData.filter(item => item.id !== id);
+        saveData();
+        renderTable();
+        showMessage("Data dihapus", false);
+    }
+}
+
+// Fungsi untuk menghapus semua data
+function clearAllData() {
+    if (promoData.length > 0 && confirm('Hapus semua data?')) {
+        promoData = [];
+        saveData();
+        renderTable();
+        showMessage("Semua data dihapus", false);
+    }
+}
+
+// Fungsi untuk render tabel
+function renderTable() {
+    if (promoData.length === 0) {
+        tableBody.innerHTML = '';
+        emptyTable.style.display = 'block';
+        return;
+    }
+    
+    emptyTable.style.display = 'none';
+    tableBody.innerHTML = promoData.map((item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${item.date}</td>
+            <td>${item.time}</td>
+            <td>${item.code}</td>
+            <td>
+                <button onclick="deleteItem(${item.id})" class="action-btn btn-danger">Hapus</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Fungsi untuk menyimpan/load data
+function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(promoData));
+}
+
+function loadData() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+        promoData = JSON.parse(savedData);
+        renderTable();
+    }
+}
+
+// Fungsi untuk menangani error kamera
+function handleCameraError(error) {
+    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        showPermissionGuide();
+    } else if (error.name === 'NotFoundError') {
+        showMessage("Kamera tidak ditemukan", true);
+    } else if (error.name === 'OverconstrainedError') {
+        showMessage("Kamera tidak memenuhi persyaratan", true);
+    } else {
+        showMessage("Gagal mengakses kamera: " + error.message, true);
+    }
+}
+
+// Fungsi untuk menangani error scanner
+function handleScannerError(error) {
+    if (error.message.includes('initialization')) {
+        showMessage("Gagal memulai scanner", true);
+    } else {
+        showMessage("Error scanner: " + error.message, true);
+    }
+}
+
+// Fungsi untuk UI helpers
+function toggleScannerUI(isActive) {
+    startButton.disabled = isActive;
+    stopButton.disabled = !isActive;
+}
+
+function showLoading(show) {
+    loadingIndicator.style.display = show ? 'block' : 'none';
+}
+
+function showMessage(text, isWarning) {
+    messageDiv.textContent = text;
+    messageDiv.className = isWarning ? 'warning' : 'success';
+    setTimeout(() => {
+        if (messageDiv.textContent === text) {
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+        }
+    }, 3000);
+}
+
+function showPermissionGuide() {
+    permissionGuide.style.display = 'block';
+    permissionMessage.style.display = 'none';
+}
+
+function hidePermissionGuide() {
+    permissionGuide.style.display = 'none';
+}
+
+async function retryCameraAccess() {
+    hidePermissionGuide();
+    await startScanner();
+}
+
+// Cek dukungan kamera
+function checkCameraSupport() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        showMessage("Browser tidak mendukung kamera", true);
+        startButton.disabled = true;
+    }
+}
+
+// Optimasi untuk mobile
+function setupMobileOptimizations() {
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.body.classList.add('mobile');
+        manualInput.focus();
+    }
+}
+
+// Expose fungsi global untuk inline event handlers
+window.deleteItem = deleteItem;
     </script>
 </body>
 </html>
