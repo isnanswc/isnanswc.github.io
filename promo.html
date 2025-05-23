@@ -1,157 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scan Kode Promo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-    }
-    video {
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-    .success {
-      color: green;
-      font-weight: bold;
-    }
-    #scanner-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Kode Promo</title>
+    <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #scanner {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #manualInput {
+            padding: 10px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .warning {
+            color: #ff0000;
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-
-<h1>Scanner Kode Promo</h1>
-
-<div id="scanner-container">
-  <video id="preview"></video>
-  <p id="status" class="error"></p>
-</div>
-
-<table id="promoTable">
-  <thead>
-    <tr>
-      <th>Tanggal Scan</th>
-      <th>Waktu Scan</th>
-      <th>Kode Promo</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<!-- Load QuaggaJS dari CDN -->
-<script src="https://unpkg.com/ @ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
-<script>
-  const statusEl = document.getElementById("status");
-  const tableBody = document.querySelector("#promoTable tbody");
-
-  // Simpan daftar kode promo yang telah tercatat
-  const promoList = [];
-
-  function formatDate(date) {
-    return date.toLocaleDateString('id-ID');
-  }
-
-  function formatTime(date) {
-    return date.toLocaleTimeString('id-ID');
-  }
-
-  function isDuplicate(code) {
-    return promoList.includes(code);
-  }
-
-  function isValidCode(code) {
-    return code.length === 10;
-  }
-
-  function addPromoToTable(code) {
-    const now = new Date();
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${formatDate(now)}</td>
-      <td>${formatTime(now)}</td>
-      <td>${code}</td>
-    `;
-    tableBody.appendChild(row);
-    promoList.push(code);
-  }
-
-  // Inisialisasi scanner
-  async function startScanner() {
-    const video = document.getElementById("preview");
-
-    Quagga.init({
-      inputStream: {
-        type: "LiveStream",
-        target: video,
-        constraints: {
-          facingMode: "environment"
-        },
-      },
-      decoder: {
-        readers: ["code_128_reader", "ean_reader", "upc_reader", "qr_code_reader"]
-      }
-    }, function(err) {
-      if (err) {
-        console.error(err);
-        statusEl.textContent = "Gagal mengakses kamera.";
-        return;
-      }
-      Quagga.start();
-    });
-
-    Quagga.onDetected(data => {
-      const code = data.codeResult.code;
-
-      statusEl.textContent = ""; // Reset status
-
-      if (!isValidCode(code)) {
-        statusEl.textContent = "Kode promo harus terdiri dari 10 karakter!";
-        statusEl.className = "error";
-        return;
-      }
-
-      if (isDuplicate(code)) {
-        statusEl.textContent = "Kode promo ini sudah pernah discan!";
-        statusEl.className = "error";
-        return;
-      }
-
-      statusEl.textContent = "Kode promo valid dan berhasil ditambahkan.";
-      statusEl.className = "success";
-
-      addPromoToTable(code);
-    });
-  }
-
-  window.onload = () => {
-    startScanner();
-  };
-</script>
-
+    <h1>Scanner Kode Promo</h1>
+    
+    <div class="controls">
+        <button id="startButton">Mulai Scan</button>
+        <button id="stopButton" disabled>Stop Scan</button>
+        <input type="text" id="manualInput" placeholder="Masukkan kode manual">
+        <button id="manualSubmit">Submit</button>
+    </div>
+    
+    <div class="scanner-container">
+        <video id="scanner"></video>
+    </div>
+    
+    <div id="message"></div>
+    
+    <table id="promoTable">
+        <thead>
+            <tr>
+                <th>Tanggal Scan</th>
+                <th>Waktu Scan</th>
+                <th>Kode Promo</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data akan ditambahkan di sini -->
+        </tbody>
+    </table>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const manualSubmit = document.getElementById('manualSubmit');
+            const manualInput = document.getElementById('manualInput');
+            const messageDiv = document.getElementById('message');
+            const tableBody = document.getElementById('tableBody');
+            
+            let scannerActive = false;
+            let scannedCodes = new Set();
+            
+            // Fungsi untuk memulai scanner
+            startButton.addEventListener('click', function() {
+                Quagga.init({
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        target: document.querySelector('#scanner'),
+                        constraints: {
+                            width: 480,
+                            height: 320,
+                            facingMode: "environment"
+                        },
+                    },
+                    decoder: {
+                        readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader"]
+                    },
+                }, function(err) {
+                    if (err) {
+                        console.error(err);
+                        showMessage("Gagal menginisialisasi scanner: " + err, true);
+                        return;
+                    }
+                    console.log("Initialization finished. Ready to start");
+                    Quagga.start();
+                    scannerActive = true;
+                    startButton.disabled = true;
+                    stopButton.disabled = false;
+                    showMessage("Scanner aktif. Arahkan kamera ke kode promo.", false);
+                });
+                
+                Quagga.onDetected(function(result) {
+                    if (scannerActive) {
+                        const code = result.codeResult.code;
+                        processPromoCode(code);
+                    }
+                });
+            });
+            
+            // Fungsi untuk menghentikan scanner
+            stopButton.addEventListener('click', function() {
+                if (scannerActive) {
+                    Quagga.stop();
+                    scannerActive = false;
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                    showMessage("Scanner dihentikan.", false);
+                }
+            });
+            
+            // Fungsi untuk input manual
+            manualSubmit.addEventListener('click', function() {
+                const code = manualInput.value.trim();
+                if (code) {
+                    processPromoCode(code);
+                    manualInput.value = '';
+                }
+            });
+            
+            // Fungsi untuk memproses kode promo
+            function processPromoCode(code) {
+                // Validasi panjang kode
+                if (code.length !== 10) {
+                    showMessage(`Warning: Kode promo harus 10 karakter (${code.length} karakter terdeteksi)`, true);
+                    return;
+                }
+                
+                // Validasi duplikat
+                if (scannedCodes.has(code)) {
+                    showMessage(`Warning: Kode promo ${code} sudah pernah di-scan sebelumnya`, true);
+                    return;
+                }
+                
+                // Tambahkan ke Set untuk menandai sudah di-scan
+                scannedCodes.add(code);
+                
+                // Dapatkan tanggal dan waktu sekarang
+                const now = new Date();
+                const dateStr = now.toLocaleDateString();
+                const timeStr = now.toLocaleTimeString();
+                
+                // Tambahkan ke tabel
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${timeStr}</td>
+                    <td>${code}</td>
+                `;
+                tableBody.appendChild(newRow);
+                
+                showMessage(`Kode promo ${code} berhasil ditambahkan`, false);
+            }
+            
+            // Fungsi untuk menampilkan pesan
+            function showMessage(text, isWarning) {
+                messageDiv.textContent = text;
+                messageDiv.className = isWarning ? 'warning' : 'success';
+                
+                // Hapus pesan setelah 3 detik
+                setTimeout(() => {
+                    if (messageDiv.textContent === text) {
+                        messageDiv.textContent = '';
+                        messageDiv.className = '';
+                    }
+                }, 3000);
+            }
+        });
+    </script>
 </body>
 </html>
