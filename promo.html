@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,12 +7,13 @@
     <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
     <style>
         :root {
-            --primary-color: #4CAF50;
-            --danger-color: #f44336;
-            --warning-color: #ff9800;
-            --border-color: #ddd;
-            --light-bg: #f9f9f9;
-            --header-bg: #f2f2f2;
+            --primary: #4CAF50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --dark: #333;
+            --light: #f5f5f5;
+            --white: #fff;
+            --gray: #ddd;
         }
         
         * {
@@ -21,35 +22,32 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 15px;
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.5;
             touch-action: manipulation;
         }
         
         .container {
             max-width: 100%;
             margin: 0 auto;
-            background-color: white;
+            background-color: var(--white);
             padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         h1 {
             text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 20px;
+            color: var(--primary);
+            margin: 0 0 20px;
             font-size: 1.5rem;
         }
         
         .scanner-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
             margin-bottom: 20px;
         }
         
@@ -57,11 +55,11 @@
             position: relative;
             width: 100%;
             height: 0;
-            padding-bottom: 75%; /* 4:3 Aspect Ratio lebih cocok untuk mobile */
-            border: 2px solid var(--border-color);
+            padding-bottom: 75%;
+            background-color: #000;
             border-radius: 8px;
             overflow: hidden;
-            background-color: #000;
+            margin-bottom: 15px;
         }
         
         #scanner {
@@ -73,92 +71,123 @@
             object-fit: cover;
         }
         
+        .loading, .permission-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--white);
+            font-weight: bold;
+            background-color: rgba(0,0,0,0.7);
+        }
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
         }
         
         button {
-            padding: 10px 12px;
+            padding: 10px 15px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
+            border-radius: 5px;
+            font-size: 1rem;
             font-weight: 500;
-            transition: all 0.2s ease;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 120px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            min-height: 40px;
+            justify-content: center;
+            gap: 8px;
         }
         
         .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+            background-color: var(--primary);
+            color: var(--white);
         }
         
         .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        button:active {
-            transform: scale(0.98);
+            background-color: var(--danger);
+            color: var(--white);
         }
         
         button:disabled {
-            background-color: #cccccc;
+            background-color: #aaa;
             cursor: not-allowed;
-            transform: none;
         }
         
         .input-group {
             display: flex;
-            flex: 1;
-            min-width: 100%;
+            width: 100%;
         }
         
         #manualInput {
-            padding: 10px;
             flex: 1;
-            border: 1px solid var(--border-color);
-            border-radius: 4px 0 0 4px;
-            font-size: 0.9rem;
-            -webkit-appearance: none;
+            padding: 10px;
+            border: 1px solid var(--gray);
+            border-radius: 5px 0 0 5px;
+            font-size: 1rem;
         }
         
         #manualSubmit {
-            border-radius: 0 4px 4px 0;
+            border-radius: 0 5px 5px 0;
             min-width: 80px;
         }
         
         #message {
             padding: 10px;
             margin: 10px 0;
-            border-radius: 4px;
+            border-radius: 5px;
             text-align: center;
             font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .warning {
-            background-color: rgba(255, 152, 0, 0.2);
-            color: var(--warning-color);
-            border: 1px solid var(--warning-color);
         }
         
         .success {
-            background-color: rgba(76, 175, 80, 0.2);
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .error {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .permission-guide {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .permission-guide h3 {
+            margin-top: 0;
+            color: var(--warning);
+        }
+        
+        .permission-guide ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .permission-guide li {
+            margin-bottom: 8px;
         }
         
         .data-section {
@@ -174,29 +203,23 @@
         }
         
         th, td {
-            padding: 10px 12px;
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.85rem;
+            border-bottom: 1px solid var(--gray);
         }
         
         th {
-            background-color: var(--header-bg);
+            background-color: #f8f8f8;
             font-weight: 600;
         }
         
         tr:nth-child(even) {
-            background-color: var(--light-bg);
-        }
-        
-        tr:active {
-            background-color: rgba(76, 175, 80, 0.1);
+            background-color: #f9f9f9;
         }
         
         .action-btn {
-            padding: 6px 8px;
-            font-size: 0.8rem;
-            margin: 0 2px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
         }
         
         .empty-table {
@@ -204,32 +227,18 @@
             padding: 20px;
             color: #666;
             font-style: italic;
-            font-size: 0.9rem;
         }
         
-        /* Loading indicator */
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-weight: bold;
-            text-align: center;
-        }
-        
-        /* Camera permission message */
-        .permission-message {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            transform: translateY(-50%);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none;
+        @media (max-width: 480px) {
+            button {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -238,24 +247,23 @@
         <h1>📷 Scanner Kode Promo</h1>
         
         <div id="permissionGuide" class="permission-guide">
-            <h3>Izin Kamera Dibutuhkan</h3>
-            <p>Untuk menggunakan scanner, Anda perlu mengizinkan akses kamera:</p>
+            <h3>Izin Kamera Diperlukan</h3>
+            <p>Untuk menggunakan fitur scanner, Anda perlu mengizinkan akses kamera:</p>
             <ol>
-                <li>Klik ikon gembok/link di address bar browser</li>
-                <li>Pilih "Site settings" atau "Izin Situs"</li>
-                <li>Cari opsi "Kamera" dan pilih "Izinkan"</li>
-                <li>Refresh halaman ini setelah mengubah pengaturan</li>
+                <li>Ketuk ikon 🔒 di address bar browser</li>
+                <li>Pilih <strong>"Site settings"</strong> atau <strong>"Izin Situs"</strong></li>
+                <li>Cari opsi <strong>"Kamera"</strong> dan pilih <strong>"Izinkan"</strong></li>
+                <li>Tutup dan buka kembali aplikasi ini</li>
             </ol>
-            <button id="retryButton" class="retry-btn">Coba Lagi</button>
+            <button id="retryButton" class="btn-primary">Coba Lagi</button>
         </div>
-        
         
         <div class="scanner-section">
             <div class="scanner-container">
                 <video id="scanner" playsinline></video>
                 <div id="loading" class="loading">Memuat kamera...</div>
                 <div id="permissionMessage" class="permission-message">
-                    Izinkan akses kamera untuk menggunakan scanner. Jika permintaan tidak muncul, periksa pengaturan browser Anda.
+                    Harap izinkan akses kamera untuk menggunakan scanner
                 </div>
             </div>
             
@@ -290,350 +298,343 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Data akan ditambahkan di sini -->
+                    <!-- Data akan muncul di sini -->
                 </tbody>
             </table>
             <div id="emptyTable" class="empty-table">Belum ada data kode promo</div>
         </div>
     </div>
-    
+
     <script>
-      // Inisialisasi variabel global
-let scannerActive = false;
-let promoData = [];
-const STORAGE_KEY = 'promoCodeScannerData';
-
-// DOM Elements
-const startButton = document.getElementById('startButton');
-const stopButton = document.getElementById('stopButton');
-const manualSubmit = document.getElementById('manualSubmit');
-const manualInput = document.getElementById('manualInput');
-const clearAllBtn = document.getElementById('clearAllBtn');
-const messageDiv = document.getElementById('message');
-const tableBody = document.getElementById('tableBody');
-const emptyTable = document.getElementById('emptyTable');
-const loadingIndicator = document.getElementById('loading');
-const permissionMessage = document.getElementById('permissionMessage');
-const scannerVideo = document.getElementById('scanner');
-const permissionGuide = document.getElementById('permissionGuide');
-const retryButton = document.getElementById('retryButton');
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', initApp);
-startButton.addEventListener('click', startScanner);
-stopButton.addEventListener('click', stopScanner);
-manualSubmit.addEventListener('click', processManualInput);
-manualInput.addEventListener('keypress', (e) => e.key === 'Enter' && processManualInput());
-clearAllBtn.addEventListener('click', clearAllData);
-retryButton.addEventListener('click', retryCameraAccess);
-
-// Fungsi inisialisasi aplikasi
-function initApp() {
-    loadData();
-    checkCameraSupport();
-    setupMobileOptimizations();
-}
-
-// Fungsi untuk memulai scanner
-async function startScanner() {
-    try {
-        showLoading(true);
+        // Inisialisasi variabel
+        let scannerActive = false;
+        let promoData = [];
+        const STORAGE_KEY = 'promoCodeData';
         
-        // 1. Cek izin kamera
-        const hasPermission = await checkCameraPermission();
-        if (!hasPermission) return;
+        // Elemen DOM
+        const elements = {
+            startButton: document.getElementById('startButton'),
+            stopButton: document.getElementById('stopButton'),
+            manualSubmit: document.getElementById('manualSubmit'),
+            manualInput: document.getElementById('manualInput'),
+            clearAllBtn: document.getElementById('clearAllBtn'),
+            messageDiv: document.getElementById('message'),
+            tableBody: document.getElementById('tableBody'),
+            emptyTable: document.getElementById('emptyTable'),
+            loading: document.getElementById('loading'),
+            permissionMessage: document.getElementById('permissionMessage'),
+            scannerVideo: document.getElementById('scanner'),
+            permissionGuide: document.getElementById('permissionGuide'),
+            retryButton: document.getElementById('retryButton')
+        };
         
-        // 2. Inisialisasi scanner
-        await initQuaggaScanner();
-        
-        // 3. Update UI state
-        scannerActive = true;
-        toggleScannerUI(true);
-        showMessage("Scanner aktif. Arahkan kamera ke kode promo.", false);
-        
-    } catch (error) {
-        console.error('Scanner error:', error);
-        handleScannerError(error);
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Fungsi untuk menghentikan scanner
-function stopScanner() {
-    if (scannerActive) {
-        Quagga.stop();
-        scannerActive = false;
-        toggleScannerUI(false);
-        showMessage("Scanner dihentikan.", false);
-    }
-}
-
-// Fungsi untuk memeriksa izin kamera
-async function checkCameraPermission() {
-    try {
-        // Cek dukungan mediaDevices
-        if (!navigator.mediaDevices?.getUserMedia) {
-            throw new Error('Browser tidak mendukung akses kamera');
+        // Inisialisasi aplikasi
+        function initApp() {
+            loadData();
+            setupEventListeners();
+            checkCameraSupport();
+            
+            // Fokus ke input manual di perangkat mobile
+            if (isMobile()) {
+                elements.manualInput.focus();
+            }
         }
         
-        // Cek status izin (jika API Permissions tersedia)
-        if (navigator.permissions) {
-            const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-            if (permissionStatus.state === 'denied') {
-                showPermissionGuide();
+        // Setup event listeners
+        function setupEventListeners() {
+            elements.startButton.addEventListener('click', startScanner);
+            elements.stopButton.addEventListener('click', stopScanner);
+            elements.manualSubmit.addEventListener('click', processManualInput);
+            elements.manualInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') processManualInput();
+            });
+            elements.clearAllBtn.addEventListener('click', clearAllData);
+            elements.retryButton.addEventListener('click', retryCameraAccess);
+        }
+        
+        // Fungsi utama untuk memulai scanner
+        async function startScanner() {
+            try {
+                showLoading(true);
+                hideMessage();
+                
+                // 1. Cek dan minta izin kamera
+                const hasPermission = await requestCameraPermission();
+                if (!hasPermission) {
+                    showPermissionGuide();
+                    return;
+                }
+                
+                // 2. Inisialisasi scanner
+                await initQuagga();
+                
+                // 3. Update UI state
+                scannerActive = true;
+                updateScannerUI();
+                showMessage("Scanner aktif. Arahkan kamera ke kode promo.", 'success');
+                
+            } catch (error) {
+                console.error('Scanner error:', error);
+                handleError(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Meminta izin kamera
+        async function requestCameraPermission() {
+            try {
+                // Cek apakah mediaDevices tersedia
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Browser tidak mendukung akses kamera');
+                }
+                
+                // Coba akses kamera
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                // Hentikan stream setelah uji coba
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+                
+            } catch (error) {
+                console.error('Camera permission error:', error);
                 return false;
             }
         }
         
-        // Test akses kamera
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: {
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
-        });
+        // Inisialisasi Quagga Scanner
+        function initQuagga() {
+            return new Promise((resolve, reject) => {
+                Quagga.init({
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        target: elements.scannerVideo,
+                        constraints: {
+                            facingMode: "environment",
+                            aspectRatio: { ideal: 4/3 }
+                        },
+                    },
+                    decoder: {
+                        readers: [
+                            "code_128_reader",
+                            "ean_reader",
+                            "code_39_reader",
+                            "upc_reader"
+                        ]
+                    },
+                    locate: true,
+                    numOfWorkers: 2
+                }, (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    Quagga.start();
+                    Quagga.onDetected(onBarcodeDetected);
+                    resolve();
+                });
+            });
+        }
         
-        // Hentikan stream setelah test
-        stream.getTracks().forEach(track => track.stop());
-        return true;
+        // Callback ketika barcode terdeteksi
+        function onBarcodeDetected(result) {
+            if (scannerActive && result?.codeResult?.code) {
+                processPromoCode(result.codeResult.code);
+            }
+        }
         
-    } catch (error) {
-        console.error('Camera error:', error);
-        handleCameraError(error);
-        return false;
-    }
-}
-
-// Inisialisasi Quagga Scanner
-function initQuaggaScanner() {
-    return new Promise((resolve, reject) => {
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: scannerVideo,
-                constraints: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: "environment",
-                    aspectRatio: { ideal: 4/3 }
-                },
-            },
-            decoder: {
-                readers: [
-                    "code_128_reader",
-                    "ean_reader",
-                    "ean_8_reader", 
-                    "code_39_reader",
-                    "code_39_vin_reader",
-                    "codabar_reader",
-                    "upc_reader",
-                    "upc_e_reader"
-                ]
-            },
-            locator: {
-                patchSize: "medium",
-                halfSample: true
-            },
-            locate: true,
-            numOfWorkers: navigator.hardwareConcurrency || 2
-        }, (err) => {
-            if (err) {
-                reject(err);
+        // Proses kode promo
+        function processPromoCode(code) {
+            // Validasi panjang kode
+            if (code.length !== 10) {
+                showMessage(`Kode harus 10 karakter (${code.length} terdeteksi)`, 'warning');
                 return;
             }
             
-            Quagga.start();
-            Quagga.onDetected(onBarcodeDetected);
-            resolve();
-        });
-    });
-}
-
-// Callback ketika barcode terdeteksi
-function onBarcodeDetected(result) {
-    if (scannerActive && result?.codeResult?.code) {
-        processPromoCode(result.codeResult.code);
-    }
-}
-
-// Proses kode promo
-function processPromoCode(code) {
-    // Validasi panjang kode
-    if (code.length !== 10) {
-        showMessage(`⚠️ Kode harus 10 karakter`+${code.length} terdeteksi}, true);
-        return;
-    }
-    
-    // Cek duplikat
-    if (promoData.some(item => item.code === code)) {
-        showMessage(`⚠️ Kode`+${code}+`sudah ada`, true);
-        return;
-    }
-    
-    // Tambahkan ke data
-    const now = new Date();
-    const newItem = {
-        id: Date.now(),
-        date: now.toLocaleDateString('id-ID'),
-        time: now.toLocaleTimeString('id-ID'),
-        code: code,
-        timestamp: now.getTime()
-    };
-    
-    promoData.unshift(newItem);
-    saveData();
-    renderTable();
-    showMessage(`✅ ${code} berhasil ditambahkan`, false);
-    
-    // Feedback haptic untuk mobile
-    if ('vibrate' in navigator) {
-        navigator.vibrate(100);
-    }
-}
-
-// Fungsi untuk input manual
-function processManualInput() {
-    const code = manualInput.value.trim();
-    if (code) {
-        processPromoCode(code);
-        manualInput.value = '';
-        manualInput.focus();
-    }
-}
-
-// Fungsi untuk menghapus data
-function deleteItem(id) {
-    if (confirm('Hapus data ini?')) {
-        promoData = promoData.filter(item => item.id !== id);
-        saveData();
-        renderTable();
-        showMessage("Data dihapus", false);
-    }
-}
-
-// Fungsi untuk menghapus semua data
-function clearAllData() {
-    if (promoData.length > 0 && confirm('Hapus semua data?')) {
-        promoData = [];
-        saveData();
-        renderTable();
-        showMessage("Semua data dihapus", false);
-    }
-}
-
-// Fungsi untuk render tabel
-function renderTable() {
-    if (promoData.length === 0) {
-        tableBody.innerHTML = '';
-        emptyTable.style.display = 'block';
-        return;
-    }
-    
-    emptyTable.style.display = 'none';
-    tableBody.innerHTML = promoData.map((item, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${item.date}</td>
-            <td>${item.time}</td>
-            <td>${item.code}</td>
-            <td>
-                <button onclick="deleteItem(${item.id})" class="action-btn btn-danger">Hapus</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Fungsi untuk menyimpan/load data
-function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(promoData));
-}
-
-function loadData() {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-        promoData = JSON.parse(savedData);
-        renderTable();
-    }
-}
-
-// Fungsi untuk menangani error kamera
-function handleCameraError(error) {
-    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        showPermissionGuide();
-    } else if (error.name === 'NotFoundError') {
-        showMessage("Kamera tidak ditemukan", true);
-    } else if (error.name === 'OverconstrainedError') {
-        showMessage("Kamera tidak memenuhi persyaratan", true);
-    } else {
-        showMessage("Gagal mengakses kamera: " + error.message, true);
-    }
-}
-
-// Fungsi untuk menangani error scanner
-function handleScannerError(error) {
-    if (error.message.includes('initialization')) {
-        showMessage("Gagal memulai scanner", true);
-    } else {
-        showMessage("Error scanner: " + error.message, true);
-    }
-}
-
-// Fungsi untuk UI helpers
-function toggleScannerUI(isActive) {
-    startButton.disabled = isActive;
-    stopButton.disabled = !isActive;
-}
-
-function showLoading(show) {
-    loadingIndicator.style.display = show ? 'block' : 'none';
-}
-
-function showMessage(text, isWarning) {
-    messageDiv.textContent = text;
-    messageDiv.className = isWarning ? 'warning' : 'success';
-    setTimeout(() => {
-        if (messageDiv.textContent === text) {
-            messageDiv.textContent = '';
-            messageDiv.className = '';
+            // Cek duplikat
+            if (promoData.some(item => item.code === code)) {
+                showMessage(`Kode ${code} sudah ada`, 'warning');
+                return;
+            }
+            
+            // Tambahkan ke data
+            const now = new Date();
+            const newItem = {
+                id: Date.now(),
+                date: now.toLocaleDateString('id-ID'),
+                time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                code: code,
+                timestamp: now.getTime()
+            };
+            
+            promoData.unshift(newItem);
+            saveData();
+            renderTable();
+            showMessage(`Kode ${code} berhasil ditambahkan`, 'success');
+            
+            // Feedback haptic untuk mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(100);
+            }
         }
-    }, 3000);
-}
-
-function showPermissionGuide() {
-    permissionGuide.style.display = 'block';
-    permissionMessage.style.display = 'none';
-}
-
-function hidePermissionGuide() {
-    permissionGuide.style.display = 'none';
-}
-
-async function retryCameraAccess() {
-    hidePermissionGuide();
-    await startScanner();
-}
-
-// Cek dukungan kamera
-function checkCameraSupport() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-        showMessage("Browser tidak mendukung kamera", true);
-        startButton.disabled = true;
-    }
-}
-
-// Optimasi untuk mobile
-function setupMobileOptimizations() {
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        document.body.classList.add('mobile');
-        manualInput.focus();
-    }
-}
-
-// Expose fungsi global untuk inline event handlers
-window.deleteItem = deleteItem;
+        
+        // Fungsi untuk input manual
+        function processManualInput() {
+            const code = elements.manualInput.value.trim();
+            if (code) {
+                processPromoCode(code);
+                elements.manualInput.value = '';
+                elements.manualInput.focus();
+            }
+        }
+        
+        // Fungsi untuk menghentikan scanner
+        function stopScanner() {
+            if (scannerActive) {
+                Quagga.stop();
+                scannerActive = false;
+                updateScannerUI();
+                showMessage("Scanner dihentikan", 'success');
+            }
+        }
+        
+        // Fungsi untuk menghapus data
+        function deleteItem(id) {
+            if (confirm('Hapus data ini?')) {
+                promoData = promoData.filter(item => item.id !== id);
+                saveData();
+                renderTable();
+                showMessage("Data dihapus", 'success');
+            }
+        }
+        
+        // Fungsi untuk menghapus semua data
+        function clearAllData() {
+            if (promoData.length > 0 && confirm('Hapus semua data?')) {
+                promoData = [];
+                saveData();
+                renderTable();
+                showMessage("Semua data dihapus", 'success');
+            }
+        }
+        
+        // Fungsi untuk render tabel
+        function renderTable() {
+            if (promoData.length === 0) {
+                elements.tableBody.innerHTML = '';
+                elements.emptyTable.style.display = 'block';
+                return;
+            }
+            
+            elements.emptyTable.style.display = 'none';
+            elements.tableBody.innerHTML = promoData.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.date}</td>
+                    <td>${item.time}</td>
+                    <td>${item.code}</td>
+                    <td>
+                        <button onclick="deleteItem(${item.id})" class="action-btn btn-danger">Hapus</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Fungsi untuk menyimpan/load data
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(promoData));
+        }
+        
+        function loadData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                promoData = JSON.parse(savedData);
+                renderTable();
+            }
+        }
+        
+        // Fungsi untuk update UI scanner
+        function updateScannerUI() {
+            elements.startButton.disabled = scannerActive;
+            elements.stopButton.disabled = !scannerActive;
+        }
+        
+        // Fungsi untuk menampilkan/menyembunyikan loading
+        function showLoading(show) {
+            elements.loading.style.display = show ? 'flex' : 'none';
+            elements.permissionMessage.style.display = 'none';
+        }
+        
+        // Fungsi untuk menampilkan pesan
+        function showMessage(text, type) {
+            elements.messageDiv.textContent = text;
+            elements.messageDiv.className = type;
+            
+            setTimeout(() => {
+                if (elements.messageDiv.textContent === text) {
+                    hideMessage();
+                }
+            }, 3000);
+        }
+        
+        function hideMessage() {
+            elements.messageDiv.textContent = '';
+            elements.messageDiv.className = '';
+        }
+        
+        // Fungsi untuk menangani error
+        function handleError(error) {
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                showPermissionGuide();
+            } else if (error.name === 'NotFoundError') {
+                showMessage("Kamera tidak ditemukan", 'error');
+            } else {
+                showMessage("Error: " + error.message, 'error');
+            }
+        }
+        
+        // Fungsi untuk permission guide
+        function showPermissionGuide() {
+            elements.permissionGuide.style.display = 'block';
+            elements.permissionMessage.style.display = 'flex';
+        }
+        
+        function hidePermissionGuide() {
+            elements.permissionGuide.style.display = 'none';
+        }
+        
+        // Fungsi untuk retry camera access
+        async function retryCameraAccess() {
+            hidePermissionGuide();
+            await startScanner();
+        }
+        
+        // Cek dukungan kamera
+        function checkCameraSupport() {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                showMessage("Browser tidak mendukung kamera", 'error');
+                elements.startButton.disabled = true;
+            }
+        }
+        
+        // Cek apakah perangkat mobile
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // Expose fungsi global untuk inline event handlers
+        window.deleteItem = deleteItem;
+        
+        // Inisialisasi aplikasi saat DOM siap
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
