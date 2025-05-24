@@ -371,6 +371,11 @@
         left: 0;
         width: 100%;
       }
+
+        .label-preview-content {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
     }
 
      /* ===== RADIO GROUP STYLES ===== */
@@ -960,7 +965,7 @@ table td[style*="color: red"] {
   <script>
     // ===== CONSTANTS =====
     let currentPage = 1;
-const rowsPerPage = 14;
+const rowsPerPage = 12;
     const DATA_KEY = "labelData";
     const form = document.getElementById("labelForm");
     let currentEditIndex = -1;
