@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans&display=swap" rel="stylesheet">
    <link rel="icon" href="https://isnanswc.github.io/gambar/favicon.ico" type="image/x-icon">
-  <title>Manajemen Label - PT. Saptawarna Cemerlang</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+   <title>Manajemen Label - PT. Saptawarna Cemerlang</title>
   <style>
     /* ===== BASE STYLES ===== */
     * { 
@@ -20,6 +21,15 @@
       color: #333;
     }
     
+    body.no-scroll {
+    overflow: hidden; /* Ini adalah properti utama untuk mengunci scroll */
+    position: fixed; /* Memastikan body tidak bergerak saat scroll */
+    width: 100%; /* Mempertahankan lebar */
+    height: 100%; /* Mempertahankan tinggi */
+    top: 0; /* Penting untuk mengunci di posisi paling atas */
+    left: 0;
+}
+
     /* ===== LAYOUT STYLES ===== */
     .container {
       padding: 20px;
@@ -961,11 +971,11 @@ table td[style*="color: red"] {
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js "></script>
-
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script>
     // ===== CONSTANTS =====
     let currentPage = 1;
-const rowsPerPage = 12;
+const rowsPerPage = 50;
     const DATA_KEY = "labelData";
     const form = document.getElementById("labelForm");
     let currentEditIndex = -1;
@@ -1446,14 +1456,23 @@ function updateLocalStorageAndMonitor() {
       const selected = [...document.querySelectorAll(".row-check:checked")].map(cb => data[cb.dataset.index]);
       
       if (selected.length === 0) {
-        alert("Pilih setidaknya satu data untuk dipreview");
+        showToast("Pilih setidaknya satu data untuk dipreview", "warning");
         return;
       }
       
       const container = document.getElementById("printArea");
       container.innerHTML = selected.map(item => createLabelHTML(item)).join("");
       
-      document.getElementById("previewModal").style.display = "flex";
+      // --- Pastikan urutan ini: ---
+  // 1. Scroll body ke paling atas
+  window.scrollTo(0, 0);
+
+  // 2. Tambahkan kelas no-scroll untuk mengunci body
+  document.body.classList.add('no-scroll');
+
+  // 3. Tampilkan modal pratinjau (ini bisa sedikit di-delay jika perlu untuk efek visual)
+  document.getElementById('previewModal').style.display = 'flex';
+  // --------------------------
     }
     
     function createLabelHTML(item) {
@@ -1544,6 +1563,8 @@ ${item.mesin === 'SML' ? `
     
     function closePreview() {
       document.getElementById("previewModal").style.display = "none";
+      document.body.classList.remove('no-scroll'); // --- TAMBAHKAN KODE INI ---
+
     }
     
     // ===== EXPORT FUNCTIONS =====
@@ -1551,7 +1572,7 @@ ${item.mesin === 'SML' ? `
   const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
 
   if (data.length === 0) {
-    alert("Tidak ada data untuk diexport!");
+    showToast("Tidak ada data untuk diexport!","error");
     return;
   }
 
@@ -1708,10 +1729,49 @@ function confirmDeleteAll() {
     localStorage.removeItem(DATA_KEY);
     updateLocalStorageAndMonitor();
     hideDeleteAllModal();
-    alert("Semua data berhasil dihapus.");
+    showToast("Semua data berhasil dihapus.","success");
   } else {
-    alert("Password salah! Penghapusan dibatalkan.");
+    showToast("Password salah! Penghapusan dibatalkan.","error");
   }
+}
+
+// Fungsi untuk menampilkan Toast Notification
+function showToast(message, type = 'success') {
+  let backgroundColor;
+  let textColor = '#fff';
+
+  switch (type) {
+    case 'success':
+      backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)'; // Green
+      break;
+    case 'error':
+      backgroundColor = 'linear-gradient(to right, #d9534f, #f44336)'; // Red
+      break;
+    case 'info':
+      backgroundColor = 'linear-gradient(to right, #5bc0de, #2196F3)'; // Blue
+      break;
+    case 'warning':
+      backgroundColor = 'linear-gradient(to right, #f0ad4e, #FFC107)'; // Orange
+      break;
+    default:
+      backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)';
+  }
+
+  Toastify({
+    text: message,
+    duration: 3000, // Durasi notifikasi dalam milidetik (3 detik)
+    close: true, // Tampilkan tombol close
+    gravity: "top", // `top` or `bottom`
+    position: "right", // `left`, `center` or `right`
+    stopOnFocus: true, // Berhenti menghitung mundur durasi saat fokus di notifikasi
+    style: {
+      background: backgroundColor,
+      color: textColor,
+      borderRadius: "5px",
+      boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
+    },
+    onClick: function(){} // Callback setelah notifikasi diklik
+  }).showToast();
 }
   </script>
 <!-- Modal Hapus Semua dengan Password -->
