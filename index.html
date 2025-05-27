@@ -341,7 +341,11 @@
       }
       
       .nav-toggle {
-        display: inline;
+        display: none;
+        font-size: 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
       }
       
       .nav-links {
@@ -675,7 +679,6 @@ table td[style*="color: red"] {
   </style>
 </head>
 <body>
-  <!-- ===== NAVIGATION ===== -->
   <nav>
   <div class="nav-left">
     <h2>Manajemen Label</h2>
@@ -699,15 +702,13 @@ table td[style*="color: red"] {
         Hapus terpilih
       </button>
     </div>
-<!-- Tombol Hapus Semua -->
-  <button class="btn btn-danger" onclick="showDeleteAllModal()">Hapus Semua</button>
+<button class="btn btn-danger" onclick="showDeleteAllModal()">Hapus Semua</button>
     <button class="btn btn-warning" onclick="exportToExcel()">
       <svg class="button-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
       Export Excel
     </button>
   </div>
 
-  <!-- Search & Storage Info - Responsive -->
   <div class="search-storage-wrapper">
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Cari data..." oninput="searchData()" />
@@ -722,15 +723,12 @@ table td[style*="color: red"] {
   </div>
 </nav>
 
-  <!-- Top Pagination -->
-<div id="topPagination" class="text-center mt-10">
+  <div id="topPagination" class="text-center mt-10">
   <button class="btn btn-secondary" onclick="prevPage()">Previous</button>
   <span id="topPageNumbers"></span>
   <button class="btn btn-secondary" onclick="nextPage()">Next</button>
 </div>
 
-  <!-- ===== MAIN CONTENT ===== -->
-   
   <div class="container">
     <table>
       <thead>
@@ -752,23 +750,18 @@ table td[style*="color: red"] {
     </table>
     
   </div>
-<!-- Bottom Pagination -->
 <div id="bottomPagination" class="text-center mt-10">
   <button class="btn btn-secondary" onclick="prevPage()">Previous</button>
   <span id="bottomPageNumbers"></span>
   <button class="btn btn-secondary" onclick="nextPage()">Next</button>
 </div>
-  <!-- ===== ADD/EDIT MODAL ===== -->
-  <!-- ===== ADD/EDIT MODAL ===== -->
-<div class="modal" id="modal">
+  <div class="modal" id="modal">
   <div class="modal-content">
     <form id="labelForm">
       <input type="hidden" name="index" id="formIndex" />
 
-      <!-- Container Utama -->
       <div class="form-container">
 
-        <!------------------ SECTION 1: Info Dasar ------------------->
         <div class="form-section">
           <div class="form-section-title">Info Dasar</div>
 
@@ -813,7 +806,6 @@ table td[style*="color: red"] {
 
         </div>
 
-        <!------------------ SECTION 2: Dimensi & Hasil ------------------->
         <div class="form-section">
           <div class="form-section-title">Dimensi & Hasil</div>
 
@@ -854,7 +846,6 @@ table td[style*="color: red"] {
 
         </div>
 
-        <!------------------ SECTION 3: Otomatis & Status ------------------->
         <div class="form-section">
           <div class="form-section-title">Otomatis & Status</div>
 
@@ -887,7 +878,6 @@ table td[style*="color: red"] {
           </div>
         </div>
 
-        <!------------------ SECTION 4: No Lot, Keterangan ------------------->
         <div class="form-section">
           <div class="form-section-title">No Lot & Keterangan</div>
 
@@ -913,7 +903,6 @@ table td[style*="color: red"] {
 
         </div>
 
-        <!------------------ SECTION 5: Sub Kode Pack ------------------->
         <div class="form-section">
           <div class="form-section-title">Sub Kode Pack</div>
 
@@ -938,8 +927,7 @@ table td[style*="color: red"] {
             <input type="hidden" name="subKode" id="subKodeValue" />
           </div>
         </div>
-         <!------------------ SECTION 6: Note ------------------->
-        <div class="form-section">
+         <div class="form-section">
           <div class="form-row">
             <span for="kode">OD STANDARD VMCPP = OD2.4</span>
           </div>
@@ -950,7 +938,6 @@ table td[style*="color: red"] {
 
       </div>
 
-      <!-- Tombol Aksi -->
       <div class="form-buttons">
         <button type="submit" class="btn btn-primary">Simpan</button>
         <button type="button" onclick="closeModal()" class="btn btn-danger">Batal</button>
@@ -959,7 +946,6 @@ table td[style*="color: red"] {
   </div>
 </div>
 
-  <!-- ===== PREVIEW MODAL ===== -->
   <div class="preview-modal modal" id="previewModal">
     <div class="preview-content">
       <div id="printArea"></div>
@@ -1008,6 +994,7 @@ const rowsPerPage = 50;
       });
 
       document.getElementById('tanggalManual').addEventListener('change', function() {
+        // Ketika tanggalManual diubah, panggil updateAutoFields untuk memperbarui tanggal otomatis lainnya.
         updateAutoFields();
       });
     }
@@ -1045,22 +1032,22 @@ const rowsPerPage = 50;
     
     // ===== CALCULATION FUNCTIONS =====
     function generateKodePack(tanggal, mesin) {
-  const d = new Date(tanggal);
-  const bulan = String(d.getMonth() + 1).padStart(2, '0');
-  const tahun = String(d.getFullYear()).slice(-2);
-  
-  // Add prefix based on machine type
-  let prefix = '';
-  if (mesin === 'REWIND') prefix = 'R';
-  if (mesin === 'SML') prefix = 'S';
-  
-  return `${prefix}3B${bulan}${tahun}`;
-}
+      const d = new Date(tanggal);
+      const bulan = String(d.getMonth() + 1).padStart(2, '0');
+      const tahun = String(d.getFullYear()).slice(-2);
+      
+      // Add prefix based on machine type
+      let prefix = '';
+      if (mesin === 'REWIND') prefix = 'R';
+      if (mesin === 'SML') prefix = 'S';
+      
+      return `${prefix}3B${bulan}${tahun}`;
+    }
     
     function calculateNetto(thick, width, length, jenis) {
-  const faktor = ["VMPET", "PET"].includes(jenis) ? 1.4 : 0.91;
-  return ((thick * width * length * faktor) / 1000000).toFixed(2);
-}
+      const faktor = ["VMPET", "PET"].includes(jenis) ? 1.4 : 0.91;
+      return ((thick * width * length * faktor) / 1000000).toFixed(2);
+    }
     
     function calculatePaperCore(width) {
       return (0.00537 * parseFloat(width || 0) + 0.852).toFixed(2);
@@ -1079,6 +1066,7 @@ const rowsPerPage = 50;
       // Set value based on selection
       switch(selectedType) {
         case 'numeric':
+          // Pastikan selalu 4 digit, tambahkan leading zeros jika perlu
           subKodeValue.value = numericInput.value.padStart(4, '0') || '0000';
           break;
         case 'reject':
@@ -1116,7 +1104,6 @@ const rowsPerPage = 50;
         odInput.required = true;
         odInput.value = "OD2.4";
       } else {
-        
         odInput.required = false;
         odInput.value = "";
       }
@@ -1125,23 +1112,29 @@ const rowsPerPage = 50;
     // ===== AUTO FIELD UPDATES =====
     function updateAutoFields() {
       const tglManual = form.tanggalManual.value;
-      const tglShift = calculateShiftDate();
+      const tglShift = calculateShiftDate(); // Dapatkan tanggal shift yang dihitung
       const thick = parseFloat(form.thickness.value) || 0;
       const width = parseFloat(form.width.value) || 0;
       const length = parseFloat(form.length.value) || 0;
       const mesin = form.mesin.value;
       
+      // Tentukan tanggal yang akan digunakan untuk perhitungan dan tampilan
+      // Jika tanggalManual diisi, gunakan tanggalManual, jika tidak, gunakan tglShift
+      const finalDate = tglManual || tglShift;
+
       // Update sub kode first
       handleSubKode();
       
-       // Set tanggal shift otomatis
-      document.getElementById('tanggalShift').value = tglManual || tglShift;
+      // Set tanggal shift di form (field 'tanggalShift' auto-input)
+      document.getElementById('tanggalShift').value = tglShift; 
        
-      // Calculate and update other fields
-       form.kodePack.value = generateKodePack(tglManual || tglShift, mesin);
+      // Set tanggal yang akan ditampilkan di form (field 'tanggal' auto-input)
+      form.tanggal.value = finalDate;
+
+      // Gunakan finalDate untuk generateKodePack
+      form.kodePack.value = generateKodePack(finalDate, mesin);
       form.paperCore.value = calculatePaperCore(width);
       form.netto.value = calculateNetto(thick, width, length, form.jenis.value);
-      form.tanggal.value = tglManual || tglShift;
     }
     
     // ===== MODAL FUNCTIONS =====
@@ -1152,8 +1145,6 @@ const rowsPerPage = 50;
       currentEditIndex = index;
       document.getElementById("modal").style.display = "flex";
       
-      // Set tanggal shift otomatis
-      updateAutoFields();
       // Initialize type and sub kode handling
       handleTypeChange();
       handleSubKode();
@@ -1164,10 +1155,10 @@ const rowsPerPage = 50;
         
         // Populate form fields
         for (let key in item) {
-      if (form[key] && key !== 'tanggalManual') { // Jangan set tanggalManual dari data lama
-        form[key].value = item[key];
-      }
-    }
+          if (form[key]) {
+            form[key].value = item[key];
+          }
+        }
         
         // Handle special cases for sub kode
         if (item.subKode === 'REJECT') {
@@ -1176,12 +1167,18 @@ const rowsPerPage = 50;
           document.querySelector('input[name="subKodeType"][value="hold"]').checked = true;
         } else {
           document.querySelector('input[name="subKodeType"][value="numeric"]').checked = true;
-          document.getElementById('subKodeNumeric').value = item.subKode.replace(/^0+/, '');
+          // Pastikan subKodeNumeric diisi dengan angka tanpa leading zero jika itu string '0001' -> '1'
+          document.getElementById('subKodeNumeric').value = item.subKode ? parseInt(item.subKode, 10).toString() : '';
         }
-        
-        handleSubKode();
+
+        // Jika item.tanggalManual ada, set tanggalManual
+        if (item.tanggalManual) {
+          form.tanggalManual.value = item.tanggalManual;
+        } else {
+          form.tanggalManual.value = ''; // Pastikan kosong jika tidak ada
+        }
       }
-      
+      // Panggil updateAutoFields setelah form diisi (untuk edit) atau direset (untuk tambah)
       updateAutoFields();
     }
     
@@ -1408,7 +1405,7 @@ function updateLocalStorageAndMonitor() {
 
      // Gunakan tanggal shift saat ini untuk data duplikat
   duplicatedItem.tanggal = calculateShiftDate();
-  // Hapus tanggalManual jika ada
+  // Hapus tanggalManual jika ada di duplikat, agar tidak menimpa tanggal shift
   if (duplicatedItem.tanggalManual) {
     delete duplicatedItem.tanggalManual;
   }
@@ -1426,14 +1423,23 @@ function updateLocalStorageAndMonitor() {
       const formData = new FormData(form);
       const newData = {};
       
-       formData.forEach((val, key) => {
-    if (key !== 'tanggalManual') { // Jangan simpan tanggalManual ke storage
-      newData[key] = val;
-    }
-  });
+      // Ambil semua data dari form kecuali tanggalManual
+      formData.forEach((val, key) => {
+        if (key !== 'tanggalManual') {
+          newData[key] = val;
+        }
+      });
 
-      // Gunakan tanggal manual jika ada, jika tidak gunakan tanggal shift
-      newData.tanggal = newData.tanggalManual || newData.tanggal;
+      // Secara eksplisit tambahkan tanggalManual jika ada nilainya
+      if (form.tanggalManual.value) {
+        newData.tanggalManual = form.tanggalManual.value;
+      } else {
+        // Jika tanggalManual kosong, pastikan tidak ada properti ini
+        delete newData.tanggalManual; 
+      }
+
+      // Tetapkan tanggal utama data: jika tanggalManual ada, gunakan itu, jika tidak, gunakan tanggalShift
+      newData.tanggal = form.tanggalManual.value || form.tanggalShift.value;
   
       
       if (currentEditIndex >= 0 && currentEditIndex < data.length) {
@@ -1444,10 +1450,10 @@ function updateLocalStorageAndMonitor() {
       
       localStorage.setItem(DATA_KEY, JSON.stringify(data));
       closeModal();
-      updateLocalStorageAndMonitor();;
+      updateLocalStorageAndMonitor();
         // Reset form termasuk tanggal manual
-  form.reset();
-  form.tanggalManual.value = '';
+      form.reset();
+      form.tanggalManual.value = ''; // Pastikan tanggalManual direset
     }
     
     // ===== PREVIEW FUNCTIONS =====
@@ -1464,102 +1470,102 @@ function updateLocalStorageAndMonitor() {
       container.innerHTML = selected.map(item => createLabelHTML(item)).join("");
       
       // --- Pastikan urutan ini: ---
-  // 1. Scroll body ke paling atas
-  window.scrollTo(0, 0);
+      // 1. Scroll body ke paling atas
+      window.scrollTo(0, 0);
 
-  // 2. Tambahkan kelas no-scroll untuk mengunci body
-  document.body.classList.add('no-scroll');
+      // 2. Tambahkan kelas no-scroll untuk mengunci body
+      document.body.classList.add('no-scroll');
 
-  // 3. Tampilkan modal pratinjau (ini bisa sedikit di-delay jika perlu untuk efek visual)
-  document.getElementById('previewModal').style.display = 'flex';
-  // --------------------------
+      // 3. Tampilkan modal pratinjau (ini bisa sedikit di-delay jika perlu untuk efek visual)
+      document.getElementById('previewModal').style.display = 'flex';
+      // --------------------------
     }
     
     function createLabelHTML(item) {
-  let machineClass;
-  switch(item.mesin) {
-    case 'REWIND':
-      machineClass = 'machine-rewind';
-      break;
-    case 'SML':
-      machineClass = 'machine-sml';
-      break;
-    default:
-      machineClass = 'machine-slitting';
-  }
+      let machineClass;
+      switch(item.mesin) {
+        case 'REWIND':
+          machineClass = 'machine-rewind';
+          break;
+        case 'SML':
+          machineClass = 'machine-sml';
+          break;
+        default:
+          machineClass = 'machine-slitting';
+      }
 
-  return `
-    <div class="label-preview-content">
-      
-      <table class="label-table" style="margin:0; padding:0; font-size:12px;">
-        <tr>          
-${item.mesin === 'SML' ? `
-    <td class="machine-slitting"> IN LINE SML </td>
-` : '<td></td>'}
-          <td colspan="4" style="padding:2px; text-align:center;">
-            <text style="font-family:'Impact', sans-serif; font-size:24px; color:#d61c1c;">PT. SAPTAWARNA CEMERLANG</text><br>
-            <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;"></text>
-          </td>
-          <td style="padding:2px; font-size:12px; font-weight:bold;">${formatTanggalIndonesia(item.tanggal)}</td>
-          <td style="width:60px; padding:2px; text-align:center;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data= ${encodeURIComponent(
-              `${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}|${item.lot}${item.turunan}|${item.kodePack}${item.subKode}`
-            )}" style="width:50px; height:auto;" />
-          </td>
-        </tr>
-        <tr>
-          <td colspan="5" style="padding:2px; font-weight:bold; font-size:13px;">${item.jenis}(${item.type}) ${item.kode}</td>
-          <td style="padding:2px; font-weight:bold; font-size:13px;">${item.spk}</td>
-          <td rowspan="7" style="text-align:center; vertical-align:middle; padding:2px;">
-            <img src="https://isnanswc.github.io/gambar/${getMonthName(item.tanggal).toLowerCase()}.png" alt="${getMonthName(item.tanggal)}" style="max-height:150px; max-width: 50px;" />
-        </tr>
-        <tr>
-          <td style="padding:2px; font-size:11px;"><strong>Thick</strong></td>
-          <td style="padding:2px; font-size:12px;"><strong>${item.thickness}</strong></td>
-          <td style="padding:2px; font-size:11px;"><strong>Netto</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.netto}</td>
-          <td style="padding:2px; font-size:11px;"><strong>Treatment</strong></td>
-          <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.treatment}</td>
-           
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:2px; font-size:11px;"><strong>Width</strong></td>
-          <td style="padding:2px; font-size:12px;"><strong>${item.width}</strong></td>
-          <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.paperCore}</td>
-          <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
-          <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.od}</td>
-        </tr>
-        <tr>
-          <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
-          <td style="padding:2px; font-size:12px;"><strong>${item.length}</strong></td>
-          <td style="padding:2px; font-size:11px;"><strong>Joint</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.joint}</td>
-          <td style="padding:2px; font-size:11px;"><strong>Meter</strong></td>
-          <td style="padding:2px; font-size:11px;">${item.meter}</td>
-        </tr>
-        <tr>
-          <td style="padding:2px; background-color:#f0f0f0; font-size:11px;"><strong>${item.supplier || 'INHOUSE'}</strong></td>
-          <td colspan="4" style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.lot}</td>
-          <td style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.turunan}</td>
-        </tr>
-        <tr>
-          <td style="padding:2px; font-size:11px;"><strong>Code Pack:</strong></td>
-          <td colspan="3" style="padding:2px; font-size:12px;"><strong>${item.kodePack}<span style="color:red;">${item.subKode}</span></strong></td>
-          <td style="padding:2px; font-size:11px;"><strong>STATUS</strong></td>
-          <td class="${item.status === 'HOLD' ? 'label-fail' : item.status === 'REJECT' ? 'label-reject' : 'label-pass'}" style="font-size:11px;">
-            ${item.status}
-          </td>
-         
-        </tr>
-        <tr>
-          <td style="padding:2px; font-size:11px;"><strong>Ket:</strong></td>
-          <td colspan="5" style="padding:2px; font-size:11px;">${item.keterangan || '-'}</td>
-        </tr>
-      </table>
-    </div>`;
-}
+      return `
+        <div class="label-preview-content">
+          
+          <table class="label-table" style="margin:0; padding:0; font-size:12px;">
+            <tr>          
+    ${item.mesin === 'SML' ? `
+        <td class="machine-slitting"> IN LINE SML </td>
+    ` : '<td></td>'}
+              <td colspan="4" style="padding:2px; text-align:center;">
+                <text style="font-family:'Impact', sans-serif; font-size:24px; color:#d61c1c;">PT. SAPTAWARNA CEMERLANG</text><br>
+                <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;"></text>
+              </td>
+              <td style="padding:2px; font-size:12px; font-weight:bold;">${formatTanggalIndonesia(item.tanggal)}</td>
+              <td style="width:60px; padding:2px; text-align:center;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data= ${encodeURIComponent(
+                  `${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}|${item.lot}${item.turunan}|${item.kodePack}${item.subKode}`
+                )}" style="width:50px; height:auto;" />
+              </td>
+            </tr>
+            <tr>
+              <td colspan="5" style="padding:2px; font-weight:bold; font-size:13px;">${item.jenis}(${item.type}) ${item.kode}</td>
+              <td style="padding:2px; font-weight:bold; font-size:13px;">${item.spk}</td>
+              <td rowspan="7" style="text-align:center; vertical-align:middle; padding:2px;">
+                <img src="https://isnanswc.github.io/gambar/${getMonthName(item.tanggal).toLowerCase()}.png" alt="${getMonthName(item.tanggal)}" style="max-height:150px; max-width: 50px;" />
+            </tr>
+            <tr>
+              <td style="padding:2px; font-size:11px;"><strong>Thick</strong></td>
+              <td style="padding:2px; font-size:12px;"><strong>${item.thickness}</strong></td>
+              <td style="padding:2px; font-size:11px;"><strong>Netto</strong></td>
+              <td style="padding:2px; font-size:11px;">${item.netto}</td>
+              <td style="padding:2px; font-size:11px;"><strong>Treatment</strong></td>
+              <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.treatment}</td>
+              
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px; font-size:11px;"><strong>Width</strong></td>
+              <td style="padding:2px; font-size:12px;"><strong>${item.width}</strong></td>
+              <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
+              <td style="padding:2px; font-size:11px;">${item.paperCore}</td>
+              <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
+              <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.od}</td>
+            </tr>
+            <tr>
+              <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
+              <td style="padding:2px; font-size:12px;"><strong>${item.length}</strong></td>
+              <td style="padding:2px; font-size:11px;"><strong>Joint</strong></td>
+              <td style="padding:2px; font-size:11px;">${item.joint}</td>
+              <td style="padding:2px; font-size:11px;"><strong>Meter</strong></td>
+              <td style="padding:2px; font-size:11px;">${item.meter}</td>
+            </tr>
+            <tr>
+              <td style="padding:2px; background-color:#f0f0f0; font-size:11px;"><strong>${item.supplier || 'INHOUSE'}</strong></td>
+              <td colspan="4" style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.lot}</td>
+              <td style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.turunan}</td>
+            </tr>
+            <tr>
+              <td style="padding:2px; font-size:11px;"><strong>Code Pack:</strong></td>
+              <td colspan="3" style="padding:2px; font-size:12px;"><strong>${item.kodePack}<span style="color:red;">${item.subKode}</span></strong></td>
+              <td style="padding:2px; font-size:11px;"><strong>STATUS</strong></td>
+              <td class="${item.status === 'HOLD' ? 'label-fail' : item.status === 'REJECT' ? 'label-reject' : 'label-pass'}" style="font-size:11px;">
+                ${item.status}
+              </td>
+            
+            </tr>
+            <tr>
+              <td style="padding:2px; font-size:11px;"><strong>Ket:</strong></td>
+              <td colspan="5" style="padding:2px; font-size:11px;">${item.keterangan || '-'}</td>
+            </tr>
+          </table>
+        </div>`;
+    }
     
     function closePreview() {
       document.getElementById("previewModal").style.display = "none";
@@ -1569,45 +1575,45 @@ ${item.mesin === 'SML' ? `
     
     // ===== EXPORT FUNCTIONS =====
     function exportToExcel() {
-  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
 
-  if (data.length === 0) {
-    showToast("Tidak ada data untuk diexport!","error");
-    return;
-  }
+      if (data.length === 0) {
+        showToast("Tidak ada data untuk diexport!","error");
+        return;
+      }
 
-  const worksheetData = data.map((item, index) => ({
-    No: index + 1,
-    Tanggal:new Date(item.tanggal).toLocaleDateString('en-GB'),
-    Mesin: item.mesin,
-    Supplier: item.supplier || 'INHOUSE',
-    SPK: item.spk,
-    'No Lot': item.lot,
-    Turunan: item.turunan,
-    Jenis: item.jenis,
-    Type: item.type,
-    OD: item.od,
-    Treatment: item.treatment,
-    Thickness: item.thickness,
-    Width: item.width,
-    Length: item.length,
-    Joint: item.joint,
-    Meter: item.meter,
-    Kode: item.kode,
-    'Kode Pack': item.kodePack,
-    'Sub Kode': item.subKode,
-    Bulan: getMonthName(new Date(item.tanggal)),
-    Status: item.status,
-    Netto: item.netto,
-    'Paper Core': item.paperCore,
-    Keterangan: item.keterangan
-  }));
+      const worksheetData = data.map((item, index) => ({
+        No: index + 1,
+        Tanggal:new Date(item.tanggal).toLocaleDateString('en-GB'),
+        Mesin: item.mesin,
+        Supplier: item.supplier || 'INHOUSE',
+        SPK: item.spk,
+        'No Lot': item.lot,
+        Turunan: item.turunan,
+        Jenis: item.jenis,
+        Type: item.type,
+        OD: item.od,
+        Treatment: item.treatment,
+        Thickness: item.thickness,
+        Width: item.width,
+        Length: item.length,
+        Joint: item.joint,
+        Meter: item.meter,
+        Kode: item.kode,
+        'Kode Pack': item.kodePack,
+        'Sub Kode': item.subKode,
+        Bulan: getMonthName(new Date(item.tanggal)),
+        Status: item.status,
+        Netto: item.netto,
+        'Paper Core': item.paperCore,
+        Keterangan: item.keterangan
+      }));
 
-  const ws = XLSX.utils.json_to_sheet(worksheetData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data Label");
-  XLSX.writeFile(wb, `LabelData_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
+      const ws = XLSX.utils.json_to_sheet(worksheetData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Data Label");
+      XLSX.writeFile(wb, `LabelData_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
     
     // ===== UTILITY FUNCTIONS =====
     function setButtonLoading(button, isLoading) {
@@ -1623,158 +1629,157 @@ ${item.mesin === 'SML' ? `
     }
 
     // ===== FUNGSI TANGGAL SHIFT =====
-function calculateShiftDate() {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const shiftDate = new Date(now);
-  
-  // Jika sebelum jam 7 pagi, gunakan tanggal kemarin
-  if (currentHour < 7) {
-    shiftDate.setDate(shiftDate.getDate() - 1);
-  }
-  
-  return shiftDate.toISOString().split('T')[0];
-}
+    function calculateShiftDate() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const shiftDate = new Date(now);
+      
+      // Jika sebelum jam 7 pagi, gunakan tanggal kemarin
+      if (currentHour < 17) {
+        shiftDate.setDate(shiftDate.getDate() - 1); // Ini akan mengurangi 1 hari dari tanggal saat ini
+      }
+      
+      return shiftDate.toISOString().split('T')[0];
+    }
 
-// Search function
-let currentSearchTerm = '';
+    // Search function
+    let currentSearchTerm = '';
 
-function searchData() {
-  currentSearchTerm = document.getElementById('searchInput').value.toLowerCase();
-  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+    function searchData() {
+      currentSearchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
 
-  if (currentSearchTerm.trim() === '') {
-    currentPage = 1;
-    renderTable(); // Tampilkan semua data
-    return;
-  }
+      if (currentSearchTerm.trim() === '') {
+        currentPage = 1;
+        renderTable(); // Tampilkan semua data
+        return;
+      }
 
-  const filteredData = data.filter(item => {
-    const values = Object.values(item).join(' ').toLowerCase();
-    return values.includes(currentSearchTerm);
-  });
+      const filteredData = data.filter(item => {
+        const values = Object.values(item).join(' ').toLowerCase();
+        return values.includes(currentSearchTerm);
+      });
 
-  currentPage = 1;
-  renderTable(filteredData); // Render tabel dengan data filter
-}
+      currentPage = 1;
+      renderTable(filteredData); // Render tabel dengan data filter
+    }
 
-function deleteSelected() {
-  const checkboxes = document.querySelectorAll('.row-check:checked');
-  if (checkboxes.length === 0) return;
-  
-  if (confirm(`Apakah Anda yakin ingin menghapus ${checkboxes.length} data terpilih?`)) {
-    const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-    const indexesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
-    
-    indexesToDelete.forEach(index => {
-      data.splice(index, 1);
-    });
-    
-    localStorage.setItem(DATA_KEY, JSON.stringify(data));
-    updateLocalStorageAndMonitor();;
-    updateBulkActionsVisibility();
-  }
-}
-
-// Update bulk actions visibility based on checked items
-function updateBulkActionsVisibility() {
-  const checkboxes = document.querySelectorAll('.row-check:checked');
-  const bulkActions = document.getElementById('bulkActions');
-  
-  if (checkboxes.length > 0) {
-    bulkActions.classList.add('visible');
-  } else {
-    bulkActions.classList.remove('visible');
-  }
-}
-
-// Modify the toggleAll function to update visibility
-function toggleAll(checkbox) {
-  document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
-  updateBulkActionsVisibility();
-}
-
-// Add this function to check for duplicate kodePack
-function getDuplicateKodePacks(data) {
-  const kodePackCounts = {};
-  const duplicates = new Set();
-  
-  data.forEach(item => {
-    if (item.status !== 'HOLD' && item.status !== 'REJECT') {
-      const key = item.kodePack + (item.subKode || '');
-      kodePackCounts[key] = (kodePackCounts[key] || 0) + 1;
-      if (kodePackCounts[key] > 1) {
-        duplicates.add(key);
+    function deleteSelected() {
+      const checkboxes = document.querySelectorAll('.row-check:checked');
+      if (checkboxes.length === 0) return;
+      
+      if (confirm(`Apakah Anda yakin ingin menghapus ${checkboxes.length} data terpilih?`)) {
+        const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+        const indexesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+        
+        indexesToDelete.forEach(index => {
+          data.splice(index, 1);
+        });
+        
+        localStorage.setItem(DATA_KEY, JSON.stringify(data));
+        updateLocalStorageAndMonitor();;
+        updateBulkActionsVisibility();
       }
     }
-  });
-  
-  return duplicates;
-}
 
-function showDeleteAllModal() {
-  document.getElementById("deletePasswordInput").value = '';
-  document.getElementById("deleteAllModal").style.display = "flex";
-}
+    // Update bulk actions visibility based on checked items
+    function updateBulkActionsVisibility() {
+      const checkboxes = document.querySelectorAll('.row-check:checked');
+      const bulkActions = document.getElementById('bulkActions');
+      
+      if (checkboxes.length > 0) {
+        bulkActions.classList.add('visible');
+      } else {
+        bulkActions.classList.remove('visible');
+      }
+    }
 
-function hideDeleteAllModal() {
-  document.getElementById("deleteAllModal").style.display = "none";
-}
+    // Modify the toggleAll function to update visibility
+    function toggleAll(checkbox) {
+      document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
+      updateBulkActionsVisibility();
+    }
 
-function confirmDeleteAll() {
-  const enteredPassword = document.getElementById("deletePasswordInput").value;
-  const correctPassword = "RIKE RIDHO";
+    // Add this function to check for duplicate kodePack
+    function getDuplicateKodePacks(data) {
+      const kodePackCounts = {};
+      const duplicates = new Set();
+      
+      data.forEach(item => {
+        if (item.status !== 'HOLD' && item.status !== 'REJECT') {
+          const key = item.kodePack + (item.subKode || '');
+          kodePackCounts[key] = (kodePackCounts[key] || 0) + 1;
+          if (kodePackCounts[key] > 1) {
+            duplicates.add(key);
+          }
+        }
+      });
+      
+      return duplicates;
+    }
 
-  if (enteredPassword === correctPassword) {
-    localStorage.removeItem(DATA_KEY);
-    updateLocalStorageAndMonitor();
-    hideDeleteAllModal();
-    showToast("Semua data berhasil dihapus.","success");
-  } else {
-    showToast("Password salah! Penghapusan dibatalkan.","error");
-  }
-}
+    function showDeleteAllModal() {
+      document.getElementById("deletePasswordInput").value = '';
+      document.getElementById("deleteAllModal").style.display = "flex";
+    }
 
-// Fungsi untuk menampilkan Toast Notification
-function showToast(message, type = 'success') {
-  let backgroundColor;
-  let textColor = '#fff';
+    function hideDeleteAllModal() {
+      document.getElementById("deleteAllModal").style.display = "none";
+    }
 
-  switch (type) {
-    case 'success':
-      backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)'; // Green
-      break;
-    case 'error':
-      backgroundColor = 'linear-gradient(to right, #d9534f, #f44336)'; // Red
-      break;
-    case 'info':
-      backgroundColor = 'linear-gradient(to right, #5bc0de, #2196F3)'; // Blue
-      break;
-    case 'warning':
-      backgroundColor = 'linear-gradient(to right, #f0ad4e, #FFC107)'; // Orange
-      break;
-    default:
-      backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)';
-  }
+    function confirmDeleteAll() {
+      const enteredPassword = document.getElementById("deletePasswordInput").value;
+      const correctPassword = "RIKE RIDHO";
 
-  Toastify({
-    text: message,
-    duration: 3000, // Durasi notifikasi dalam milidetik (3 detik)
-    close: true, // Tampilkan tombol close
-    gravity: "top", // `top` or `bottom`
-    position: "right", // `left`, `center` or `right`
-    stopOnFocus: true, // Berhenti menghitung mundur durasi saat fokus di notifikasi
-    style: {
-      background: backgroundColor,
-      color: textColor,
-      borderRadius: "5px",
-      boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
-    },
-    onClick: function(){} // Callback setelah notifikasi diklik
-  }).showToast();
-}
+      if (enteredPassword === correctPassword) {
+        localStorage.removeItem(DATA_KEY);
+        updateLocalStorageAndMonitor();
+        hideDeleteAllModal();
+        showToast("Semua data berhasil dihapus.","success");
+      } else {
+        showToast("Password salah! Penghapusan dibatalkan.","error");
+      }
+    }
+
+    // Fungsi untuk menampilkan Toast Notification
+    function showToast(message, type = 'success') {
+      let backgroundColor;
+      let textColor = '#fff';
+
+      switch (type) {
+        case 'success':
+          backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)'; // Green
+          break;
+        case 'error':
+          backgroundColor = 'linear-gradient(to right, #d9534f, #f44336)'; // Red
+          break;
+        case 'info':
+          backgroundColor = 'linear-gradient(to right, #5bc0de, #2196F3)'; // Blue
+          break;
+        case 'warning':
+          backgroundColor = 'linear-gradient(to right, #f0ad4e, #FFC107)'; // Orange
+          break;
+        default:
+          backgroundColor = 'linear-gradient(to right, #5cb85c, #4CAF50)';
+      }
+
+      Toastify({
+        text: message,
+        duration: 3000, // Durasi notifikasi dalam milidetik (3 detik)
+        close: true, // Tampilkan tombol close
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Berhenti menghitung mundur durasi saat fokus di notifikasi
+        style: {
+          background: backgroundColor,
+          color: textColor,
+          borderRadius: "5px",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
+        },
+        onClick: function(){} // Callback setelah notifikasi diklik
+      }).showToast();
+    }
   </script>
-<!-- Modal Hapus Semua dengan Password -->
 <div class="modal" id="deleteAllModal" style="display: none;">
   <div class="modal-content" style="max-width: 400px; padding: 20px;">
     <h3>Konfirmasi Hapus Semua Data</h3>
