@@ -6,34 +6,68 @@
     <meta name="theme-color" content="#4CAF50">
     <title>QR Scanner Android</title>
     <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --danger: #f44336;
+            --danger-dark: #d32f2f;
+            --warning: #ff9800;
+            --info: #2196F3;
+            --info-dark: #0b7dda;
+            --gray: #607d8b;
+            --gray-dark: #455a64;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Roboto', Arial, sans-serif;
-            max-width: 100%;
             margin: 0;
-            padding: 15px;
+            padding: 0;
             background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
         }
         
         h1 {
             color: #333;
             text-align: center;
             font-size: 24px;
+            margin-bottom: 20px;
         }
         
-        #scanner-container {
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            width: 95%;
             max-width: 500px;
-            margin: 15px auto;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
             position: relative;
-            background-color: #000;
         }
         
         #qr-video {
             width: 100%;
             display: block;
+            border-radius: 8px;
         }
         
         #scan-region {
@@ -48,21 +82,71 @@
             pointer-events: none;
         }
         
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 999;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: var(--danger);
+        }
+        
+        .notification.warning {
+            background-color: var(--warning);
+        }
+        
+        .notification.info {
+            background-color: var(--info);
+        }
+        
+        /* Result Styles */
         #result {
             margin: 15px 0;
             padding: 12px;
             background-color: #e8f5e9;
             border-radius: 8px;
             font-size: 14px;
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid var(--primary);
+        }
+        
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
             font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         th, td {
@@ -72,15 +156,18 @@
         }
         
         th {
-            background-color: #4CAF50;
+            background-color: var(--primary);
             color: white;
             font-weight: 500;
+            position: sticky;
+            top: 0;
         }
         
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         
+        /* Button Styles */
         .button-container {
             display: flex;
             justify-content: center;
@@ -91,7 +178,7 @@
         
         button {
             padding: 12px 20px;
-            background-color: #4CAF50;
+            background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 25px;
@@ -104,7 +191,7 @@
         }
         
         button:hover {
-            background-color: #388E3C;
+            background-color: var(--primary-dark);
             transform: translateY(-2px);
         }
         
@@ -113,38 +200,30 @@
         }
         
         #stop-btn {
-            background-color: #f44336;
+            background-color: var(--danger);
         }
         
         #stop-btn:hover {
-            background-color: #d32f2f;
+            background-color: var(--danger-dark);
         }
         
         #clear-btn {
-            background-color: #607d8b;
+            background-color: var(--gray);
         }
         
         #clear-btn:hover {
-            background-color: #455a64;
+            background-color: var(--gray-dark);
         }
         
         #export-btn {
-            background-color: #2196F3;
+            background-color: var(--info);
         }
         
         #export-btn:hover {
-            background-color: #0b7dda;
+            background-color: var(--info-dark);
         }
         
-        .permission-help {
-            background-color: #fff3e0;
-            border-left: 4px solid #ffa000;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
+        /* Action Buttons */
         .action-btn {
             padding: 5px 10px;
             font-size: 12px;
@@ -154,10 +233,40 @@
         }
         
         .delete-btn {
-            background-color: #f44336;
+            background-color: var(--danger);
         }
         
-        @media (max-width: 480px) {
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination button {
+            min-width: 40px;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        
+        .pagination button.active {
+            background-color: var(--primary-dark);
+            font-weight: bold;
+        }
+        
+        /* Help Box */
+        .permission-help {
+            background-color: #fff3e0;
+            border-left: 4px solid #ffa000;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
             th, td {
                 padding: 8px 6px;
                 font-size: 13px;
@@ -168,65 +277,101 @@
                 min-width: 100px;
                 font-size: 13px;
             }
+            
+            .button-container {
+                gap: 8px;
+            }
+            
+            .modal-content {
+                width: 98%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 200px;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>QR Code Scanner Android</h1>
-    
-    <div class="permission-help">
-        <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
-        <ol>
-            <li>Mengizinkan akses kamera di browser</li>
-            <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
-            <li>Membuka halaman ini melalui HTTPS (https://)</li>
-        </ol>
+    <div class="container">
+        <h1>QR Code Scanner Android</h1>
+        
+        <div class="permission-help">
+            <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
+            <ol>
+                <li>Mengizinkan akses kamera di browser</li>
+                <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
+                <li>Membuka halaman ini melalui HTTPS (https://)</li>
+            </ol>
+        </div>
+        
+        <div class="button-container">
+            <button id="open-modal-btn">Buka Scanner</button>
+            <button id="clear-btn">Hapus Data</button>
+            <button id="export-btn">Export Excel</button>
+        </div>
+        
+        <div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
+        
+        <h2>Data Tersimpan</h2>
+        <div class="table-container">
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Ukuran</th>
+                        <th>No. Lot</th>
+                        <th>Kode Pack</th>
+                        <th>Waktu Scan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Data akan ditambahkan di sini -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination" id="pagination">
+            <!-- Pagination buttons will be added here -->
+        </div>
     </div>
     
-    <div id="scanner-container">
-        <video id="qr-video" playsinline></video>
-        <div id="scan-region"></div>
+    <!-- Modal for Scanner -->
+    <div class="modal" id="scanner-modal">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <video id="qr-video" playsinline></video>
+            <div id="scan-region"></div>
+        </div>
+        <div class="button-container" style="margin-top: 20px;">
+            <button id="start-btn">Mulai Scan</button>
+            <button id="stop-btn">Stop Scan</button>
+        </div>
     </div>
     
-    <div class="button-container">
-        <button id="start-btn">Mulai Scan</button>
-        <button id="stop-btn">Stop Scan</button>
-        <button id="clear-btn">Hapus Data</button>
-        <button id="export-btn">Export Excel</button>
-    </div>
-    
-    <div id="result">Arahkan kamera ke QR code dengan format: ukuran-no_lot-kode_pack</div>
-    
-    <h2>Data Tersimpan</h2>
-    <table id="data-table">
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Ukuran</th>
-                <th>No. Lot</th>
-                <th>Kode Pack</th>
-                <th>Waktu Scan</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data akan ditambahkan di sini -->
-        </tbody>
-    </table>
-
-    <!-- Modal -->
-<div id="camera-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:9999;">
-    <div style="position:relative; width:100%; max-width:500px; margin:40px auto; border:2px solid #fff; border-radius:8px; overflow:hidden;">
-        <video id="qr-video" playsinline style="width:100%; display:block;"></video>
-        <div id="scan-region" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:70%; height:70%; border:3px dashed rgba(255,255,255,0.7); pointer-events:none;"></div>
-        <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:8px 12px; border-radius:4px;">Tutup</button>
-    </div>
-</div>
-
-<!-- Toast Notification -->
-<div id="toast" style="display:none; position:fixed; bottom:30px; right:30px; background:#333; color:#fff; padding:12px 20px; border-radius:6px; z-index:10000; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
-    Ini adalah pesan
-</div>
+    <!-- Notification Element -->
+    <div class="notification" id="notification"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
@@ -237,26 +382,64 @@
         let scanCount = 0;
         let lastScanned = null;
         let scannedData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
         
         // Elemen DOM
         const videoElement = document.getElementById('qr-video');
         const resultElement = document.getElementById('result');
         const tableBody = document.getElementById('table-body');
+        const openModalBtn = document.getElementById('open-modal-btn');
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
         const clearBtn = document.getElementById('clear-btn');
         const exportBtn = document.getElementById('export-btn');
+        const scannerModal = document.getElementById('scanner-modal');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const notification = document.getElementById('notification');
+        const paginationElement = document.getElementById('pagination');
         
         // Event listeners
-       startBtn.addEventListener('click', openCameraModal);
+        openModalBtn.addEventListener('click', openScannerModal);
+        closeModalBtn.addEventListener('click', closeScannerModal);
+        startBtn.addEventListener('click', startScanning);
         stopBtn.addEventListener('click', stopScanning);
         clearBtn.addEventListener('click', clearAllData);
         exportBtn.addEventListener('click', exportToExcel);
         
         // Load data from localStorage when page loads
-        document.addEventListener('DOMContentLoaded', loadFromStorage);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            renderTable();
+            setupPagination();
+        });
         
-        // Fungsi untuk memulai scanning (dioptimalkan untuk Android)
+        // Fungsi untuk membuka modal scanner
+        function openScannerModal() {
+            scannerModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Fungsi untuk menutup modal scanner
+        function closeScannerModal() {
+            stopScanning();
+            scannerModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message, type = 'success', duration = 3000) {
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+        
+        // Fungsi untuk memulai scanning
         async function startScanning() {
             try {
                 // Hentikan stream yang mungkin masih aktif
@@ -276,20 +459,20 @@
                 });
                 
                 videoElement.srcObject = videoStream;
-                videoElement.setAttribute('playsinline', 'true'); // Penting untuk iOS/Android
+                videoElement.setAttribute('playsinline', 'true');
                 await videoElement.play();
                 
-                resultElement.textContent = "Memindai QR code...";
+                showNotification("Memindai QR code...", "info");
                 
                 // Mulai scanning dengan jsQR
                 scanInterval = setInterval(scanWithjsQR, 300);
                 
             } catch (err) {
-                resultElement.textContent = "Error: " + err.message;
+                showNotification("Error: " + err.message, "error", 5000);
                 console.error("Error kamera:", err);
                 
                 if (err.name === 'NotAllowedError') {
-                   showToast("<br><br>Harap berikan izin akses kamera melalui setelan browser Anda.");
+                    showNotification("Harap berikan izin akses kamera melalui setelan browser Anda.", "error", 5000);
                 }
             }
         }
@@ -342,7 +525,7 @@
                 videoElement.srcObject = null;
             }
             
-            resultElement.textContent = "Scan dihentikan. Tekan 'Mulai Scan' untuk melanjutkan.";
+            showNotification("Scan dihentikan", "info");
         }
         
         // Fungsi untuk memproses data yang discan
@@ -356,11 +539,12 @@
                 
                 // Cek duplikat sebelum menambahkan
                 if (isDuplicate(noLot, kodePack)) {
-                    showToast( `
-                        <strong style="color: #ff9800;">Data sudah pernah discan!</strong><br>
+                    showNotification("Data sudah pernah discan!", "warning");
+                    resultElement.innerHTML = `
+                        <strong style="color: var(--warning);">Data sudah pernah discan!</strong><br>
                         <b>No. Lot:</b> ${noLot}<br>
                         <b>Kode Pack:</b> ${kodePack}
-                    `);
+                    `;
                     
                     // Beri feedback error (getar panjang)
                     if (navigator.vibrate) {
@@ -374,12 +558,14 @@
                 saveToStorage(ukuran, noLot, kodePack, waktuScan);
                 
                 // Tampilkan hasil
-                showToast( `
+                resultElement.innerHTML = `
                     <strong>✓ Data berhasil discan:</strong><br>
                     <b>Ukuran:</b> ${ukuran}<br>
                     <b>No. Lot:</b> ${noLot}<br>
                     <b>Kode Pack:</b> ${kodePack}
-                `);
+                `;
+                
+                showNotification("Data berhasil discan", "success");
                 
                 // Beri feedback sukses (getar jika didukung)
                 if (navigator.vibrate) {
@@ -387,11 +573,12 @@
                 }
                 
             } else {
-                showToast( `
-                    <strong style="color: #f44336;">Format QR code tidak valid!</strong><br>
+                showNotification("Format QR code tidak valid!", "error");
+                resultElement.innerHTML = `
+                    <strong style="color: var(--danger);">Format QR code tidak valid!</strong><br>
                     Harap gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
                     Contoh: <code>CPP L01 25 MC X 2200 MM|L01250525A101|3B05250001</code>
-                `);
+                `;
                 
                 // Beri feedback error (getar panjang)
                 if (navigator.vibrate) {
@@ -400,36 +587,79 @@
             }
         }
         
-        // Fungsi untuk menambahkan data ke tabel
-        function addToTable(ukuran, noLot, kodePack, waktuScan) {
-            scanCount++;
-            const newRow = document.createElement('tr');
-            newRow.dataset.id = Date.now(); // Unique ID for each row
+        // Fungsi untuk setup pagination
+        function setupPagination() {
+            paginationElement.innerHTML = '';
             
-            newRow.innerHTML = `
-                <td>${scanCount}</td>
-                <td>${ukuran}</td>
-                <td>${noLot}</td>
-                <td>${kodePack}</td>
-                <td>${waktuScan}</td>
-                <td>
-                    <button class="action-btn delete-btn" onclick="deleteRow('${newRow.dataset.id}', '${noLot}', '${kodePack}')">Hapus</button>
-                </td>
-            `;
+            const pageCount = Math.ceil(scannedData.length / rowsPerPage);
             
-            tableBody.appendChild(newRow);
+            if (pageCount <= 1) return;
             
-            // Tambahkan ke array scannedData
-            scannedData.push({
-                id: newRow.dataset.id,
-                ukuran,
-                noLot,
-                kodePack,
-                waktuScan
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = '&laquo;';
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                    setupPagination();
+                }
             });
+            paginationElement.appendChild(prevButton);
             
-            // Scroll ke baris baru
-            newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Page buttons
+            for (let i = 1; i <= pageCount; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                if (i === currentPage) {
+                    pageButton.classList.add('active');
+                }
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTable();
+                    setupPagination();
+                });
+                paginationElement.appendChild(pageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = '&raquo;';
+            nextButton.addEventListener('click', () => {
+                if (currentPage < pageCount) {
+                    currentPage++;
+                    renderTable();
+                    setupPagination();
+                }
+            });
+            paginationElement.appendChild(nextButton);
+        }
+        
+        // Fungsi untuk render table dengan pagination
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, scannedData.length);
+            const currentItems = scannedData.slice(startIndex, endIndex);
+            
+            currentItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.dataset.id = item.id;
+                
+                row.innerHTML = `
+                    <td>${startIndex + index + 1}</td>
+                    <td>${item.ukuran}</td>
+                    <td>${item.noLot}</td>
+                    <td>${item.kodePack}</td>
+                    <td>${item.waktuScan}</td>
+                    <td>
+                        <button class="action-btn delete-btn" onclick="deleteRow('${item.id}', '${item.noLot}', '${item.kodePack}')">Hapus</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
         }
         
         // Fungsi untuk mengecek data duplikat
@@ -442,45 +672,34 @@
         // Fungsi untuk menghapus baris tertentu
         function deleteRow(rowId, noLot, kodePack) {
             if (confirm(`Apakah Anda yakin ingin menghapus data ini?\nNo. Lot: ${noLot}\nKode Pack: ${kodePack}`)) {
-                // Hapus dari DOM
-                const row = document.querySelector(`tr[data-id="${rowId}"]`);
-                if (row) row.remove();
-                
                 // Hapus dari array scannedData
                 scannedData = scannedData.filter(item => item.id !== rowId);
                 
                 // Update localStorage
                 updateStorage();
                 
-                // Update nomor urut
-                updateRowNumbers();
+                // Render ulang tabel dan pagination
+                renderTable();
+                setupPagination();
                 
-                resultElement.textContent = "Data berhasil dihapus.";
+                showNotification("Data berhasil dihapus", "success");
             }
-        }
-        
-        // Fungsi untuk memperbarui nomor urut
-        function updateRowNumbers() {
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                row.cells[0].textContent = index + 1;
-            });
-            scanCount = rows.length;
         }
         
         // Fungsi untuk menghapus semua data
         function clearAllData() {
             if (scannedData.length === 0) {
-                resultElement.textContent = "Tidak ada data yang bisa dihapus.";
+                showNotification("Tidak ada data yang bisa dihapus", "info");
                 return;
             }
             
             if (confirm("Apakah Anda yakin ingin menghapus SEMUA data?")) {
-                tableBody.innerHTML = '';
                 scannedData = [];
-                scanCount = 0;
+                currentPage = 1;
                 localStorage.removeItem('qrScans');
-                resultElement.textContent = "Semua data telah dihapus.";
+                renderTable();
+                setupPagination();
+                showNotification("Semua data telah dihapus", "success");
             }
         }
         
@@ -494,8 +713,13 @@
                 waktuScan
             };
             
-            scannedData.push(data);
+            scannedData.unshift(data); // Add to beginning of array
             updateStorage();
+            
+            // Reset to first page when adding new data
+            currentPage = 1;
+            renderTable();
+            setupPagination();
         }
         
         // Fungsi untuk memperbarui localStorage
@@ -508,16 +732,14 @@
             const savedData = localStorage.getItem('qrScans');
             if (savedData) {
                 scannedData = JSON.parse(savedData);
-                scannedData.forEach((data, index) => {
-                    addToTable(data.ukuran, data.noLot, data.kodePack, data.waktuScan);
-                });
+                scanCount = scannedData.length;
             }
         }
         
         // Fungsi untuk export ke Excel
         function exportToExcel() {
             if (scannedData.length === 0) {
-                resultElement.textContent = "Tidak ada data yang bisa diexport.";
+                showNotification("Tidak ada data yang bisa diexport", "warning");
                 return;
             }
             
@@ -542,33 +764,18 @@
             const dateStr = new Date().toISOString().slice(0, 10);
             XLSX.writeFile(wb, `qr-scans-${dateStr}.xlsx`);
             
-            resultElement.textContent = "Data berhasil diexport ke Excel.";
+            showNotification("Data berhasil diexport ke Excel", "success");
         }
         
         // Hentikan kamera saat halaman ditutup
         window.addEventListener('beforeunload', stopScanning);
-
-        // Tampilkan toast notification
-function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.display = "block";
-    setTimeout(() => {
-        toast.style.display = "none";
-    }, 3000);
-}
-
-// Buka modal kamera
-function openCameraModal() {
-    document.getElementById("camera-modal").style.display = "block";
-    startScanning();
-}
-
-// Tutup modal dan hentikan scan
-function closeModal() {
-    stopScanning();
-    document.getElementById("camera-modal").style.display = "none";
-}
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === scannerModal) {
+                closeScannerModal();
+            }
+        });
     </script>
 </body>
 </html>
