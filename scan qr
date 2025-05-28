@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        /* CSS Diletakkan di sini */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Batasi lebar container */
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 400px; /* Batasi lebar area scan */
+            margin: 0 auto 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden; /* Penting agar video tidak keluar batas */
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .stop-button {
+            background-color: #dc3545;
+        }
+
+        .stop-button:hover {
+            background-color: #c82333;
+        }
+
+        .table-container {
+            margin-top: 30px;
+            overflow-x: auto; /* Agar tabel bisa digulir jika terlalu lebar */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Responsivitas untuk layar kecil */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .button {
+                width: calc(100% - 10px); /* Ambil hampir seluruh lebar */
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pemindai QR Code</h1>
+
+        <div id="reader"></div>
+        <div id="result" style="display: none;"></div>
+
+        <button id="startScan" class="button">Mulai Scan</button>
+        <button id="stopScan" class="button stop-button" style="display: none;">Hentikan Scan</button>
+
+        <div class="table-container">
+            <h2>Data Terpindai</h2>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Ukuran</th>
+                        <th>No Lot</th>
+                        <th>Kode Pack</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script>
+        // JavaScript Diletakkan di sini
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const html5QrCode = new Html5Qrcode("reader");
+            const resultDiv = document.getElementById('result');
+            const dataTableBody = document.querySelector('#dataTable tbody');
+            const startScanButton = document.getElementById('startScan');
+            const stopScanButton = document.getElementById('stopScan');
+
+            let isScanning = false; // Untuk melacak status scanning
+
+            // Fungsi untuk menambahkan data ke tabel
+            function addDataToTable(ukuran, noLot, kodePack) {
+                const newRow = dataTableBody.insertRow(); // Membuat baris baru
+                const ukuranCell = newRow.insertCell(); // Membuat sel untuk Ukuran
+                const noLotCell = newRow.insertCell(); // Membuat sel untuk No Lot
+                const kodePackCell = newRow.insertCell(); // Membuat sel untuk Kode Pack
+
+                ukuranCell.textContent = ukuran;
+                noLotCell.textContent = noLot;
+                kodePackCell.textContent = kodePack;
+            }
+
+            // Konfigurasi untuk scanner QR Code
+            const qrCodeConfig = {
+                fps: 10,    // Frames per second, untuk seberapa sering mencoba memindai
+                qrbox: { width: 250, height: 250 }, // Ukuran kotak pemindaian
+                supportedScanFormats: [
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ]
+            };
+
+            // Callback saat scan berhasil
+            const onScanSuccess = (decodedText, decodedResult) => {
+                if (!isScanning) return; // Pastikan hanya memproses saat sedang scanning
+
+                console.log(`QR Code terdeteksi: ${decodedText}`);
+                resultDiv.textContent = `Hasil Scan: ${decodedText}`; // Opsional, untuk debug
+
+                // Pisahkan data berdasarkan "|"
+                const data = decodedText.split('|');
+
+                if (data.length === 3) {
+                    const ukuran = data[0].trim();
+                    const noLot = data[1].trim();
+                    const kodePack = data[2].trim();
+
+                    addDataToTable(ukuran, noLot, kodePack);
+                } else {
+                    alert('Format QR Code tidak sesuai (seharusnya Ukuran|NoLot|KodePack).');
+                    console.warn('Format QR Code tidak sesuai:', decodedText);
+                }
+
+                // Hentikan scan setelah berhasil memproses 1 QR Code
+                // Jika ingin terus scan beberapa QR, hapus baris di bawah ini
+                stopScanner();
+            };
+
+            // Callback saat scan error
+            const onScanError = (errorMessage) => {
+                // console.warn(`QR Code Scan Error: ${errorMessage}`); // Bisa diaktifkan untuk debug
+            };
+
+            // Fungsi untuk memulai scanner
+            async function startScanner() {
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" }, // Prioritaskan kamera belakang
+                        qrCodeConfig,
+                        onScanSuccess,
+                        onScanError
+                    );
+                    isScanning = true;
+                    startScanButton.style.display = 'none';
+                    stopScanButton.style.display = 'inline-block';
+                    resultDiv.style.display = 'none'; // Sembunyikan hasil sementara
+                    console.log("Scanner dimulai.");
+                } catch (err) {
+                    alert(`Tidak dapat memulai scanner: ${err}. Pastikan Anda memberikan izin kamera.`);
+                    console.error("Gagal memulai scanner:", err);
+                }
+            }
+
+            // Fungsi untuk menghentikan scanner
+            async function stopScanner() {
+                try {
+                    if (html5QrCode.isScanning) {
+                        await html5QrCode.stop();
+                        isScanning = false;
+                        startScanButton.style.display = 'inline-block';
+                        stopScanButton.style.display = 'none';
+                        console.log("Scanner dihentikan.");
+                    }
+                } catch (err) {
+                    console.error("Gagal menghentikan scanner:", err);
+                }
+            }
+
+            // Event listener untuk tombol
+            startScanButton.addEventListener('click', startScanner);
+            stopScanButton.addEventListener('click', stopScanner);
+
+            // Otomatis memulai scanner saat halaman dimuat (opsional, bisa dihapus)
+            // startScanner();
+        });
+    </script>
+</body>
+</html>
