@@ -106,6 +106,8 @@
             transform: translateX(150%);
             transition: transform 0.3s ease;
             max-width: 300px;
+            display: flex;
+            flex-direction: column;
         }
         
         .notification.show {
@@ -122,6 +124,28 @@
         
         .notification.info {
             background-color: var(--info);
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .notification-content {
+            font-size: 14px;
+        }
+        
+        .notification-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 5px;
         }
         
         /* Result Styles */
@@ -285,6 +309,11 @@
             .modal-content {
                 width: 98%;
             }
+            
+            .notification {
+                max-width: 250px;
+                padding: 12px 15px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -308,6 +337,12 @@
             
             .pagination {
                 flex-wrap: wrap;
+            }
+            
+            .notification {
+                max-width: 200px;
+                bottom: 10px;
+                right: 10px;
             }
         }
     </style>
@@ -371,7 +406,11 @@
     </div>
     
     <!-- Notification Element -->
-    <div class="notification" id="notification"></div>
+    <div class="notification" id="notification">
+        <button class="notification-close">&times;</button>
+        <div class="notification-title" id="notification-title"></div>
+        <div class="notification-content" id="notification-content"></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
@@ -384,6 +423,7 @@
         let scannedData = [];
         let currentPage = 1;
         const rowsPerPage = 10;
+        let notificationTimeout = null;
         
         // Elemen DOM
         const videoElement = document.getElementById('qr-video');
@@ -397,6 +437,9 @@
         const scannerModal = document.getElementById('scanner-modal');
         const closeModalBtn = document.querySelector('.close-modal');
         const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notification-title');
+        const notificationContent = document.getElementById('notification-content');
+        const notificationClose = document.querySelector('.notification-close');
         const paginationElement = document.getElementById('pagination');
         
         // Event listeners
@@ -406,6 +449,7 @@
         stopBtn.addEventListener('click', stopScanning);
         clearBtn.addEventListener('click', clearAllData);
         exportBtn.addEventListener('click', exportToExcel);
+        notificationClose.addEventListener('click', hideNotification);
         
         // Load data from localStorage when page loads
         document.addEventListener('DOMContentLoaded', () => {
@@ -428,15 +472,41 @@
         }
         
         // Fungsi untuk menampilkan notifikasi
-        function showNotification(message, type = 'success', duration = 3000) {
-            notification.textContent = message;
+        function showNotification(title, content, type = 'success', duration = 3000) {
+            // Clear any existing timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            
+            // Set notification content
+            notificationTitle.textContent = title;
+            notificationContent.innerHTML = content;
+            
+            // Set notification type
             notification.className = 'notification';
             notification.classList.add(type);
+            
+            // Show notification
             notification.classList.add('show');
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, duration);
+            // Auto-hide after duration if specified
+            if (duration > 0) {
+                notificationTimeout = setTimeout(() => {
+                    hideNotification();
+                }, duration);
+            }
+            
+            // Also update the result element (for when modal is closed)
+            resultElement.innerHTML = `<strong>${title}</strong><br>${content}`;
+        }
+        
+        // Fungsi untuk menyembunyikan notifikasi
+        function hideNotification() {
+            notification.classList.remove('show');
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+                notificationTimeout = null;
+            }
         }
         
         // Fungsi untuk memulai scanning
@@ -462,17 +532,17 @@
                 videoElement.setAttribute('playsinline', 'true');
                 await videoElement.play();
                 
-                showNotification("Memindai QR code...", "info");
+                showNotification("Memindai QR code", "Arahkan kamera ke QR code", "info", 2000);
                 
                 // Mulai scanning dengan jsQR
                 scanInterval = setInterval(scanWithjsQR, 300);
                 
             } catch (err) {
-                showNotification("Error: " + err.message, "error", 5000);
+                showNotification("Error Kamera", err.message, "error", 5000);
                 console.error("Error kamera:", err);
                 
                 if (err.name === 'NotAllowedError') {
-                    showNotification("Harap berikan izin akses kamera melalui setelan browser Anda.", "error", 5000);
+                    showNotification("Izin Kamera Dibutuhkan", "Harap berikan izin akses kamera melalui setelan browser Anda.", "error", 5000);
                 }
             }
         }
@@ -525,7 +595,7 @@
                 videoElement.srcObject = null;
             }
             
-            showNotification("Scan dihentikan", "info");
+            showNotification("Scan Dihentikan", "Tekan 'Mulai Scan' untuk melanjutkan", "info", 2000);
         }
         
         // Fungsi untuk memproses data yang discan
@@ -539,12 +609,12 @@
                 
                 // Cek duplikat sebelum menambahkan
                 if (isDuplicate(noLot, kodePack)) {
-                    showNotification("Data sudah pernah discan!", "warning");
-                    resultElement.innerHTML = `
-                        <strong style="color: var(--warning);">Data sudah pernah discan!</strong><br>
-                        <b>No. Lot:</b> ${noLot}<br>
-                        <b>Kode Pack:</b> ${kodePack}
-                    `;
+                    showNotification(
+                        "Data Sudah Pernah Discan", 
+                        `No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`,
+                        "warning",
+                        3000
+                    );
                     
                     // Beri feedback error (getar panjang)
                     if (navigator.vibrate) {
@@ -557,15 +627,13 @@
                 addToTable(ukuran, noLot, kodePack, waktuScan);
                 saveToStorage(ukuran, noLot, kodePack, waktuScan);
                 
-                // Tampilkan hasil
-                resultElement.innerHTML = `
-                    <strong>✓ Data berhasil discan:</strong><br>
-                    <b>Ukuran:</b> ${ukuran}<br>
-                    <b>No. Lot:</b> ${noLot}<br>
-                    <b>Kode Pack:</b> ${kodePack}
-                `;
-                
-                showNotification("Data berhasil discan", "success");
+                // Tampilkan notifikasi hasil scan
+                showNotification(
+                    "Scan Berhasil", 
+                    `Ukuran: ${ukuran}<br>No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`,
+                    "success",
+                    3000
+                );
                 
                 // Beri feedback sukses (getar jika didukung)
                 if (navigator.vibrate) {
@@ -573,12 +641,12 @@
                 }
                 
             } else {
-                showNotification("Format QR code tidak valid!", "error");
-                resultElement.innerHTML = `
-                    <strong style="color: var(--danger);">Format QR code tidak valid!</strong><br>
-                    Harap gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
-                    Contoh: <code>CPP L01 25 MC X 2200 MM|L01250525A101|3B05250001</code>
-                `;
+                showNotification(
+                    "Format Tidak Valid", 
+                    "Harap gunakan format: ukuran|no_lot|kode_pack<br>Contoh: CPP L01 25 MC X 2200 MM|L01250525A101|3B05250001",
+                    "error",
+                    4000
+                );
                 
                 // Beri feedback error (getar panjang)
                 if (navigator.vibrate) {
@@ -682,14 +750,14 @@
                 renderTable();
                 setupPagination();
                 
-                showNotification("Data berhasil dihapus", "success");
+                showNotification("Data Dihapus", `No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`, "info", 2000);
             }
         }
         
         // Fungsi untuk menghapus semua data
         function clearAllData() {
             if (scannedData.length === 0) {
-                showNotification("Tidak ada data yang bisa dihapus", "info");
+                showNotification("Tidak Ada Data", "Tidak ada data yang bisa dihapus", "info", 2000);
                 return;
             }
             
@@ -699,7 +767,7 @@
                 localStorage.removeItem('qrScans');
                 renderTable();
                 setupPagination();
-                showNotification("Semua data telah dihapus", "success");
+                showNotification("Semua Data Dihapus", "Semua data scan telah dihapus", "success", 2000);
             }
         }
         
@@ -739,7 +807,7 @@
         // Fungsi untuk export ke Excel
         function exportToExcel() {
             if (scannedData.length === 0) {
-                showNotification("Tidak ada data yang bisa diexport", "warning");
+                showNotification("Tidak Ada Data", "Tidak ada data yang bisa diexport", "warning", 2000);
                 return;
             }
             
@@ -764,7 +832,7 @@
             const dateStr = new Date().toISOString().slice(0, 10);
             XLSX.writeFile(wb, `qr-scans-${dateStr}.xlsx`);
             
-            showNotification("Data berhasil diexport ke Excel", "success");
+            showNotification("Export Berhasil", "Data berhasil diexport ke Excel", "success", 2000);
         }
         
         // Hentikan kamera saat halaman ditutup
