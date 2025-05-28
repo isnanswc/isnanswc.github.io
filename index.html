@@ -1635,7 +1635,7 @@ function updateLocalStorageAndMonitor() {
       const shiftDate = new Date(now);
       
       // Jika sebelum jam 7 pagi, gunakan tanggal kemarin
-      if (currentHour < 17) {
+      if (currentHour < 7) {
         shiftDate.setDate(shiftDate.getDate() - 1); // Ini akan mengurangi 1 hari dari tanggal saat ini
       }
       
