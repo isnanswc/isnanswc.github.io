@@ -3,275 +3,378 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scanner QRCode - Versi Notifikasi</title>
+  <title>QR Scanner - Editable</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', Arial, sans-serif;
+      max-width: 100%;
       margin: 0;
-      padding: 0;
-      background: #f4f4f4;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
+      padding: 15px;
+      background-color: #f5f5f5;
     }
 
     h1 {
+      color: #333;
       text-align: center;
-      margin-bottom: 10px;
+      font-size: 24px;
     }
 
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #interactive.viewport {
+    #scanner-container {
       width: 100%;
-      max-width: 400px;
-      margin: auto;
+      max-width: 500px;
+      margin: 15px auto;
       border: 2px solid #ccc;
       border-radius: 8px;
       overflow: hidden;
+      position: relative;
+      background-color: #000;
     }
 
-    video {
+    #qr-video {
       width: 100%;
       display: block;
     }
 
+    #scan-region {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: 70%;
+      border: 3px dashed rgba(255, 255, 255, 0.7);
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    #result {
+      margin: 15px 0;
+      padding: 12px;
+      background-color: #e8f5e9;
+      border-radius: 8px;
+      font-size: 14px;
+      border-left: 4px solid #4CAF50;
+    }
+
     table {
       width: 100%;
-      margin-top: 20px;
       border-collapse: collapse;
-      background: white;
+      margin-top: 15px;
+      font-size: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     th, td {
-      border: 1px solid #aaa;
+      border: 1px solid #ddd;
       padding: 10px;
-      text-align: center;
+      text-align: left;
     }
 
     th {
-      background-color: #eee;
+      background-color: #4CAF50;
+      color: white;
+      font-weight: 500;
     }
 
-    /* Toast Notification */
-    #toast {
-      visibility: hidden;
-      min-width: 250px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 4px;
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+      min-width: 120px;
+    }
+
+    button:hover {
+      background-color: #388E3C;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #stop-btn {
+      background-color: #f44336;
+    }
+
+    #stop-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    #clear-btn {
+      background-color: #607d8b;
+    }
+
+    #clear-btn:hover {
+      background-color: #455a64;
+    }
+
+    #export-btn {
+      background-color: #2196F3;
+    }
+
+    #export-btn:hover {
+      background-color: #1976D2;
+    }
+
+    .permission-help {
+      background-color: #fff3e0;
+      border-left: 4px solid #ffa000;
       padding: 12px;
-      position: fixed;
-      z-index: 9999;
-      left: 50%;
-      bottom: 30px;
-      transform: translateX(-50%);
-      opacity: 0;
-      transition: opacity 0.5s, visibility 0.5s;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      margin: 15px 0;
+      border-radius: 8px;
+      font-size: 14px;
     }
 
-    #toast.show {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    @media screen and (max-width: 600px) {
+    @media (max-width: 480px) {
+      th, td {
+        padding: 8px 6px;
+        font-size: 13px;
+      }
       button {
-        width: 100%;
+        padding: 10px 15px;
+        min-width: 100px;
+        font-size: 13px;
       }
     }
   </style>
 </head>
 <body>
 
-<div id="toast"></div>
-
-<div class="container">
-  <h1>Scanner QR Code</h1>
-
-  <div class="controls">
-    <button onclick="startCamera()">Start Kamera</button>
-    <button onclick="stopCamera()">Stop Kamera</button>
-    <button onclick="exportToExcel()">Export ke Excel</button>
-    <button onclick="clearData()">Hapus Semua Data</button>
+  <h1>QR Code Scanner Android</h1>
+  <div class="permission-help">
+    <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
+    <ol>
+      <li>Mengizinkan akses kamera di browser</li>
+      <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
+      <li>Membuka halaman ini melalui HTTPS (https://)</li>
+    </ol>
   </div>
 
-  <div id="interactive" class="viewport"></div>
+  <div id="scanner-container">
+    <video id="qr-video" playsinline></video>
+    <div id="scan-region"></div>
+  </div>
 
-  <table id="dataTable">
+  <div class="button-container">
+    <button id="start-btn">Mulai Scan</button>
+    <button id="stop-btn">Stop Scan</button>
+    <button id="clear-btn">Hapus Semua</button>
+    <button id="export-btn">Export Excel</button>
+  </div>
+
+  <div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
+
+  <h2>Data Tersimpan</h2>
+  <table id="data-table">
     <thead>
       <tr>
+        <th>No.</th>
         <th>Ukuran</th>
-        <th>No Lot</th>
+        <th>No. Lot</th>
         <th>Kode Pack</th>
+        <th>Waktu Scan</th>
+        <th>Aksi</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="table-body">
       <!-- Data akan ditambahkan di sini -->
     </tbody>
   </table>
-</div>
 
-<!-- Library Quagga2 untuk scanning -->
-<script src="https://unpkg.com/ @ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
+  <!-- Library jsQR untuk scan -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
+  <!-- SheetJS untuk export Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js "></script>
 
-<!-- Library SheetJS untuk export Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js "></script>
+  <script>
+    let videoStream = null;
+    let scanInterval = null;
+    let scanCount = 0;
+    let scannedDataList = []; // Untuk cek duplikasi
+    const resultElement = document.getElementById('result');
+    const tableBody = document.getElementById('table-body');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const videoElement = document.getElementById('qr-video');
 
-<script>
-  let isScanning = true;
+    startBtn.addEventListener('click', startScanning);
+    stopBtn.addEventListener('click', stopScanning);
+    clearBtn.addEventListener('click', clearData);
+    exportBtn.addEventListener('click', exportToExcel);
 
-  const config = {
-    inputStream: {
-      type: "LiveStream",
-      target: document.querySelector('#interactive'),
-      constraints: {
-        facingMode: "environment"
-      },
-    },
-    decoder: {
-      readers: ["qrcode_reader"]
+    async function startScanning() {
+      if (videoStream) stopScanning();
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        videoElement.srcObject = videoStream;
+        videoElement.setAttribute('playsinline', true);
+        await videoElement.play();
+        resultElement.textContent = "Memindai QR code...";
+        scanInterval = setInterval(scanWithjsQR, 300);
+      } catch (err) {
+        resultElement.textContent = "Error: " + err.message;
+        console.error("Error kamera:", err);
+      }
     }
-  };
 
-  function showToast(message, bgColor = "#333") {
-    const toast = document.getElementById("toast");
-    toast.innerHTML = message;
-    toast.style.backgroundColor = bgColor;
-    toast.className = "show";
-    setTimeout(() => { toast.className = ""; }, 3000);
-  }
+    function scanWithjsQR() {
+      if (videoElement.readyState >= videoElement.HAVE_METADATA) {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
 
-  function startCamera() {
-    if (!Quagga.initialized) {
-      Quagga.init(config, function(err) {
-        if (err) {
-          console.log(err);
-          showToast("🔴 Gagal mengakses kamera. Izinkan akses kamera.", "#dc3545");
-          return;
+        if (code) {
+          const data = code.data.trim();
+          if (scannedDataList.includes(data)) return; // Deteksi duplikasi
+          scannedDataList.push(data);
+          processScannedData(data);
         }
-        Quagga.start();
-        isScanning = true;
-        showToast("🟢 Kamera berhasil diaktifkan", "#28a745");
+      }
+    }
+
+    function processScannedData(data) {
+      const parts = data.split('|');
+      if (parts.length === 3) {
+        const [ukuran, noLot, kodePack] = parts.map(p => p.trim());
+        const waktuScan = new Date().toLocaleString();
+        addToTable(ukuran, noLot, kodePack, waktuScan);
+        resultElement.innerHTML = `
+          <strong>✅ Data berhasil discan:</strong><br>
+          Ukuran: ${ukuran}<br>
+          No. Lot: ${noLot}<br>
+          Kode Pack: ${kodePack}
+        `;
+        if (navigator.vibrate) navigator.vibrate(200);
+      } else {
+        resultElement.innerHTML = `
+          <strong style="color: red;">Format QR salah!</strong><br>
+          Gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
+          Contoh: XL|12345|PCK789
+        `;
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      }
+    }
+
+    function addToTable(ukuran, noLot, kodePack, waktuScan) {
+      scanCount++;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${scanCount}</td>
+        <td>${ukuran}</td>
+        <td>${noLot}</td>
+        <td>${kodePack}</td>
+        <td>${waktuScan}</td>
+        <td><button onclick="deleteRow(this)" style="background:#f44336;color:white;padding:5px 10px;border:none;border-radius:5px;">Hapus</button></td>
+      `;
+      tableBody.appendChild(row);
+      saveToLocalStorage();
+    }
+
+    window.deleteRow = function(btn) {
+      const row = btn.closest('tr');
+      row.remove();
+      updateRowNumbers();
+      saveToLocalStorage();
+    }
+
+    function updateRowNumbers() {
+      const rows = tableBody.querySelectorAll('tr');
+      rows.forEach((row, index) => {
+        row.cells[0].textContent = index + 1;
       });
-    } else {
-      Quagga.start();
-      isScanning = true;
-      showToast("🟢 Kamera berhasil diaktifkan", "#28a745");
+      scanCount = rows.length;
     }
-  }
 
-  function stopCamera() {
-    Quagga.stop();
-    isScanning = false;
-    showToast("⚪ Kamera dinonaktifkan", "#6c757d");
-  }
-
-  // Muat data dari localStorage saat halaman dibuka
-  window.onload = () => {
-    loadDataFromLocalStorage();
-    startCamera(); // Mulai otomatis
-  };
-
-  Quagga.onProcessed(function(result) {
-    if (isScanning && result && result.codeResult) {
-      showToast("🔵 Kamera sedang aktif...", "#007bff");
+    function clearData() {
+      if (confirm("Yakin ingin hapus semua data?")) {
+        tableBody.innerHTML = '';
+        scanCount = 0;
+        scannedDataList = [];
+        resultElement.textContent = "Semua data telah dihapus";
+        saveToLocalStorage();
+      }
     }
-  });
 
-  Quagga.onDetected(data => {
-    if (!isScanning) return;
-
-    const rawText = data.codeResult.code;
-    const parts = rawText.split('|');
-
-    if (parts.length === 3) {
-      const ukuran = parts[0];
-      const noLot = parts[1];
-      const kodePack = parts[2];
-
-      const row = `<tr><td>${ukuran}</td><td>${noLot}</td><td>${kodePack}</td></tr>`;
-      document.querySelector("#dataTable tbody").innerHTML += row;
-
-      saveDataToLocalStorage({ ukuran, noLot, kodePack });
-
-      // Hentikan sejenak agar tidak terdeteksi berulang
-      Quagga.stop();
-      setTimeout(() => Quagga.start(), 1500);
-    } else {
-      alert("Format QR salah. Harus ada 3 bagian dipisah dengan |");
+    function exportToExcel() {
+      const wb = XLSX.utils.table_to_book(document.getElementById("data-table"));
+      XLSX.writeFile(wb, "data_qr_code.xlsx");
     }
-  });
 
-  function saveDataToLocalStorage() {
-    const rows = document.querySelectorAll("#dataTable tbody tr");
-    const data = [];
-
-    rows.forEach(row => {
-      const cells = row.querySelectorAll("td");
-      data.push({
-        Ukuran: cells[0].innerText,
-        "No Lot": cells[1].innerText,
-        "Kode Pack": cells[2].innerText
+    function saveToLocalStorage() {
+      const data = [];
+      tableBody.querySelectorAll('tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        data.push({
+          ukuran: tds[1].textContent,
+          no_lot: tds[2].textContent,
+          kode_pack: tds[3].textContent,
+          waktu: tds[4].textContent
+        });
       });
-    });
-
-    localStorage.setItem("qr_data", JSON.stringify(data));
-  }
-
-  function loadDataFromLocalStorage() {
-    const data = JSON.parse(localStorage.getItem("qr_data")) || [];
-    const tbody = document.querySelector("#dataTable tbody");
-    tbody.innerHTML = "";
-
-    data.forEach(item => {
-      const row = `
-        <tr>
-          <td>${item.Ukuran}</td>
-          <td>${item["No Lot"]}</td>
-          <td>${item["Kode Pack"]}</td>
-        </tr>`;
-      tbody.innerHTML += row;
-    });
-  }
-
-  function exportToExcel() {
-    const wb = XLSX.utils.table_to_book(document.getElementById('dataTable'));
-    XLSX.writeFile(wb, 'data_qr_code.xlsx');
-  }
-
-  function clearData() {
-    if (confirm("Yakin ingin hapus semua data?")) {
-      document.querySelector("#dataTable tbody").innerHTML = "";
-      localStorage.removeItem("qr_data");
+      localStorage.setItem('qr_data', JSON.stringify(data));
     }
-  }
-</script>
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('qr_data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        scanCount = data.length;
+        data.forEach((item, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.ukuran}</td>
+            <td>${item.no_lot}</td>
+            <td>${item.kode_pack}</td>
+            <td>${item.waktu}</td>
+            <td><button onclick="deleteRow(this)" style="background:#f44336;color:white;padding:5px 10px;border:none;border-radius:5px;">Hapus</button></td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    }
+
+    function stopScanning() {
+      if (scanInterval) clearInterval(scanInterval);
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+        videoElement.srcObject = null;
+      }
+      resultElement.textContent = "Scan dihentikan.";
+    }
+
+    window.addEventListener('beforeunload', stopScanning);
+    window.onload = loadFromLocalStorage;
+  </script>
 
 </body>
 </html>
