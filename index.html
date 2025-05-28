@@ -1521,7 +1521,7 @@ function updateLocalStorageAndMonitor() {
             </tr>
             <tr>
               <td style="padding:2px; font-size:11px;"><strong>Thick</strong></td>
-              <td style="padding:2px; font-size:12px;"><strong>${item.thickness}</strong></td>
+              <td style="padding:0.5px; font-size:16px;"><strong>${item.thickness}</strong></td>
               <td style="padding:2px; font-size:11px;"><strong>Netto</strong></td>
               <td style="padding:2px; font-size:11px;">${item.netto}</td>
               <td style="padding:2px; font-size:11px;"><strong>Treatment</strong></td>
@@ -1531,7 +1531,7 @@ function updateLocalStorageAndMonitor() {
             </tr>
             <tr>
               <td style="padding:2px; font-size:11px;"><strong>Width</strong></td>
-              <td style="padding:2px; font-size:12px;"><strong>${item.width}</strong></td>
+              <td style="padding:0.5px; font-size:16px;"><strong>${item.width}</strong></td>
               <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
               <td style="padding:2px; font-size:11px;">${item.paperCore}</td>
               <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
@@ -1539,7 +1539,7 @@ function updateLocalStorageAndMonitor() {
             </tr>
             <tr>
               <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
-              <td style="padding:2px; font-size:12px;"><strong>${item.length}</strong></td>
+              <td style="padding:0.5px; font-size:16px;"><strong>${item.length}</strong></td>
               <td style="padding:2px; font-size:11px;"><strong>Joint</strong></td>
               <td style="padding:2px; font-size:11px;">${item.joint}</td>
               <td style="padding:2px; font-size:11px;"><strong>Meter</strong></td>
@@ -1547,12 +1547,12 @@ function updateLocalStorageAndMonitor() {
             </tr>
             <tr>
               <td style="padding:2px; background-color:#f0f0f0; font-size:11px;"><strong>${item.supplier || 'INHOUSE'}</strong></td>
-              <td colspan="4" style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.lot}</td>
+              <td colspan="4" style="padding:2px; font-size:18px; font-weight:bold; text-align:center;">${item.lot}</td>
               <td style="padding:2px; font-size:14px; font-weight:bold; text-align:center;">${item.turunan}</td>
             </tr>
             <tr>
               <td style="padding:2px; font-size:11px;"><strong>Code Pack:</strong></td>
-              <td colspan="3" style="padding:2px; font-size:12px;"><strong>${item.kodePack}<span style="color:red;">${item.subKode}</span></strong></td>
+              <td colspan="3" style="padding:2px; font-size:16px;"><strong>${item.kodePack}<span style="color:red;">${item.subKode}</span></strong></td>
               <td style="padding:2px; font-size:11px;"><strong>STATUS</strong></td>
               <td class="${item.status === 'HOLD' ? 'label-fail' : item.status === 'REJECT' ? 'label-reject' : 'label-pass'}" style="font-size:11px;">
                 ${item.status}
