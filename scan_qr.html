@@ -25,7 +25,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: 100%;
-            max-width: 600px; /* Batasi lebar container */
+            max-width: 600px;
+            margin-top: 20px; /* Sedikit ruang di atas */
         }
 
         h1, h2 {
@@ -35,11 +36,24 @@
 
         #reader {
             width: 100%;
-            max-width: 400px; /* Batasi lebar area scan */
+            max-width: 400px;
             margin: 0 auto 20px auto;
             border: 1px solid #ddd;
             border-radius: 5px;
-            overflow: hidden; /* Penting agar video tidak keluar batas */
+            overflow: hidden;
+            min-height: 250px; /* Memberi tinggi minimum agar elemen terlihat */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+            font-size: 1.1em;
+            background-color: #e0e0e0;
+        }
+
+        #reader video {
+            width: 100%;
+            height: auto;
+            display: block; /* Penting untuk video */
         }
 
         .button {
@@ -66,9 +80,28 @@
             background-color: #c82333;
         }
 
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
         .table-container {
             margin-top: 30px;
-            overflow-x: auto; /* Agar tabel bisa digulir jika terlalu lebar */
+            overflow-x: auto;
         }
 
         table {
@@ -103,7 +136,7 @@
             }
 
             .button {
-                width: calc(100% - 10px); /* Ambil hampir seluruh lebar */
+                width: calc(100% - 10px);
                 margin: 5px 0;
             }
         }
@@ -113,8 +146,10 @@
     <div class="container">
         <h1>Pemindai QR Code</h1>
 
-        <div id="reader"></div>
-        <div id="result" style="display: none;"></div>
+        <div id="reader">
+            <span id="reader-message">Klik "Mulai Scan" untuk mengaktifkan kamera.</span>
+        </div>
+        <div id="statusMessage" class="message" style="display: none;"></div>
 
         <button id="startScan" class="button">Mulai Scan</button>
         <button id="stopScan" class="button stop-button" style="display: none;">Hentikan Scan</button>
@@ -140,19 +175,32 @@
         // JavaScript Diletakkan di sini
         document.addEventListener('DOMContentLoaded', (event) => {
             const html5QrCode = new Html5Qrcode("reader");
-            const resultDiv = document.getElementById('result');
             const dataTableBody = document.querySelector('#dataTable tbody');
             const startScanButton = document.getElementById('startScan');
             const stopScanButton = document.getElementById('stopScan');
+            const statusMessageDiv = document.getElementById('statusMessage');
+            const readerMessageSpan = document.getElementById('reader-message'); // Pesan di dalam area reader
 
-            let isScanning = false; // Untuk melacak status scanning
+            let isScanning = false;
+
+            // Fungsi untuk menampilkan pesan status
+            function showStatusMessage(message, type = 'info') {
+                statusMessageDiv.textContent = message;
+                statusMessageDiv.className = `message ${type}`;
+                statusMessageDiv.style.display = 'block';
+            }
+
+            // Fungsi untuk menyembunyikan pesan status
+            function hideStatusMessage() {
+                statusMessageDiv.style.display = 'none';
+            }
 
             // Fungsi untuk menambahkan data ke tabel
             function addDataToTable(ukuran, noLot, kodePack) {
-                const newRow = dataTableBody.insertRow(); // Membuat baris baru
-                const ukuranCell = newRow.insertCell(); // Membuat sel untuk Ukuran
-                const noLotCell = newRow.insertCell(); // Membuat sel untuk No Lot
-                const kodePackCell = newRow.insertCell(); // Membuat sel untuk Kode Pack
+                const newRow = dataTableBody.insertRow();
+                const ukuranCell = newRow.insertCell();
+                const noLotCell = newRow.insertCell();
+                const kodePackCell = newRow.insertCell();
 
                 ukuranCell.textContent = ukuran;
                 noLotCell.textContent = noLot;
@@ -161,8 +209,8 @@
 
             // Konfigurasi untuk scanner QR Code
             const qrCodeConfig = {
-                fps: 10,    // Frames per second, untuk seberapa sering mencoba memindai
-                qrbox: { width: 250, height: 250 }, // Ukuran kotak pemindaian
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
                 supportedScanFormats: [
                     Html5QrcodeSupportedFormats.QR_CODE
                 ]
@@ -170,12 +218,11 @@
 
             // Callback saat scan berhasil
             const onScanSuccess = (decodedText, decodedResult) => {
-                if (!isScanning) return; // Pastikan hanya memproses saat sedang scanning
+                if (!isScanning) return;
 
-                console.log(`QR Code terdeteksi: ${decodedText}`);
-                resultDiv.textContent = `Hasil Scan: ${decodedText}`; // Opsional, untuk debug
+                console.log(`[QR Success] QR Code terdeteksi: ${decodedText}`);
+                hideStatusMessage(); // Sembunyikan pesan jika scan berhasil
 
-                // Pisahkan data berdasarkan "|"
                 const data = decodedText.split('|');
 
                 if (data.length === 3) {
@@ -185,8 +232,8 @@
 
                     addDataToTable(ukuran, noLot, kodePack);
                 } else {
-                    alert('Format QR Code tidak sesuai (seharusnya Ukuran|NoLot|KodePack).');
-                    console.warn('Format QR Code tidak sesuai:', decodedText);
+                    showStatusMessage('Format QR Code tidak sesuai (seharusnya Ukuran|NoLot|KodePack). Silakan coba QR lain.', 'error');
+                    console.warn('[QR Warning] Format QR Code tidak sesuai:', decodedText);
                 }
 
                 // Hentikan scan setelah berhasil memproses 1 QR Code
@@ -194,14 +241,19 @@
                 stopScanner();
             };
 
-            // Callback saat scan error
+            // Callback saat scan error (biasanya terjadi jika tidak ada QR terdeteksi)
             const onScanError = (errorMessage) => {
-                // console.warn(`QR Code Scan Error: ${errorMessage}`); // Bisa diaktifkan untuk debug
+                // Jangan menampilkan error di UI secara terus-menerus
+                // console.warn(`[QR Error] Scan Error: ${errorMessage}`);
             };
 
             // Fungsi untuk memulai scanner
             async function startScanner() {
                 try {
+                    // Sembunyikan pesan di dalam reader saat kamera akan aktif
+                    readerMessageSpan.style.display = 'none';
+                    showStatusMessage('Memulai kamera, harap berikan izin jika diminta...', 'info');
+
                     await html5QrCode.start(
                         { facingMode: "environment" }, // Prioritaskan kamera belakang
                         qrCodeConfig,
@@ -211,11 +263,25 @@
                     isScanning = true;
                     startScanButton.style.display = 'none';
                     stopScanButton.style.display = 'inline-block';
-                    resultDiv.style.display = 'none'; // Sembunyikan hasil sementara
-                    console.log("Scanner dimulai.");
+                    hideStatusMessage(); // Sembunyikan pesan setelah kamera aktif
+                    console.log("[Scanner] Scanner dimulai.");
                 } catch (err) {
-                    alert(`Tidak dapat memulai scanner: ${err}. Pastikan Anda memberikan izin kamera.`);
-                    console.error("Gagal memulai scanner:", err);
+                    isScanning = false;
+                    startScanButton.style.display = 'inline-block'; // Tampilkan lagi tombol start
+                    stopScanButton.style.display = 'none';
+                    readerMessageSpan.style.display = 'block'; // Tampilkan kembali pesan di reader
+                    readerMessageSpan.textContent = "Gagal memulai kamera. Coba lagi atau periksa izin.";
+
+                    let errorMessage = "Terjadi kesalahan saat memulai kamera.";
+                    if (err.name === "NotAllowedError") {
+                        errorMessage = "Izin kamera ditolak. Harap izinkan akses kamera di pengaturan browser/ponsel Anda.";
+                    } else if (err.name === "NotFoundError") {
+                        errorMessage = "Tidak ada kamera yang ditemukan. Pastikan perangkat Anda memiliki kamera yang berfungsi.";
+                    } else if (err.name === "OverconstrainedError") {
+                        errorMessage = "Kamera tidak dapat diakses dengan batasan yang diminta (misalnya, kamera belakang tidak tersedia).";
+                    }
+                    showStatusMessage(errorMessage + " Error detail: " + err.message, 'error');
+                    console.error("[Scanner Error] Gagal memulai scanner:", err);
                 }
             }
 
@@ -227,10 +293,14 @@
                         isScanning = false;
                         startScanButton.style.display = 'inline-block';
                         stopScanButton.style.display = 'none';
-                        console.log("Scanner dihentikan.");
+                        readerMessageSpan.style.display = 'block'; // Tampilkan kembali pesan di reader
+                        readerMessageSpan.textContent = "Scan dihentikan. Klik 'Mulai Scan' lagi.";
+                        hideStatusMessage(); // Sembunyikan pesan status
+                        console.log("[Scanner] Scanner dihentikan.");
                     }
                 } catch (err) {
-                    console.error("Gagal menghentikan scanner:", err);
+                    console.error("[Scanner Error] Gagal menghentikan scanner:", err);
+                    showStatusMessage("Gagal menghentikan scanner. Coba muat ulang halaman.", 'error');
                 }
             }
 
@@ -238,8 +308,8 @@
             startScanButton.addEventListener('click', startScanner);
             stopScanButton.addEventListener('click', stopScanner);
 
-            // Otomatis memulai scanner saat halaman dimuat (opsional, bisa dihapus)
-            // startScanner();
+            // Inisialisasi awal pesan di reader
+            readerMessageSpan.textContent = "Klik 'Mulai Scan' untuk mengaktifkan kamera.";
         });
     </script>
 </body>
