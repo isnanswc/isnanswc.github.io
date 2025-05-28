@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QR Scanner - Editable</title>
+  <title>QR Scanner Android</title>
   <style>
+    /* [CSS sama seperti sebelumnya] */
     body {
       font-family: 'Roboto', Arial, sans-serif;
       max-width: 100%;
@@ -12,13 +13,11 @@
       padding: 15px;
       background-color: #f5f5f5;
     }
-
     h1 {
       color: #333;
       text-align: center;
       font-size: 24px;
     }
-
     #scanner-container {
       width: 100%;
       max-width: 500px;
@@ -29,12 +28,10 @@
       position: relative;
       background-color: #000;
     }
-
     #qr-video {
       width: 100%;
       display: block;
     }
-
     #scan-region {
       position: absolute;
       top: 50%;
@@ -46,7 +43,6 @@
       box-sizing: border-box;
       pointer-events: none;
     }
-
     #result {
       margin: 15px 0;
       padding: 12px;
@@ -55,7 +51,6 @@
       font-size: 14px;
       border-left: 4px solid #4CAF50;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -63,23 +58,19 @@
       font-size: 14px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-
     th, td {
       border: 1px solid #ddd;
       padding: 10px;
       text-align: left;
     }
-
     th {
       background-color: #4CAF50;
       color: white;
       font-weight: 500;
     }
-
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
-
     .button-container {
       display: flex;
       justify-content: center;
@@ -87,7 +78,6 @@
       margin: 15px 0;
       flex-wrap: wrap;
     }
-
     button {
       padding: 12px 20px;
       background-color: #4CAF50;
@@ -101,40 +91,25 @@
       transition: all 0.3s;
       min-width: 120px;
     }
-
     button:hover {
       background-color: #388E3C;
       transform: translateY(-2px);
     }
-
     button:active {
       transform: translateY(0);
     }
-
     #stop-btn {
       background-color: #f44336;
     }
-
     #stop-btn:hover {
       background-color: #d32f2f;
     }
-
     #clear-btn {
       background-color: #607d8b;
     }
-
     #clear-btn:hover {
       background-color: #455a64;
     }
-
-    #export-btn {
-      background-color: #2196F3;
-    }
-
-    #export-btn:hover {
-      background-color: #1976D2;
-    }
-
     .permission-help {
       background-color: #fff3e0;
       border-left: 4px solid #ffa000;
@@ -143,7 +118,6 @@
       border-radius: 8px;
       font-size: 14px;
     }
-
     @media (max-width: 480px) {
       th, td {
         padding: 8px 6px;
@@ -159,222 +133,156 @@
 </head>
 <body>
 
-  <h1>QR Code Scanner Android</h1>
-  <div class="permission-help">
-    <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
-    <ol>
-      <li>Mengizinkan akses kamera di browser</li>
-      <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
-      <li>Membuka halaman ini melalui HTTPS (https://)</li>
-    </ol>
-  </div>
+<h1>QR Code Scanner Android</h1>
+<div class="permission-help">
+  <strong>Catatan:</strong> Jika kamera tidak muncul, pastikan Anda:
+  <ol>
+    <li>Mengizinkan akses kamera di browser</li>
+    <li>Menggunakan browser Chrome, Firefox, atau Edge</li>
+    <li>Membuka halaman ini melalui HTTPS (https://)</li>
+  </ol>
+</div>
 
-  <div id="scanner-container">
-    <video id="qr-video" playsinline></video>
-    <div id="scan-region"></div>
-  </div>
+<div id="scanner-container">
+  <video id="qr-video" playsinline autoplay></video>
+  <div id="scan-region"></div>
+</div>
 
-  <div class="button-container">
-    <button id="start-btn">Mulai Scan</button>
-    <button id="stop-btn">Stop Scan</button>
-    <button id="clear-btn">Hapus Semua</button>
-    <button id="export-btn">Export Excel</button>
-  </div>
+<div class="button-container">
+  <button id="start-btn">Mulai Scan</button>
+  <button id="stop-btn">Stop Scan</button>
+  <button id="clear-btn">Hapus Data</button>
+</div>
 
-  <div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
+<div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
 
-  <h2>Data Tersimpan</h2>
-  <table id="data-table">
-    <thead>
-      <tr>
-        <th>No.</th>
-        <th>Ukuran</th>
-        <th>No. Lot</th>
-        <th>Kode Pack</th>
-        <th>Waktu Scan</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody id="table-body">
-      <!-- Data akan ditambahkan di sini -->
-    </tbody>
-  </table>
+<h2>Data Tersimpan</h2>
+<table id="data-table">
+  <thead>
+    <tr>
+      <th>No.</th>
+      <th>Ukuran</th>
+      <th>No. Lot</th>
+      <th>Kode Pack</th>
+      <th>Waktu Scan</th>
+    </tr>
+  </thead>
+  <tbody id="table-body">
+    <!-- Data akan ditambahkan di sini -->
+  </tbody>
+</table>
 
-  <!-- Library jsQR untuk scan -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
-  <!-- SheetJS untuk export Excel -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js "></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
+<script>
+  let videoStream = null;
+  let scanInterval = null;
+  let scanCount = 0;
+  let lastScanned = null;
 
-  <script>
-    let videoStream = null;
-    let scanInterval = null;
-    let scanCount = 0;
-    let scannedDataList = []; // Untuk cek duplikasi
-    const resultElement = document.getElementById('result');
-    const tableBody = document.getElementById('table-body');
-    const startBtn = document.getElementById('start-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const clearBtn = document.getElementById('clear-btn');
-    const exportBtn = document.getElementById('export-btn');
-    const videoElement = document.getElementById('qr-video');
+  const videoElement = document.getElementById('qr-video');
+  const resultElement = document.getElementById('result');
+  const tableBody = document.getElementById('table-body');
+  const startBtn = document.getElementById('start-btn');
+  const stopBtn = document.getElementById('stop-btn');
+  const clearBtn = document.getElementById('clear-btn');
 
-    startBtn.addEventListener('click', startScanning);
-    stopBtn.addEventListener('click', stopScanning);
-    clearBtn.addEventListener('click', clearData);
-    exportBtn.addEventListener('click', exportToExcel);
+  startBtn.addEventListener('click', startScanning);
+  stopBtn.addEventListener('click', stopScanning);
+  clearBtn.addEventListener('click', clearData);
 
-    async function startScanning() {
-      if (videoStream) stopScanning();
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
-        videoElement.srcObject = videoStream;
-        videoElement.setAttribute('playsinline', true);
-        await videoElement.play();
-        resultElement.textContent = "Memindai QR code...";
-        scanInterval = setInterval(scanWithjsQR, 300);
-      } catch (err) {
-        resultElement.textContent = "Error: " + err.message;
-        console.error("Error kamera:", err);
+  async function startScanning() {
+    if (videoStream) stopScanning();
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      videoElement.srcObject = videoStream;
+      videoElement.setAttribute('playsinline', true);
+      videoElement.play();
+      resultElement.textContent = "Memindai QR code...";
+      scanInterval = setInterval(scanWithjsQR, 300);
+    } catch (err) {
+      resultElement.textContent = "Error: " + err.message;
+      console.error("Error kamera:", err);
+    }
+  }
+
+  function scanWithjsQR() {
+    if (videoElement.readyState >= videoElement.HAVE_METADATA) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+
+      if (code && (!lastScanned || code.data !== lastScanned)) {
+        lastScanned = code.data;
+        processScannedData(code.data);
       }
     }
+  }
 
-    function scanWithjsQR() {
-      if (videoElement.readyState >= videoElement.HAVE_METADATA) {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-
-        if (code) {
-          const data = code.data.trim();
-          if (scannedDataList.includes(data)) return; // Deteksi duplikasi
-          scannedDataList.push(data);
-          processScannedData(data);
-        }
-      }
-    }
-
-    function processScannedData(data) {
-      const parts = data.split('|');
-      if (parts.length === 3) {
-        const [ukuran, noLot, kodePack] = parts.map(p => p.trim());
-        const waktuScan = new Date().toLocaleString();
-        addToTable(ukuran, noLot, kodePack, waktuScan);
-        resultElement.innerHTML = `
-          <strong>✅ Data berhasil discan:</strong><br>
-          Ukuran: ${ukuran}<br>
-          No. Lot: ${noLot}<br>
-          Kode Pack: ${kodePack}
-        `;
-        if (navigator.vibrate) navigator.vibrate(200);
-      } else {
-        resultElement.innerHTML = `
-          <strong style="color: red;">Format QR salah!</strong><br>
-          Gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
-          Contoh: XL|12345|PCK789
-        `;
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      }
-    }
-
-    function addToTable(ukuran, noLot, kodePack, waktuScan) {
-      scanCount++;
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${scanCount}</td>
-        <td>${ukuran}</td>
-        <td>${noLot}</td>
-        <td>${kodePack}</td>
-        <td>${waktuScan}</td>
-        <td><button onclick="deleteRow(this)" style="background:#f44336;color:white;padding:5px 10px;border:none;border-radius:5px;">Hapus</button></td>
+  function processScannedData(data) {
+    const parts = data.split('|');
+    if (parts.length === 3) {
+      const [ukuran, noLot, kodePack] = parts.map(p => p.trim());
+      const waktuScan = new Date().toLocaleString();
+      addToTable(ukuran, noLot, kodePack, waktuScan);
+      resultElement.innerHTML = `
+        <strong>✅ Data berhasil discan:</strong><br>
+        Ukuran: ${ukuran}<br>
+        No. Lot: ${noLot}<br>
+        Kode Pack: ${kodePack}
       `;
-      tableBody.appendChild(row);
-      saveToLocalStorage();
+      if (navigator.vibrate) navigator.vibrate(200);
+    } else {
+      resultElement.innerHTML = `
+        <strong style="color: red;">Format QR salah!</strong><br>
+        Gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
+        Contoh: XL|12345|PCK789
+      `;
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
+  }
 
-    window.deleteRow = function(btn) {
-      const row = btn.closest('tr');
-      row.remove();
-      updateRowNumbers();
-      saveToLocalStorage();
+  function addToTable(ukuran, noLot, kodePack, waktuScan) {
+    scanCount++;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${scanCount}</td>
+      <td>${ukuran}</td>
+      <td>${noLot}</td>
+      <td>${kodePack}</td>
+      <td>${waktuScan}</td>
+    `;
+    tableBody.appendChild(row);
+    row.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function clearData() {
+    if (confirm("Yakin ingin hapus semua data?")) {
+      tableBody.innerHTML = '';
+      scanCount = 0;
+      lastScanned = null;
+      resultElement.textContent = "Semua data telah dihapus";
     }
+  }
 
-    function updateRowNumbers() {
-      const rows = tableBody.querySelectorAll('tr');
-      rows.forEach((row, index) => {
-        row.cells[0].textContent = index + 1;
-      });
-      scanCount = rows.length;
+  function stopScanning() {
+    if (scanInterval) clearInterval(scanInterval);
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+      videoStream = null;
+      videoElement.srcObject = null;
     }
+    resultElement.textContent = "Scan dihentikan.";
+  }
 
-    function clearData() {
-      if (confirm("Yakin ingin hapus semua data?")) {
-        tableBody.innerHTML = '';
-        scanCount = 0;
-        scannedDataList = [];
-        resultElement.textContent = "Semua data telah dihapus";
-        saveToLocalStorage();
-      }
-    }
-
-    function exportToExcel() {
-      const wb = XLSX.utils.table_to_book(document.getElementById("data-table"));
-      XLSX.writeFile(wb, "data_qr_code.xlsx");
-    }
-
-    function saveToLocalStorage() {
-      const data = [];
-      tableBody.querySelectorAll('tr').forEach(tr => {
-        const tds = tr.querySelectorAll('td');
-        data.push({
-          ukuran: tds[1].textContent,
-          no_lot: tds[2].textContent,
-          kode_pack: tds[3].textContent,
-          waktu: tds[4].textContent
-        });
-      });
-      localStorage.setItem('qr_data', JSON.stringify(data));
-    }
-
-    function loadFromLocalStorage() {
-      const saved = localStorage.getItem('qr_data');
-      if (saved) {
-        const data = JSON.parse(saved);
-        scanCount = data.length;
-        data.forEach((item, index) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.ukuran}</td>
-            <td>${item.no_lot}</td>
-            <td>${item.kode_pack}</td>
-            <td>${item.waktu}</td>
-            <td><button onclick="deleteRow(this)" style="background:#f44336;color:white;padding:5px 10px;border:none;border-radius:5px;">Hapus</button></td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
-    }
-
-    function stopScanning() {
-      if (scanInterval) clearInterval(scanInterval);
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-        videoElement.srcObject = null;
-      }
-      resultElement.textContent = "Scan dihentikan.";
-    }
-
-    window.addEventListener('beforeunload', stopScanning);
-    window.onload = loadFromLocalStorage;
-  </script>
+  window.addEventListener('beforeunload', stopScanning);
+</script>
 
 </body>
 </html>
