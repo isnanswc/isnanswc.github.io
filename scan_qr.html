@@ -128,6 +128,14 @@
             background-color: #455a64;
         }
         
+        #export-btn {
+            background-color: #2196F3;
+        }
+        
+        #export-btn:hover {
+            background-color: #0b7dda;
+        }
+        
         .permission-help {
             background-color: #fff3e0;
             border-left: 4px solid #ffa000;
@@ -135,6 +143,18 @@
             margin: 15px 0;
             border-radius: 8px;
             font-size: 14px;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            min-width: auto;
+            border-radius: 4px;
+            margin: 2px;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
         }
         
         @media (max-width: 480px) {
@@ -172,6 +192,7 @@
         <button id="start-btn">Mulai Scan</button>
         <button id="stop-btn">Stop Scan</button>
         <button id="clear-btn">Hapus Data</button>
+        <button id="export-btn">Export Excel</button>
     </div>
     
     <div id="result">Arahkan kamera ke QR code dengan format: ukuran-no_lot-kode_pack</div>
@@ -185,6 +206,7 @@
                 <th>No. Lot</th>
                 <th>Kode Pack</th>
                 <th>Waktu Scan</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody id="table-body">
@@ -193,12 +215,14 @@
     </table>
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         // Variabel global
         let videoStream = null;
         let scanInterval = null;
         let scanCount = 0;
         let lastScanned = null;
+        let scannedData = [];
         
         // Elemen DOM
         const videoElement = document.getElementById('qr-video');
@@ -207,11 +231,16 @@
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const exportBtn = document.getElementById('export-btn');
         
         // Event listeners
         startBtn.addEventListener('click', startScanning);
         stopBtn.addEventListener('click', stopScanning);
-        clearBtn.addEventListener('click', clearData);
+        clearBtn.addEventListener('click', clearAllData);
+        exportBtn.addEventListener('click', exportToExcel);
+        
+        // Load data from localStorage when page loads
+        document.addEventListener('DOMContentLoaded', loadFromStorage);
         
         // Fungsi untuk memulai scanning (dioptimalkan untuk Android)
         async function startScanning() {
@@ -311,12 +340,28 @@
                 const [ukuran, noLot, kodePack] = parts.map(part => part.trim());
                 const waktuScan = new Date().toLocaleString();
                 
-                // Tambahkan ke tabel
+                // Cek duplikat sebelum menambahkan
+                if (isDuplicate(noLot, kodePack)) {
+                    resultElement.innerHTML = `
+                        <strong style="color: #ff9800;">Data sudah pernah discan!</strong><br>
+                        <b>No. Lot:</b> ${noLot}<br>
+                        <b>Kode Pack:</b> ${kodePack}
+                    `;
+                    
+                    // Beri feedback error (getar panjang)
+                    if (navigator.vibrate) {
+                        navigator.vibrate([100, 50, 100, 50, 100]);
+                    }
+                    return;
+                }
+                
+                // Tambahkan ke tabel dan penyimpanan
                 addToTable(ukuran, noLot, kodePack, waktuScan);
+                saveToStorage(ukuran, noLot, kodePack, waktuScan);
                 
                 // Tampilkan hasil
                 resultElement.innerHTML = `
-                    <strong>? Data berhasil discan:</strong><br>
+                    <strong>✓ Data berhasil discan:</strong><br>
                     <b>Ukuran:</b> ${ukuran}<br>
                     <b>No. Lot:</b> ${noLot}<br>
                     <b>Kode Pack:</b> ${kodePack}
@@ -331,7 +376,7 @@
                 resultElement.innerHTML = `
                     <strong style="color: #f44336;">Format QR code tidak valid!</strong><br>
                     Harap gunakan format: <b>ukuran|no_lot|kode_pack</b><br>
-                    Contoh: <code>CPP L01 25 MC X 2200 MM-L01250525A101-3B05250001</code>
+                    Contoh: <code>CPP L01 25 MC X 2200 MM|L01250525A101|3B05250001</code>
                 `;
                 
                 // Beri feedback error (getar panjang)
@@ -345,6 +390,7 @@
         function addToTable(ukuran, noLot, kodePack, waktuScan) {
             scanCount++;
             const newRow = document.createElement('tr');
+            newRow.dataset.id = Date.now(); // Unique ID for each row
             
             newRow.innerHTML = `
                 <td>${scanCount}</td>
@@ -352,21 +398,137 @@
                 <td>${noLot}</td>
                 <td>${kodePack}</td>
                 <td>${waktuScan}</td>
+                <td>
+                    <button class="action-btn delete-btn" onclick="deleteRow('${newRow.dataset.id}', '${noLot}', '${kodePack}')">Hapus</button>
+                </td>
             `;
             
             tableBody.appendChild(newRow);
+            
+            // Tambahkan ke array scannedData
+            scannedData.push({
+                id: newRow.dataset.id,
+                ukuran,
+                noLot,
+                kodePack,
+                waktuScan
+            });
             
             // Scroll ke baris baru
             newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
-        // Fungsi untuk menghapus semua data
-        function clearData() {
-            if (confirm("Apakah Anda yakin ingin menghapus semua data?")) {
-                tableBody.innerHTML = '';
-                scanCount = 0;
-                resultElement.textContent = "Semua data telah dihapus";
+        // Fungsi untuk mengecek data duplikat
+        function isDuplicate(noLot, kodePack) {
+            return scannedData.some(item => 
+                item.noLot === noLot && item.kodePack === kodePack
+            );
+        }
+        
+        // Fungsi untuk menghapus baris tertentu
+        function deleteRow(rowId, noLot, kodePack) {
+            if (confirm(`Apakah Anda yakin ingin menghapus data ini?\nNo. Lot: ${noLot}\nKode Pack: ${kodePack}`)) {
+                // Hapus dari DOM
+                const row = document.querySelector(`tr[data-id="${rowId}"]`);
+                if (row) row.remove();
+                
+                // Hapus dari array scannedData
+                scannedData = scannedData.filter(item => item.id !== rowId);
+                
+                // Update localStorage
+                updateStorage();
+                
+                // Update nomor urut
+                updateRowNumbers();
+                
+                resultElement.textContent = "Data berhasil dihapus.";
             }
+        }
+        
+        // Fungsi untuk memperbarui nomor urut
+        function updateRowNumbers() {
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+            scanCount = rows.length;
+        }
+        
+        // Fungsi untuk menghapus semua data
+        function clearAllData() {
+            if (scannedData.length === 0) {
+                resultElement.textContent = "Tidak ada data yang bisa dihapus.";
+                return;
+            }
+            
+            if (confirm("Apakah Anda yakin ingin menghapus SEMUA data?")) {
+                tableBody.innerHTML = '';
+                scannedData = [];
+                scanCount = 0;
+                localStorage.removeItem('qrScans');
+                resultElement.textContent = "Semua data telah dihapus.";
+            }
+        }
+        
+        // Fungsi untuk menyimpan data ke localStorage
+        function saveToStorage(ukuran, noLot, kodePack, waktuScan) {
+            const data = {
+                id: Date.now().toString(),
+                ukuran,
+                noLot,
+                kodePack,
+                waktuScan
+            };
+            
+            scannedData.push(data);
+            updateStorage();
+        }
+        
+        // Fungsi untuk memperbarui localStorage
+        function updateStorage() {
+            localStorage.setItem('qrScans', JSON.stringify(scannedData));
+        }
+        
+        // Fungsi untuk memuat data dari localStorage
+        function loadFromStorage() {
+            const savedData = localStorage.getItem('qrScans');
+            if (savedData) {
+                scannedData = JSON.parse(savedData);
+                scannedData.forEach((data, index) => {
+                    addToTable(data.ukuran, data.noLot, data.kodePack, data.waktuScan);
+                });
+            }
+        }
+        
+        // Fungsi untuk export ke Excel
+        function exportToExcel() {
+            if (scannedData.length === 0) {
+                resultElement.textContent = "Tidak ada data yang bisa diexport.";
+                return;
+            }
+            
+            // Prepare data for export
+            const exportData = [
+                ['No.', 'Ukuran', 'No. Lot', 'Kode Pack', 'Waktu Scan'],
+                ...scannedData.map((item, index) => [
+                    index + 1,
+                    item.ukuran,
+                    item.noLot,
+                    item.kodePack,
+                    item.waktuScan
+                ])
+            ];
+            
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            XLSX.utils.book_append_sheet(wb, ws, "QR Scans");
+            
+            // Export to file
+            const dateStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `qr-scans-${dateStr}.xlsx`);
+            
+            resultElement.textContent = "Data berhasil diexport ke Excel.";
         }
         
         // Hentikan kamera saat halaman ditutup
