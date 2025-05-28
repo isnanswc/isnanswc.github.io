@@ -739,8 +739,9 @@
             showLoader(false);
         }
         
-        // Fungsi untuk memproses data yang discan
+       // Fungsi untuk memproses data yang discan
         function processScannedData(data) {
+            console.log("Data mentah dari QR:", data); // Tambahkan baris ini
             try {
                 // Validasi data
                 if (typeof data !== 'string' || data.trim() === '') {
@@ -749,6 +750,7 @@
                 
                 // Format data: ukuran|no_lot|kode_pack
                 const parts = data.split('|').map(part => part.trim());
+                console.log("Bagian data setelah split:", parts); // Tambahkan baris ini
                 
                 if (parts.length !== 3) {
                     throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${data}`);
