@@ -1,316 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <style>
-        /* CSS Diletakkan di sini */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scanner QRCode - Versi Notifikasi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
 
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            margin-top: 20px; /* Sedikit ruang di atas */
-        }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
 
-        h1, h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
 
-        #reader {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto 20px auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-            min-height: 250px; /* Memberi tinggi minimum agar elemen terlihat */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #555;
-            font-size: 1.1em;
-            background-color: #e0e0e0;
-        }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
 
-        #reader video {
-            width: 100%;
-            height: auto;
-            display: block; /* Penting untuk video */
-        }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-        .button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 5px;
-            transition: background-color 0.3s ease;
-        }
+    button:hover {
+      background-color: #0056b3;
+    }
 
-        .button:hover {
-            background-color: #0056b3;
-        }
+    #interactive.viewport {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
 
-        .stop-button {
-            background-color: #dc3545;
-        }
+    video {
+      width: 100%;
+      display: block;
+    }
 
-        .stop-button:hover {
-            background-color: #c82333;
-        }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background: white;
+    }
 
-        .message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: center;
+    }
 
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+    th {
+      background-color: #eee;
+    }
 
-        .message.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
+    /* Toast Notification */
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 12px;
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.5s, visibility 0.5s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
 
-        .table-container {
-            margin-top: 30px;
-            overflow-x: auto;
-        }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #f2f2f2;
-            color: #333;
-        }
-
-        table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Responsivitas untuk layar kecil */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-
-            .button {
-                width: calc(100% - 10px);
-                margin: 5px 0;
-            }
-        }
-    </style>
+    @media screen and (max-width: 600px) {
+      button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Pemindai QR Code</h1>
 
-        <div id="reader">
-            <span id="reader-message">Klik "Mulai Scan" untuk mengaktifkan kamera.</span>
-        </div>
-        <div id="statusMessage" class="message" style="display: none;"></div>
+<div id="toast"></div>
 
-        <button id="startScan" class="button">Mulai Scan</button>
-        <button id="stopScan" class="button stop-button" style="display: none;">Hentikan Scan</button>
+<div class="container">
+  <h1>Scanner QR Code</h1>
 
-        <div class="table-container">
-            <h2>Data Terpindai</h2>
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Ukuran</th>
-                        <th>No Lot</th>
-                        <th>Kode Pack</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    </tbody>
-            </table>
-        </div>
-    </div>
+  <div class="controls">
+    <button onclick="startCamera()">Start Kamera</button>
+    <button onclick="stopCamera()">Stop Kamera</button>
+    <button onclick="exportToExcel()">Export ke Excel</button>
+    <button onclick="clearData()">Hapus Semua Data</button>
+  </div>
 
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <script>
-        // JavaScript Diletakkan di sini
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const html5QrCode = new Html5Qrcode("reader");
-            const dataTableBody = document.querySelector('#dataTable tbody');
-            const startScanButton = document.getElementById('startScan');
-            const stopScanButton = document.getElementById('stopScan');
-            const statusMessageDiv = document.getElementById('statusMessage');
-            const readerMessageSpan = document.getElementById('reader-message'); // Pesan di dalam area reader
+  <div id="interactive" class="viewport"></div>
 
-            let isScanning = false;
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Ukuran</th>
+        <th>No Lot</th>
+        <th>Kode Pack</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data akan ditambahkan di sini -->
+    </tbody>
+  </table>
+</div>
 
-            // Fungsi untuk menampilkan pesan status
-            function showStatusMessage(message, type = 'info') {
-                statusMessageDiv.textContent = message;
-                statusMessageDiv.className = `message ${type}`;
-                statusMessageDiv.style.display = 'block';
-            }
+<!-- Library Quagga2 untuk scanning -->
+<script src="https://unpkg.com/ @ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 
-            // Fungsi untuk menyembunyikan pesan status
-            function hideStatusMessage() {
-                statusMessageDiv.style.display = 'none';
-            }
+<!-- Library SheetJS untuk export Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js "></script>
 
-            // Fungsi untuk menambahkan data ke tabel
-            function addDataToTable(ukuran, noLot, kodePack) {
-                const newRow = dataTableBody.insertRow();
-                const ukuranCell = newRow.insertCell();
-                const noLotCell = newRow.insertCell();
-                const kodePackCell = newRow.insertCell();
+<script>
+  let isScanning = true;
 
-                ukuranCell.textContent = ukuran;
-                noLotCell.textContent = noLot;
-                kodePackCell.textContent = kodePack;
-            }
+  const config = {
+    inputStream: {
+      type: "LiveStream",
+      target: document.querySelector('#interactive'),
+      constraints: {
+        facingMode: "environment"
+      },
+    },
+    decoder: {
+      readers: ["qrcode_reader"]
+    }
+  };
 
-            // Konfigurasi untuk scanner QR Code
-            const qrCodeConfig = {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                supportedScanFormats: [
-                    Html5QrcodeSupportedFormats.QR_CODE
-                ]
-            };
+  function showToast(message, bgColor = "#333") {
+    const toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.style.backgroundColor = bgColor;
+    toast.className = "show";
+    setTimeout(() => { toast.className = ""; }, 3000);
+  }
 
-            // Callback saat scan berhasil
-            const onScanSuccess = (decodedText, decodedResult) => {
-                if (!isScanning) return;
+  function startCamera() {
+    if (!Quagga.initialized) {
+      Quagga.init(config, function(err) {
+        if (err) {
+          console.log(err);
+          showToast("🔴 Gagal mengakses kamera. Izinkan akses kamera.", "#dc3545");
+          return;
+        }
+        Quagga.start();
+        isScanning = true;
+        showToast("🟢 Kamera berhasil diaktifkan", "#28a745");
+      });
+    } else {
+      Quagga.start();
+      isScanning = true;
+      showToast("🟢 Kamera berhasil diaktifkan", "#28a745");
+    }
+  }
 
-                console.log(`[QR Success] QR Code terdeteksi: ${decodedText}`);
-                hideStatusMessage(); // Sembunyikan pesan jika scan berhasil
+  function stopCamera() {
+    Quagga.stop();
+    isScanning = false;
+    showToast("⚪ Kamera dinonaktifkan", "#6c757d");
+  }
 
-                const data = decodedText.split('|');
+  // Muat data dari localStorage saat halaman dibuka
+  window.onload = () => {
+    loadDataFromLocalStorage();
+    startCamera(); // Mulai otomatis
+  };
 
-                if (data.length === 3) {
-                    const ukuran = data[0].trim();
-                    const noLot = data[1].trim();
-                    const kodePack = data[2].trim();
+  Quagga.onProcessed(function(result) {
+    if (isScanning && result && result.codeResult) {
+      showToast("🔵 Kamera sedang aktif...", "#007bff");
+    }
+  });
 
-                    addDataToTable(ukuran, noLot, kodePack);
-                } else {
-                    showStatusMessage('Format QR Code tidak sesuai (seharusnya Ukuran|NoLot|KodePack). Silakan coba QR lain.', 'error');
-                    console.warn('[QR Warning] Format QR Code tidak sesuai:', decodedText);
-                }
+  Quagga.onDetected(data => {
+    if (!isScanning) return;
 
-                // Hentikan scan setelah berhasil memproses 1 QR Code
-                // Jika ingin terus scan beberapa QR, hapus baris di bawah ini
-                stopScanner();
-            };
+    const rawText = data.codeResult.code;
+    const parts = rawText.split('|');
 
-            // Callback saat scan error (biasanya terjadi jika tidak ada QR terdeteksi)
-            const onScanError = (errorMessage) => {
-                // Jangan menampilkan error di UI secara terus-menerus
-                // console.warn(`[QR Error] Scan Error: ${errorMessage}`);
-            };
+    if (parts.length === 3) {
+      const ukuran = parts[0];
+      const noLot = parts[1];
+      const kodePack = parts[2];
 
-            // Fungsi untuk memulai scanner
-            async function startScanner() {
-                try {
-                    // Sembunyikan pesan di dalam reader saat kamera akan aktif
-                    readerMessageSpan.style.display = 'none';
-                    showStatusMessage('Memulai kamera, harap berikan izin jika diminta...', 'info');
+      const row = `<tr><td>${ukuran}</td><td>${noLot}</td><td>${kodePack}</td></tr>`;
+      document.querySelector("#dataTable tbody").innerHTML += row;
 
-                    await html5QrCode.start(
-                        { facingMode: "environment" }, // Prioritaskan kamera belakang
-                        qrCodeConfig,
-                        onScanSuccess,
-                        onScanError
-                    );
-                    isScanning = true;
-                    startScanButton.style.display = 'none';
-                    stopScanButton.style.display = 'inline-block';
-                    hideStatusMessage(); // Sembunyikan pesan setelah kamera aktif
-                    console.log("[Scanner] Scanner dimulai.");
-                } catch (err) {
-                    isScanning = false;
-                    startScanButton.style.display = 'inline-block'; // Tampilkan lagi tombol start
-                    stopScanButton.style.display = 'none';
-                    readerMessageSpan.style.display = 'block'; // Tampilkan kembali pesan di reader
-                    readerMessageSpan.textContent = "Gagal memulai kamera. Coba lagi atau periksa izin.";
+      saveDataToLocalStorage({ ukuran, noLot, kodePack });
 
-                    let errorMessage = "Terjadi kesalahan saat memulai kamera.";
-                    if (err.name === "NotAllowedError") {
-                        errorMessage = "Izin kamera ditolak. Harap izinkan akses kamera di pengaturan browser/ponsel Anda.";
-                    } else if (err.name === "NotFoundError") {
-                        errorMessage = "Tidak ada kamera yang ditemukan. Pastikan perangkat Anda memiliki kamera yang berfungsi.";
-                    } else if (err.name === "OverconstrainedError") {
-                        errorMessage = "Kamera tidak dapat diakses dengan batasan yang diminta (misalnya, kamera belakang tidak tersedia).";
-                    }
-                    showStatusMessage(errorMessage + " Error detail: " + err.message, 'error');
-                    console.error("[Scanner Error] Gagal memulai scanner:", err);
-                }
-            }
+      // Hentikan sejenak agar tidak terdeteksi berulang
+      Quagga.stop();
+      setTimeout(() => Quagga.start(), 1500);
+    } else {
+      alert("Format QR salah. Harus ada 3 bagian dipisah dengan |");
+    }
+  });
 
-            // Fungsi untuk menghentikan scanner
-            async function stopScanner() {
-                try {
-                    if (html5QrCode.isScanning) {
-                        await html5QrCode.stop();
-                        isScanning = false;
-                        startScanButton.style.display = 'inline-block';
-                        stopScanButton.style.display = 'none';
-                        readerMessageSpan.style.display = 'block'; // Tampilkan kembali pesan di reader
-                        readerMessageSpan.textContent = "Scan dihentikan. Klik 'Mulai Scan' lagi.";
-                        hideStatusMessage(); // Sembunyikan pesan status
-                        console.log("[Scanner] Scanner dihentikan.");
-                    }
-                } catch (err) {
-                    console.error("[Scanner Error] Gagal menghentikan scanner:", err);
-                    showStatusMessage("Gagal menghentikan scanner. Coba muat ulang halaman.", 'error');
-                }
-            }
+  function saveDataToLocalStorage() {
+    const rows = document.querySelectorAll("#dataTable tbody tr");
+    const data = [];
 
-            // Event listener untuk tombol
-            startScanButton.addEventListener('click', startScanner);
-            stopScanButton.addEventListener('click', stopScanner);
+    rows.forEach(row => {
+      const cells = row.querySelectorAll("td");
+      data.push({
+        Ukuran: cells[0].innerText,
+        "No Lot": cells[1].innerText,
+        "Kode Pack": cells[2].innerText
+      });
+    });
 
-            // Inisialisasi awal pesan di reader
-            readerMessageSpan.textContent = "Klik 'Mulai Scan' untuk mengaktifkan kamera.";
-        });
-    </script>
+    localStorage.setItem("qr_data", JSON.stringify(data));
+  }
+
+  function loadDataFromLocalStorage() {
+    const data = JSON.parse(localStorage.getItem("qr_data")) || [];
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(item => {
+      const row = `
+        <tr>
+          <td>${item.Ukuran}</td>
+          <td>${item["No Lot"]}</td>
+          <td>${item["Kode Pack"]}</td>
+        </tr>`;
+      tbody.innerHTML += row;
+    });
+  }
+
+  function exportToExcel() {
+    const wb = XLSX.utils.table_to_book(document.getElementById('dataTable'));
+    XLSX.writeFile(wb, 'data_qr_code.xlsx');
+  }
+
+  function clearData() {
+    if (confirm("Yakin ingin hapus semua data?")) {
+      document.querySelector("#dataTable tbody").innerHTML = "";
+      localStorage.removeItem("qr_data");
+    }
+  }
+</script>
+
 </body>
 </html>
