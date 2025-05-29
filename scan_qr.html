@@ -1,207 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4CAF50">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>QR Scanner Android</title>
     <style>
         :root {
             --primary: #4CAF50;
-            --primary-dark: #388E3C;
             --danger: #f44336;
-            --danger-dark: #d32f2f;
             --warning: #ff9800;
             --info: #2196F3;
-            --info-dark: #0b7dda;
-            --gray: #607d8b;
-            --gray-dark: #455a64;
         }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
             background-color: #f5f5f5;
-            line-height: 1.6;
         }
-        
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: auto;
             padding: 15px;
         }
-        
-        h1, h2 {
-            color: #333;
-            text-align: center;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        
-        h2 {
-            font-size: 20px;
-            margin-top: 30px;
-        }
-        
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            z-index: 1000;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            width: 95%;
-            max-width: 500px;
-            position: relative;
-        }
-        
-        #qr-video {
-            width: 100%;
-            display: block;
-            border-radius: 8px;
-            background-color: #000;
-        }
-        
-        #scan-region {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            border: 3px dashed rgba(255, 255, 255, 0.7);
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            color: white;
-            font-size: 30px;
-            cursor: pointer;
-            z-index: 1001;
-        }
-        
-        /* Notification Styles */
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background-color: var(--primary);
-            color: white;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 999;
-            transform: translateX(150%);
-            transition: transform 0.3s ease;
-            max-width: 300px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.error {
-            background-color: var(--danger);
-        }
-        
-        .notification.warning {
-            background-color: var(--warning);
-            color: #333;
-        }
-        
-        .notification.info {
-            background-color: var(--info);
-        }
-        
-        .notification-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-        
-        .notification-content {
-            font-size: 14px;
-        }
-        
-        .notification-close {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 5px;
-        }
-        
-        /* Result Styles */
-        #result {
-            margin: 15px 0;
-            padding: 12px;
-            background-color: #e8f5e9;
-            border-radius: 8px;
-            font-size: 14px;
-            border-left: 4px solid var(--primary);
-        }
-        
-        /* Table Styles */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: var(--primary);
-            color: white;
-            font-weight: 500;
-            position: sticky;
-            top: 0;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        /* Button Styles */
+        h1, h2 { text-align: center; color: #333; }
         .button-container {
             display: flex;
             justify-content: center;
@@ -209,7 +30,6 @@
             margin: 15px 0;
             flex-wrap: wrap;
         }
-        
         button {
             padding: 12px 20px;
             background-color: var(--primary);
@@ -218,898 +38,328 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.3s;
-            min-width: 120px;
-            display: flex;
+        }
+        button:hover { background-color: #388E3C; }
+        #result {
+            margin: 15px 0;
+            padding: 12px;
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--primary);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            gap: 8px;
         }
-        
-        button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
+        .modal-content {
+            width: 95%;
+            max-width: 500px;
+            position: relative;
         }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        #stop-btn {
-            background-color: var(--danger);
-        }
-        
-        #stop-btn:hover {
-            background-color: var(--danger-dark);
-        }
-        
-        #clear-btn {
-            background-color: var(--gray);
-        }
-        
-        #clear-btn:hover {
-            background-color: var(--gray-dark);
-        }
-        
-        #export-btn {
-            background-color: var(--info);
-        }
-        
-        #export-btn:hover {
-            background-color: var(--info-dark);
-        }
-        
-        /* Action Buttons */
-        .action-btn {
-            padding: 5px 10px;
-            font-size: 12px;
-            min-width: auto;
-            border-radius: 4px;
-            margin: 2px;
-        }
-        
-        .delete-btn {
-            background-color: var(--danger);
-        }
-        
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 5px;
-        }
-        
-        .pagination button {
-            min-width: 40px;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-        
-        .pagination button.active {
-            background-color: var(--primary-dark);
-            font-weight: bold;
-        }
-        
-        /* Help Box */
-        .permission-help {
-            background-color: #fff3e0;
-            border-left: 4px solid #ffa000;
-            padding: 12px;
-            margin: 15px 0;
+        #qr-video {
+            width: 100%;
             border-radius: 8px;
-            font-size: 14px;
+            background-color: black;
         }
-        
-        /* Scanner Status */
-        .scanner-status {
-            text-align: center;
+        #scan-region {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%; height: 70%;
+            border: 3px dashed white;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            padding: 15px 20px;
+            background-color: var(--primary);
             color: white;
-            margin-top: 10px;
-            font-size: 14px;
+            border-radius: 5px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        
-        /* Loading Indicator */
-        .loader {
-            display: none;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
+        .notification.show {
+            opacity: 1;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            th, td {
-                padding: 8px 6px;
-                font-size: 13px;
-            }
-            
-            button {
-                padding: 10px 15px;
-                min-width: 100px;
-                font-size: 13px;
-            }
-            
-            .button-container {
-                gap: 8px;
-            }
-            
-            .modal-content {
-                width: 98%;
-            }
-            
-            .notification {
-                max-width: 250px;
-                padding: 12px 15px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 20px;
-            }
-            
-            .button-container {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            button {
-                width: 100%;
-                max-width: 200px;
-            }
-            
-            .pagination {
-                flex-wrap: wrap;
-            }
-            
-            .notification {
-                max-width: 200px;
-                bottom: 10px;
-                right: 10px;
-            }
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>QR Code Scanner Android</h1>
-        
-        <div class="permission-help">
-            <strong>Catatan Penting:</strong> Untuk hasil terbaik:
-            <ol>
-                <li>Gunakan browser Chrome atau Firefox terbaru</li>
-                <li>Berikan izin akses kamera saat diminta</li>
-                <li>Pastikan QR code dalam kondisi baik dan pencahayaan cukup</li>
-                <li>Format QR harus: <code>ukuran|no_lot|kode_pack</code></li>
-            </ol>
-        </div>
-        
-        <div class="button-container">
-            <button id="open-modal-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                Buka Scanner
-            </button>
-            <button id="clear-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Hapus Data
-            </button>
-            <button id="export-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Export Excel
-            </button>
-        </div>
-        
-        <div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
-        
-        <h2>Data Tersimpan</h2>
-        <div class="table-container">
-            <table id="data-table">
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Ukuran</th>
-                        <th>No. Lot</th>
-                        <th>Kode Pack</th>
-                        <th>Waktu Scan</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <!-- Data akan ditambahkan di sini -->
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="pagination" id="pagination">
-            <!-- Pagination buttons will be added here -->
-        </div>
+<div class="container">
+    <h1>QR Code Scanner Android</h1>
+    <div id="result">Arahkan kamera ke QR code dengan format: ukuran|no_lot|kode_pack</div>
+    <div class="button-container">
+        <button id="open-modal-btn">Buka Scanner</button>
+        <button id="clear-btn">Hapus Data</button>
+        <button id="export-btn">Export Excel</button>
     </div>
-    
-    <!-- Modal for Scanner -->
-    <div class="modal" id="scanner-modal">
-        <span class="close-modal">&times;</span>
-        <div class="modal-content">
-            <video id="qr-video" playsinline></video>
-            <div id="scan-region"></div>
-            <div class="scanner-status" id="scanner-status">Scanner siap</div>
-        </div>
-        <div class="button-container" style="margin-top: 20px;">
-            <button id="start-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                </svg>
-                Mulai Scan
-            </button>
-            <button id="stop-btn" disabled>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <rect x="8" y="8" width="8" height="8"></rect>
-                </svg>
-                Stop Scan
-            </button>
-        </div>
-        <div class="loader" id="scanner-loader"></div>
+    <table id="data-table">
+        <thead>
+            <tr><th>No.</th><th>Ukuran</th><th>No. Lot</th><th>Kode Pack</th><th>Waktu Scan</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="scanner-modal">
+    <div class="modal-content">
+        <video id="qr-video" playsinline></video>
+        <div id="scan-region"></div>
     </div>
-    
-    <!-- Notification Element -->
-    <div class="notification" id="notification">
-        <button class="notification-close">&times;</button>
-        <div class="notification-title" id="notification-title"></div>
-        <div class="notification-content" id="notification-content"></div>
+    <div class="button-container" style="margin-top:20px">
+        <button id="start-btn">Mulai Scan</button>
+        <button id="stop-btn" disabled>Stop Scan</button>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <script>
-        // Variabel global
-        let videoStream = null;
-        let scanInterval = null;
-        let scanCount = 0;
-        let lastScanned = null;
-        let scannedData = [];
-        let currentPage = 1;
-        const rowsPerPage = 10;
-        let notificationTimeout = null;
-        let isScanning = false;
-        
-        // Elemen DOM
-        const videoElement = document.getElementById('qr-video');
-        const resultElement = document.getElementById('result');
-        const tableBody = document.getElementById('table-body');
-        const openModalBtn = document.getElementById('open-modal-btn');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const scannerModal = document.getElementById('scanner-modal');
-        const closeModalBtn = document.querySelector('.close-modal');
-        const notification = document.getElementById('notification');
-        const notificationTitle = document.getElementById('notification-title');
-        const notificationContent = document.getElementById('notification-content');
-        const notificationClose = document.querySelector('.notification-close');
-        const paginationElement = document.getElementById('pagination');
-        const scannerStatus = document.getElementById('scanner-status');
-        const scannerLoader = document.getElementById('scanner-loader');
-        
-        // Event listeners
-        openModalBtn.addEventListener('click', openScannerModal);
-        closeModalBtn.addEventListener('click', closeScannerModal);
-        startBtn.addEventListener('click', startScanning);
-        stopBtn.addEventListener('click', stopScanning);
-        clearBtn.addEventListener('click', clearAllData);
-        exportBtn.addEventListener('click', exportToExcel);
-        notificationClose.addEventListener('click', hideNotification);
-        
-        // Load data from localStorage when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFromStorage();
-            renderTable();
-            setupPagination();
-        });
-        
-        // Fungsi untuk membuka modal scanner
-        function openScannerModal() {
-            scannerModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            updateScannerStatus('Scanner siap', 'info');
+<!-- Notifikasi -->
+<div class="notification" id="notification">
+    <div class="notification-title" id="notification-title"></div>
+    <div class="notification-content" id="notification-content"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js "></script>
+<script>
+    let videoStream = null;
+    let scanInterval = null;
+    let scannedData = [];
+    let isScanning = false;
+
+    const videoElement = document.getElementById('qr-video');
+    const resultElement = document.getElementById('result');
+    const tableBody = document.getElementById('table-body');
+    const scannerModal = document.getElementById('scanner-modal');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const notification = document.getElementById('notification');
+    const notifTitle = document.getElementById('notification-title');
+    const notifContent = document.getElementById('notification-content');
+
+    // Load data saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFromStorage();
+        renderTable();
+    });
+
+    // Event Listeners
+    document.getElementById('open-modal-btn').addEventListener('click', openScannerModal);
+    document.getElementById('start-btn').addEventListener('click', startScanning);
+    document.getElementById('stop-btn').addEventListener('click', stopScanning);
+    document.getElementById('clear-btn').addEventListener('click', clearAllData);
+    document.getElementById('export-btn').addEventListener('click', exportToExcel);
+
+    function showNotification(title, content, type = 'success') {
+        notifTitle.textContent = title;
+        notifContent.innerHTML = content;
+        notification.className = `notification ${type} show`;
+        setTimeout(() => notification.classList.remove('show'), 4000);
+        resultElement.innerHTML = `<strong>${title}</strong><br>${content}`;
+    }
+
+    async function startScanning() {
+        if (isScanning) return;
+        try {
+            const constraints = { video: { facingMode: "environment" } };
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+            videoElement.srcObject = videoStream;
+            await videoElement.play();
+            isScanning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            scanInterval = setInterval(scanWithjsQR, 300);
+        } catch (err) {
+            showNotification("Error", "Izin kamera ditolak atau tidak tersedia", "error");
         }
-        
-        // Fungsi untuk menutup modal scanner
-        function closeScannerModal() {
-            stopScanning();
-            scannerModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
+    }
+
+    function stopScanning() {
+        clearInterval(scanInterval);
+        if (videoStream) {
+            videoStream.getTracks().forEach(t => t.stop());
+            videoStream = null;
+            videoElement.srcObject = null;
         }
-        
-        // Fungsi untuk menampilkan notifikasi
-        function showNotification(title, content, type = 'success', duration = 3000) {
-            // Clear any existing timeout
-            if (notificationTimeout) {
-                clearTimeout(notificationTimeout);
+        isScanning = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+    }
+
+    function scanWithjsQR() {
+        if (!isScanning || !videoElement.srcObject) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+
+        if (code) {
+            processScannedData(code.data);
+        }
+    }
+
+    function processScannedData(data) {
+        try {
+            if (typeof data !== 'string' || data.trim() === '') {
+                throw new Error("Data QR tidak valid");
             }
-            
-            // Set notification content
-            notificationTitle.textContent = title;
-            notificationContent.innerHTML = content;
-            
-            // Set notification type
-            notification.className = 'notification';
-            notification.classList.add(type);
-            
-            // Show notification
-            notification.classList.add('show');
-            
-            // Auto-hide after duration if specified
-            if (duration > 0) {
-                notificationTimeout = setTimeout(() => {
-                    hideNotification();
-                }, duration);
+
+            // Bersihkan karakter aneh
+            const cleaned = data.replace(/[^\x20-\x7E]/g, '').trim();
+            const parts = cleaned.split('|').map(p => p.trim());
+
+            if (parts.length !== 3) {
+                throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${cleaned}`);
             }
-            
-            // Also update the result element (for when modal is closed)
-            resultElement.innerHTML = `<strong>${title}</strong><br>${content}`;
-        }
-        
-        // Fungsi untuk menyembunyikan notifikasi
-        function hideNotification() {
-            notification.classList.remove('show');
-            if (notificationTimeout) {
-                clearTimeout(notificationTimeout);
-                notificationTimeout = null;
+
+            const [ukuran, noLot, kodePack] = parts;
+
+            if (!ukuran || !noLot || !kodePack) {
+                throw new Error("Semua field harus diisi");
             }
+
+            if (isDuplicate(noLot, kodePack)) {
+                throw new Error("Data ini sudah pernah discan");
+            }
+
+            const waktuScan = new Date().toLocaleString();
+            addToTable(ukuran, noLot, kodePack, waktuScan);
+            saveToStorage(ukuran, noLot, kodePack, waktuScan);
+            showNotification("Berhasil", `Ukuran: ${ukuran}<br>No. Lot: ${noLot}`, "success");
+
+        } catch (err) {
+            console.error("Error:", err.message);
+            showNotification("Gagal", err.message, "error");
         }
-        
-        // Fungsi untuk mengupdate status scanner
-        function updateScannerStatus(message, type = 'info') {
-            scannerStatus.textContent = message;
-            scannerStatus.style.color = type === 'error' ? '#ff4444' : 
-                                       type === 'success' ? '#4CAF50' : 'white';
-        }
-        
-        // Fungsi untuk memulai scanning
-        async function startScanning() {
-            if (isScanning) return;
-            
+    }
+
+    function isDuplicate(noLot, kodePack) {
+        return scannedData.some(item => item.noLot === noLot && item.kodePack === kodePack);
+    }
+
+    function addToTable(ukuran, noLot, kodePack, waktuScan) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${scannedData.length + 1}</td>
+            <td>${escapeHtml(ukuran)}</td>
+            <td>${escapeHtml(noLot)}</td>
+            <td>${escapeHtml(kodePack)}</td>
+            <td>${waktuScan}</td>
+            <td><button onclick="deleteRow('${noLot}', '${kodePack}')">Hapus</button></td>`;
+        tableBody.appendChild(row);
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '<', '>': '>',
+            '"': '&quot;', "'": '&#39;'
+        })[m]);
+    }
+
+    function deleteRow(noLot, kodePack) {
+        if (!confirm(`Hapus data: No. Lot=${noLot}, Kode Pack=${kodePack}?`)) return;
+        scannedData = scannedData.filter(d => !(d.noLot === noLot && d.kodePack === kodePack));
+        localStorage.setItem('qrScans', JSON.stringify(scannedData));
+        renderTable();
+    }
+
+    function clearAllData() {
+        if (!confirm("Yakin ingin hapus semua data?")) return;
+        scannedData = [];
+        localStorage.removeItem('qrScans');
+        renderTable();
+        showNotification("Info", "Semua data berhasil dihapus", "info");
+    }
+
+    function saveToStorage(ukuran, noLot, kodePack, waktuScan) {
+        const data = { ukuran, noLot, kodePack, waktuScan };
+        scannedData.unshift(data);
+        localStorage.setItem('qrScans', JSON.stringify(scannedData));
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem('qrScans');
+        if (saved) {
             try {
-                showLoader(true);
-                updateScannerStatus('Menyiapkan kamera...', 'info');
-                
-                // Hentikan stream yang mungkin masih aktif
-                if (videoStream) {
-                    stopScanning();
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                // Minta izin kamera dengan konfigurasi optimal
-                const constraints = {
-                    video: { 
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        focusMode: "continuous"
-                    },
-                    audio: false
-                };
-                
-                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-                
-                videoElement.srcObject = videoStream;
-                videoElement.setAttribute('playsinline', 'true');
-                
-                // Tambahkan event listener untuk track kamera
-                videoStream.getVideoTracks()[0].addEventListener('ended', () => {
-                    stopScanning();
-                    updateScannerStatus("Kamera dihentikan", "error");
-                });
-                
-                await videoElement.play();
-                
-                updateScannerStatus("Memindai QR code...", "info");
-                showNotification("Scanner Aktif", "Arahkan kamera ke QR code", "info", 2000);
-                
-                // Aktifkan tombol stop
-                stopBtn.disabled = false;
-                startBtn.disabled = true;
-                isScanning = true;
-                
-                // Mulai scanning dengan jsQR
-                scanInterval = setInterval(scanWithjsQR, 300);
-                
-            } catch (err) {
-                console.error("Error kamera:", err);
-                showLoader(false);
-                
-                let errorMessage = err.message;
-                if (err.name === 'NotAllowedError') {
-                    errorMessage = "Izin kamera ditolak. Harap berikan izin akses kamera.";
-                } else if (err.name === 'NotFoundError') {
-                    errorMessage = "Kamera tidak ditemukan. Pastikan perangkat memiliki kamera.";
-                } else if (err.name === 'NotReadableError') {
-                    errorMessage = "Kamera tidak dapat diakses. Mungkin sedang digunakan oleh aplikasi lain.";
-                }
-                
-                updateScannerStatus(errorMessage, "error");
-                showNotification("Error Kamera", errorMessage, "error", 5000);
-                
-                stopBtn.disabled = true;
-                startBtn.disabled = false;
-                isScanning = false;
-            } finally {
-                showLoader(false);
-            }
-        }
-        
-        // Fungsi untuk menampilkan/menyembunyikan loader
-        function showLoader(show) {
-            scannerLoader.style.display = show ? 'block' : 'none';
-        }
-        
-        let lastScanTime = 0;
-
-        // Fungsi untuk scan menggunakan jsQR
-        function scanWithjsQR() {
-            const now = Date.now();
-            if (now - lastScanTime < 500) return; // minimal 500ms antar-scan
-            lastScanTime = now;
-
-            if (!isScanning || videoElement.readyState < videoElement.HAVE_METADATA) return;
-            
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // Gambar frame video ke canvas
-                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                
-                // Ambil data gambar
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Coba decode QR code
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-                
-                if (code) {
-                    // Cegah scan berulang pada QR yang sama dalam 3 detik
-                    if (lastScanned === code.data || (lastScanned && Date.now() - lastScanned.time < 3000)) {
-                        return;
-                    }
-                    
-                    lastScanned = {
-                        data: code.data,
-                        time: Date.now()
-                    };
-                    
-                    processScannedData(code.data);
-                }
-            } catch (err) {
-                console.error("Error scanning:", err);
-                updateScannerStatus("Error saat memindai", "error");
-            }
-        }
-        
-        // Fungsi untuk menghentikan scanning
-        function stopScanning() {
-            if (!isScanning) return;
-            
-            clearInterval(scanInterval);
-            scanInterval = null;
-            
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-                videoElement.srcObject = null;
-            }
-            
-            updateScannerStatus("Scanner dihentikan", "info");
-            showNotification("Scan Dihentikan", "Tekan 'Mulai Scan' untuk melanjutkan", "info", 2000);
-            
-            stopBtn.disabled = true;
-            startBtn.disabled = false;
-            isScanning = false;
-            showLoader(false);
-        }
-        
-       // Fungsi untuk memproses data yang discan
-        function processScannedData(data) {
-            console.log("Data mentah dari QR:", data); // Tambahkan baris ini
-            try {
-                // Validasi data
-               // Validasi data
-                if (typeof data !== 'string' || data.trim() === '') {
-                    console.error("Data tidak valid", { data });
-                    throw new Error("Data QR tidak valid");
-                }
-
-                // Bersihkan karakter tidak terlihat dan pecah
-                const cleanedData = data.replace(/[^\x20-\x7E]/g, '');
-                const parts = cleanedData.split('|').map(part => part.trim());
-
-                console.log("Raw Data:", data);
-                console.log("Cleaned Data:", cleanedData);
-                console.log("Split Parts:", parts);
-
-                if (parts.length !== 3) {
-                    throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${cleanedData}`);
-                }
-
-                const [ukuran, noLot, kodePack] = parts;
-
-                if (!ukuran || !noLot || !kodePack) {
-                    console.warn("Ada bagian kosong", { ukuran, noLot, kodePack });
-                    throw new Error("Semua field harus diisi");
-                }
-                
-                // Validasi field
-                if (!ukuran || !noLot || !kodePack) {
-                    throw new Error("Semua field harus diisi");
-                }
-                
-                const waktuScan = new Date().toLocaleString();
-                
-                // Cek duplikat sebelum menambahkan
-                if (isDuplicate(noLot, kodePack)) {
-                    showNotification(
-                        "Data Sudah Pernah Discan", 
-                        `No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`,
-                        "warning",
-                        3000
-                    );
-                    
-                    // Beri feedback error (getar panjang)
-                    vibrate([100, 50, 100, 50, 100]);
-                    return;
-                }
-                
-                // Tambahkan ke tabel dan penyimpanan
-                addToTable(ukuran, noLot, kodePack, waktuScan);
-                saveToStorage(ukuran, noLot, kodePack, waktuScan);
-                
-                // Tampilkan notifikasi hasil scan
-                showNotification(
-                    "Scan Berhasil", 
-                    `Ukuran: ${ukuran}<br>No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`,
-                    "success",
-                    3000
-                );
-                
-                updateScannerStatus("Scan berhasil!", "success");
-                
-                // Beri feedback sukses (getar jika didukung)
-                vibrate(200);
-                
-            } catch (err) {
-                console.error("Error proses data:", err);
-                showNotification(
-                    "Error QR Code", 
-                    err.message,
-                    "error",
-                    4000
-                );
-                
-                updateScannerStatus("Format tidak valid", "error");
-                vibrate([100, 50, 100]);
-            }
-        }
-        
-        // Fungsi untuk memberikan feedback haptic
-        function vibrate(pattern) {
-            if (navigator.vibrate) {
-                navigator.vibrate(pattern);
-            }
-        }
-        
-        // Fungsi untuk setup pagination
-        function setupPagination() {
-            paginationElement.innerHTML = '';
-            
-            const pageCount = Math.ceil(scannedData.length / rowsPerPage);
-            
-            if (pageCount <= 1) return;
-            
-            // Previous button
-            const prevButton = document.createElement('button');
-            prevButton.innerHTML = '&laquo;';
-            prevButton.disabled = currentPage === 1;
-            prevButton.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderTable();
-                    setupPagination();
-                }
-            });
-            paginationElement.appendChild(prevButton);
-            
-            // Page buttons
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(pageCount, startPage + maxVisiblePages - 1);
-            
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-            
-            if (startPage > 1) {
-                const firstButton = document.createElement('button');
-                firstButton.textContent = '1';
-                firstButton.addEventListener('click', () => {
-                    currentPage = 1;
-                    renderTable();
-                    setupPagination();
-                });
-                paginationElement.appendChild(firstButton);
-                
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.style.padding = '0 10px';
-                    paginationElement.appendChild(ellipsis);
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.textContent = i;
-                if (i === currentPage) {
-                    pageButton.classList.add('active');
-                }
-                pageButton.addEventListener('click', () => {
-                    currentPage = i;
-                    renderTable();
-                    setupPagination();
-                });
-                paginationElement.appendChild(pageButton);
-            }
-            
-            if (endPage < pageCount) {
-                if (endPage < pageCount - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.style.padding = '0 10px';
-                    paginationElement.appendChild(ellipsis);
-                }
-                
-                const lastButton = document.createElement('button');
-                lastButton.textContent = pageCount;
-                lastButton.addEventListener('click', () => {
-                    currentPage = pageCount;
-                    renderTable();
-                    setupPagination();
-                });
-                paginationElement.appendChild(lastButton);
-            }
-            
-            // Next button
-            const nextButton = document.createElement('button');
-            nextButton.innerHTML = '&raquo;';
-            nextButton.disabled = currentPage === pageCount;
-            nextButton.addEventListener('click', () => {
-                if (currentPage < pageCount) {
-                    currentPage++;
-                    renderTable();
-                    setupPagination();
-                }
-            });
-            paginationElement.appendChild(nextButton);
-        }
-        
-        // Fungsi untuk render table dengan pagination
-        function renderTable() {
-            tableBody.innerHTML = '';
-            
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = Math.min(startIndex + rowsPerPage, scannedData.length);
-            const currentItems = scannedData.slice(startIndex, endIndex);
-            
-            if (currentItems.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="6" style="text-align: center;">Tidak ada data</td>`;
-                tableBody.appendChild(row);
-                return;
-            }
-            
-            currentItems.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.dataset.id = item.id;
-                
-                row.innerHTML = `
-                    <td>${startIndex + index + 1}</td>
-                    <td>${escapeHtml(item.ukuran)}</td>
-                    <td>${escapeHtml(item.noLot)}</td>
-                    <td>${escapeHtml(item.kodePack)}</td>
-                    <td>${item.waktuScan}</td>
-                    <td>
-                        <button class="action-btn delete-btn" onclick="deleteRow('${item.id}', '${escapeHtml(item.noLot)}', '${escapeHtml(item.kodePack)}')">
-                            Hapus
-                        </button>
-                    </td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // Fungsi untuk escape HTML (mencegah XSS)
-        function escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return unsafe
-                .toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-        
-        // Fungsi untuk mengecek data duplikat
-        function isDuplicate(noLot, kodePack) {
-            return scannedData.some(item => 
-                item.noLot === noLot && item.kodePack === kodePack
-            );
-        }
-        
-        // Fungsi untuk menghapus baris tertentu
-        function deleteRow(rowId, noLot, kodePack) {
-            if (confirm(`Apakah Anda yakin ingin menghapus data ini?\nNo. Lot: ${noLot}\nKode Pack: ${kodePack}`)) {
-                // Hapus dari array scannedData
-                scannedData = scannedData.filter(item => item.id !== rowId);
-                
-                // Update localStorage
-                updateStorage();
-                
-                // Kembali ke halaman pertama jika halaman saat ini kosong
-                const totalPages = Math.ceil(scannedData.length / rowsPerPage);
-                if (currentPage > totalPages) {
-                    currentPage = totalPages > 0 ? totalPages : 1;
-                }
-                
-                // Render ulang tabel dan pagination
-                renderTable();
-                setupPagination();
-                
-                showNotification("Data Dihapus", `No. Lot: ${noLot}<br>Kode Pack: ${kodePack}`, "info", 2000);
-            }
-        }
-        
-        // Fungsi untuk menghapus semua data
-        function clearAllData() {
-            if (scannedData.length === 0) {
-                showNotification("Tidak Ada Data", "Tidak ada data yang bisa dihapus", "info", 2000);
-                return;
-            }
-            
-            if (confirm("Apakah Anda yakin ingin menghapus SEMUA data?")) {
+                scannedData = JSON.parse(saved);
+            } catch {
                 scannedData = [];
-                currentPage = 1;
-                localStorage.removeItem('qrScans');
-                renderTable();
-                setupPagination();
-                showNotification("Semua Data Dihapus", "Semua data scan telah dihapus", "success", 2000);
             }
         }
-        
-        // Fungsi untuk menyimpan data ke localStorage
-        function saveToStorage(ukuran, noLot, kodePack, waktuScan) {
-            const data = {
-                id: Date.now().toString(),
-                ukuran: ukuran.trim(),
-                noLot: noLot.trim(),
-                kodePack: kodePack.trim(),
-                waktuScan
-            };
-            
-            scannedData.unshift(data); // Add to beginning of array
-            updateStorage();
-            
-            // Reset to first page when adding new data
-            currentPage = 1;
-            renderTable();
-            setupPagination();
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        if (scannedData.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="6" style="text-align:center">Tidak ada data</td>`;
+            tableBody.appendChild(row);
+            return;
         }
-        
-        // Fungsi untuk memperbarui localStorage
-        function updateStorage() {
-            localStorage.setItem('qrScans', JSON.stringify(scannedData));
-        }
-        
-        // Fungsi untuk memuat data dari localStorage
-        function loadFromStorage() {
-            const savedData = localStorage.getItem('qrScans');
-            if (savedData) {
-                try {
-                    scannedData = JSON.parse(savedData);
-                    scanCount = scannedData.length;
-                } catch (err) {
-                    console.error("Error parsing saved data:", err);
-                    scannedData = [];
-                }
-            }
-        }
-        
-        // Fungsi untuk export ke Excel
-        function exportToExcel() {
-            if (scannedData.length === 0) {
-                showNotification("Tidak Ada Data", "Tidak ada data yang bisa diexport", "warning", 2000);
-                return;
-            }
-            
-            try {
-                // Prepare data for export
-                const exportData = [
-                    ['No.', 'Ukuran', 'No. Lot', 'Kode Pack', 'Waktu Scan'],
-                    ...scannedData.map((item, index) => [
-                        index + 1,
-                        item.ukuran,
-                        item.noLot,
-                        item.kodePack,
-                        item.waktuScan
-                    ])
-                ];
-                
-                // Create workbook
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(exportData);
-                XLSX.utils.book_append_sheet(wb, ws, "QR Scans");
-                
-                // Export to file
-                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const timeStr = new Date().toTimeString().slice(0,8).replace(/:/g, '');
-                XLSX.writeFile(wb, `qr-scans-${dateStr}_${timeStr}.xlsx`);
-                
-                showNotification("Export Berhasil", "Data berhasil diexport ke Excel", "success", 2000);
-            } catch (err) {
-                console.error("Error exporting to Excel:", err);
-                showNotification("Export Gagal", "Terjadi kesalahan saat export data", "error", 3000);
-            }
-        }
-        
-        // Hentikan kamera saat halaman ditutup
-        window.addEventListener('beforeunload', stopScanning);
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', (event) => {
-            if (event.target === scannerModal) {
-                closeScannerModal();
-            }
+
+        scannedData.forEach((d, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${i+1}</td>
+                <td>${escapeHtml(d.ukuran)}</td>
+                <td>${escapeHtml(d.noLot)}</td>
+                <td>${escapeHtml(d.kodePack)}</td>
+                <td>${d.waktuScan}</td>
+                <td><button onclick="deleteRow('${d.noLot}', '${d.kodePack}')">Hapus</button></td>`;
+            tableBody.appendChild(row);
         });
-        
-        // Expose deleteRow to global scope for inline event handlers
-        window.deleteRow = deleteRow;
-    </script>
+    }
+
+    function exportToExcel() {
+        if (scannedData.length === 0) {
+            showNotification("Export Gagal", "Tidak ada data untuk di-export", "error");
+            return;
+        }
+
+        const ws_data = [
+            ['No.', 'Ukuran', 'No. Lot', 'Kode Pack', 'Waktu'],
+            ...scannedData.map((d, i) => [i+1, d.ukuran, d.noLot, d.kodePack, d.waktuScan])
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data QR");
+        XLSX.writeFile(wb, `QR_Scans_${new Date().toISOString().slice(0,10)}.xlsx`);
+        showNotification("Export Berhasil", "Data berhasil di-export", "success");
+    }
+
+    function openScannerModal() {
+        scannerModal.style.display = 'flex';
+    }
+
+    window.onclick = e => {
+        if (e.target === scannerModal) scannerModal.style.display = 'none';
+    };
+
+    window.deleteRow = deleteRow;
+</script>
 </body>
 </html>
