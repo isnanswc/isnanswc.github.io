@@ -66,9 +66,9 @@
             justify-content: center;
         }
         
-        .modal-content {
+       .modal-content {
             width: 95%;
-            max-width: 500px;
+            max-width: 350px; /* Diperkecil dari 500px ke 350px */
             position: relative;
         }
         
@@ -84,8 +84,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
+            width: 70%; /* Tetap sama */
+            height: 50%; /* Diperkecil agar lebih fokus */
             border: 3px dashed rgba(255, 255, 255, 0.7);
             box-sizing: border-box;
             pointer-events: none;
@@ -742,15 +742,17 @@
        // Fungsi untuk memproses data yang discan
         function processScannedData(data) {
             console.log("Data mentah dari QR:", data); // Tambahkan baris ini
-            try {
-                // Validasi data
-                if (typeof data !== 'string' || data.trim() === '') {
-                    throw new Error("Data QR tidak valid");
-                }
-                
-                // Format data: ukuran|no_lot|kode_pack
-                const parts = data.split('|').map(part => part.trim());
-                console.log("Bagian data setelah split:", parts); // Tambahkan baris ini
+                try {
+                    // Bersihkan whitespace dan karakter tak terlihat
+                    let cleanedData = data.replace(/[\u200B-\u200D\uFEFF]/g, ''); // Hilangkan zero-width chars
+                    cleanedData = cleanedData.trim(); // Hapus spasi di awal/akhir
+                    if (!cleanedData || typeof cleanedData !== 'string') {
+                        throw new Error("Data QR kosong atau tidak valid");
+                    }
+
+                    // Pastikan pemisah '|' benar
+                    const parts = cleanedData.split('|').map(part => part.trim());
+                    console.log("Bagian data setelah split:", parts); // Tambahkan baris ini
                 
                 if (parts.length !== 3) {
                     throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${data}`);
