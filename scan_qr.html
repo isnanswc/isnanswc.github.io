@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>QR Scanner Android</title>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>QR Scanner Android</title>
     <style>
         :root {
             --primary: #4CAF50;
@@ -53,25 +53,16 @@
             margin-top: 20px;
             background: white;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: var(--primary);
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
             z-index: 1000;
             align-items: center;
@@ -96,8 +87,7 @@
         }
         .notification {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 20px; right: 20px;
             padding: 15px 20px;
             background-color: var(--primary);
             color: white;
@@ -150,10 +140,8 @@
     <div class="notification-content" id="notification-content"></div>
 </div>
 
-<!-- JS Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js "></script>
-
 <script>
     let videoStream = null;
     let scanInterval = null;
@@ -198,15 +186,11 @@
             videoStream = await navigator.mediaDevices.getUserMedia(constraints);
             videoElement.srcObject = videoStream;
             await videoElement.play();
-            console.log("Kamera berhasil diaktifkan");
-
             isScanning = true;
             startBtn.disabled = true;
             stopBtn.disabled = false;
-
             scanInterval = setInterval(scanWithjsQR, 300);
         } catch (err) {
-            console.error("Gagal akses kamera:", err);
             showNotification("Error", "Izin kamera ditolak atau tidak tersedia", "error");
         }
     }
@@ -221,38 +205,30 @@
         isScanning = false;
         startBtn.disabled = false;
         stopBtn.disabled = true;
-        console.log("Scan dihentikan");
     }
 
     function scanWithjsQR() {
-    if (!isScanning || !videoElement.srcObject) return;
+        if (!isScanning || !videoElement.srcObject) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
 
-    if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
-        console.log("Video belum siap...");
-        return;
+        if (code) {
+            processScannedData(code.data);
+        }
     }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
-
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
-
-    if (code) {
-        console.log("QR Code ditemukan:", code.data);
-        showNotification("Berhasil", "QR Code terbaca: " + code.data, "success");
-        processScannedData(code.data);
-    }
-}
 
     function processScannedData(data) {
         try {
-            if (typeof data !== 'string' || data.trim() === '') throw new Error("Data QR tidak valid");
+            if (typeof data !== 'string' || data.trim() === '') {
+                throw new Error("Data QR tidak valid");
+            }
 
+            // Bersihkan karakter aneh
             const cleaned = data.replace(/[^\x20-\x7E]/g, '').trim();
             const parts = cleaned.split('|').map(p => p.trim());
 
@@ -344,6 +320,7 @@
             tableBody.appendChild(row);
             return;
         }
+
         scannedData.forEach((d, i) => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -362,6 +339,7 @@
             showNotification("Export Gagal", "Tidak ada data untuk di-export", "error");
             return;
         }
+
         const ws_data = [
             ['No.', 'Ukuran', 'No. Lot', 'Kode Pack', 'Waktu'],
             ...scannedData.map((d, i) => [i+1, d.ukuran, d.noLot, d.kodePack, d.waktuScan])
