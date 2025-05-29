@@ -151,7 +151,7 @@
 </div>
 
 <!-- JS Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js "></script>
 
 <script>
@@ -225,31 +225,29 @@
     }
 
     function scanWithjsQR() {
-        if (!isScanning || !videoElement.srcObject) {
-            console.warn("Scan tidak aktif atau video tidak tersedia");
-            return;
-        }
+    if (!isScanning || !videoElement.srcObject) return;
 
-        if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
-            console.warn("Video belum siap");
-            return;
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
-
-        if (code) {
-            console.log("QR Code ditemukan:", code.data);
-            processScannedData(code.data);
-        }
+    if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+        console.log("Video belum siap...");
+        return;
     }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+
+    if (code) {
+        console.log("QR Code ditemukan:", code.data);
+        showNotification("Berhasil", "QR Code terbaca: " + code.data, "success");
+        processScannedData(code.data);
+    }
+}
 
     function processScannedData(data) {
         try {
