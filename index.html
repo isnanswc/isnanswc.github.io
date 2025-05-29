@@ -961,10 +961,11 @@ table td[style*="color: red"] {
   <script>
     // ===== CONSTANTS =====
     let currentPage = 1;
-const rowsPerPage = 50;
+    const rowsPerPage = 50;
     const DATA_KEY = "labelData";
     const form = document.getElementById("labelForm");
     let currentEditIndex = -1;
+    let filteredDataCache = null; // Untuk menyimpan data hasil pencarian
     
     // ===== INITIALIZATION =====
     document.addEventListener('DOMContentLoaded', function() {
@@ -1138,49 +1139,52 @@ const rowsPerPage = 50;
     }
     
     // ===== MODAL FUNCTIONS =====
-    function openModal(index = -1) {
-      form.reset();
-       // Reset tanggal manual
-      form.tanggalManual.value = '';
-      currentEditIndex = index;
-      document.getElementById("modal").style.display = "flex";
-      
-      // Initialize type and sub kode handling
-      handleTypeChange();
-      handleSubKode();
-      
-      if (index >= 0) {
-        const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-        const item = data[index];
-        
-        // Populate form fields
-        for (let key in item) {
-          if (form[key]) {
-            form[key].value = item[key];
-          }
-        }
-        
-        // Handle special cases for sub kode
-        if (item.subKode === 'REJECT') {
-          document.querySelector('input[name="subKodeType"][value="reject"]').checked = true;
-        } else if (item.subKode === '0000') {
-          document.querySelector('input[name="subKodeType"][value="hold"]').checked = true;
-        } else {
-          document.querySelector('input[name="subKodeType"][value="numeric"]').checked = true;
-          // Pastikan subKodeNumeric diisi dengan angka tanpa leading zero jika itu string '0001' -> '1'
-          document.getElementById('subKodeNumeric').value = item.subKode ? parseInt(item.subKode, 10).toString() : '';
-        }
+   function openModal(index = -1) {
+  if (index < 0) return;
 
-        // Jika item.tanggalManual ada, set tanggalManual
-        if (item.tanggalManual) {
-          form.tanggalManual.value = item.tanggalManual;
-        } else {
-          form.tanggalManual.value = ''; // Pastikan kosong jika tidak ada
-        }
-      }
-      // Panggil updateAutoFields setelah form diisi (untuk edit) atau direset (untuk tambah)
-      updateAutoFields();
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  let dataToUse = filteredDataCache || allData;
+
+  if (index >= dataToUse.length) {
+    showToast("Indeks data tidak valid.", "error");
+    return;
+  }
+
+  const item = dataToUse[index];
+
+  // Cari indeks sebenarnya di localStorage untuk editing
+  const realIndex = allData.findIndex(
+    d => JSON.stringify(d) === JSON.stringify(item)
+  );
+
+  form.reset();
+  form.tanggalManual.value = '';
+
+  currentEditIndex = realIndex;
+
+  for (let key in item) {
+    if (form[key]) {
+      form[key].value = item[key];
     }
+  }
+
+  // Handle subKodeType
+  if (item.subKode === 'REJECT') {
+    document.querySelector('input[name="subKodeType"][value="reject"]').checked = true;
+  } else if (item.subKode === '0000') {
+    document.querySelector('input[name="subKodeType"][value="hold"]').checked = true;
+  } else {
+    document.querySelector('input[name="subKodeType"][value="numeric"]').checked = true;
+    document.getElementById('subKodeNumeric').value = item.subKode ? parseInt(item.subKode, 10).toString() : '';
+  }
+
+  if (item.tanggalManual) {
+    form.tanggalManual.value = item.tanggalManual;
+  }
+
+  updateAutoFields();
+  document.getElementById("modal").style.display = "flex";
+}
     
     function closeModal() {
       document.getElementById("modal").style.display = "none";
@@ -1190,7 +1194,10 @@ const rowsPerPage = 50;
     // ===== DATA TABLE FUNCTIONS =====
     // Update the renderTable function
 function renderTable(filteredData = null) {
-  const data = filteredData || JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const data = filteredData || allData;
+  filteredDataCache = filteredData; // Simpan hasil filter
+
   const tbody = document.getElementById("dataBody");
   tbody.innerHTML = "";
 
@@ -1200,26 +1207,21 @@ function renderTable(filteredData = null) {
   const end = Math.min(start + rowsPerPage, totalRows);
   const paginatedData = data.slice(start, end);
 
-  const duplicateKodePacks = getDuplicateKodePacks(data);
+  const duplicateKodePacks = getDuplicateKodePacks(allData); // Gunakan allData untuk cek duplikasi global
 
   paginatedData.forEach((item, index) => {
     const absoluteIndex = start + index;
-    const row = document.createElement("tr");
-    let machineClass;
 
+    const row = document.createElement("tr");
+
+    let machineClass;
     switch(item.mesin) {
-      case 'REWIND':
-        machineClass = 'machine-rewind';
-        break;
-      case 'SML':
-        machineClass = 'machine-sml';
-        break;
-      default:
-        machineClass = 'machine-slitting';
+      case 'REWIND': machineClass = 'machine-rewind'; break;
+      case 'SML': machineClass = 'machine-sml'; break;
+      default: machineClass = 'machine-slitting';
     }
 
-    const isDuplicate = item.status !== 'HOLD' &&
-                        item.status !== 'REJECT' &&
+    const isDuplicate = item.status !== 'HOLD' && item.status !== 'REJECT' &&
                         duplicateKodePacks.has(item.kodePack + (item.subKode || ''));
 
     row.innerHTML = `
@@ -1227,17 +1229,22 @@ function renderTable(filteredData = null) {
       <td>${absoluteIndex + 1}</td>
       <td>${formatTanggalIndonesia(item.tanggal)}</td>
       <td><span class="${machineClass}">${item.mesin}</span></td>
-      <td>${item.supplier || 'INHOUSE'}</td> 
+      <td>${item.supplier || 'INHOUSE'}</td>
       <td>${item.spk}</td>
       <td>${item.lot}<text style="color: red;">${item.turunan}</text></td>
       <td>${item.jenis} ${item.kode} ${item.thickness} MC X ${item.width} MM = ${item.length}</td>
-      <td ${isDuplicate ? ' style="background-color: red; color: yellow; font-weight: bold;"' : ''}>${item.kodePack}<text ${isDuplicate ? ' style="color: yellow; font-weight: bold;"' : 'style="color: red; font-weight: bold; "'}>${item.subKode}</text></td>
+      <td ${isDuplicate ? 'style="background-color: red; color: yellow; font-weight: bold;"' : ''}>
+        ${item.kodePack}<text ${isDuplicate ? 'style="color: yellow; font-weight: bold;"' : 'style="color: red; font-weight: bold;"'}>
+          ${item.subKode}
+        </text>
+      </td>
       <td>${getMonthName(item.tanggal)}</td>
       <td>
         <button class="btn btn-primary" onclick="openModal(${absoluteIndex})">Edit</button>
         <button class="btn btn-secondary" onclick="duplicateData(${absoluteIndex})">Duplikat</button>
         <button class="btn btn-danger" onclick="deleteData(${absoluteIndex})">Hapus</button>
-      </td>`;
+      </td>
+    `;
     tbody.appendChild(row);
   });
 
@@ -1280,28 +1287,28 @@ function updatePaginationControls(totalPages) {
   }
 }
 
-function prevPage() {
-  if (currentPage > 1) {
-    currentPage--;
-    renderTable(currentSearchTerm ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
-      Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
-    ) : null);
-  }
-}
+// function prevPage() {
+//   if (currentPage > 1) {
+//     currentPage--;
+//     renderTable(currentSearchTerm ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
+//       Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
+//     ) : null);
+//   }
+// }
 
-function nextPage() {
-  const data = currentSearchTerm
-    ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
-        Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
-      )
-    : JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+// function nextPage() {
+//   const data = currentSearchTerm
+//     ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
+//         Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
+//       )
+//     : JSON.parse(localStorage.getItem(DATA_KEY)) || [];
 
-  const totalPages = Math.ceil(data.length / rowsPerPage);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderTable(currentSearchTerm ? data : null);
-  }
-}
+//   const totalPages = Math.ceil(data.length / rowsPerPage);
+//   if (currentPage < totalPages) {
+//     currentPage++;
+//     renderTable(currentSearchTerm ? data : null);
+//   }
+// }
 
 function prevPage() {
   if (currentPage > 1) {
@@ -1311,11 +1318,11 @@ function prevPage() {
 }
 
 function nextPage() {
-  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const data = filteredDataCache || JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
   const totalPages = Math.ceil(data.length / rowsPerPage);
   if (currentPage < totalPages) {
     currentPage++;
-    renderTable();
+    renderTable(filteredDataCache);
   }
 }
 
@@ -1390,30 +1397,58 @@ function updateLocalStorageAndMonitor() {
       document.querySelectorAll(".row-check").forEach(c => c.checked = checkbox.checked);
     }
     
-    function deleteData(index) {
-      if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
-        const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-        data.splice(index, 1);
-        localStorage.setItem(DATA_KEY, JSON.stringify(data));
-        updateLocalStorageAndMonitor();;
-      }
-    }
-    
-    function duplicateData(index) {
-      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-      const duplicatedItem = { ...data[index] };
+   function deleteData(index) {
+  if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
 
-     // Gunakan tanggal shift saat ini untuk data duplikat
-  duplicatedItem.tanggal = calculateShiftDate();
-  // Hapus tanggalManual jika ada di duplikat, agar tidak menimpa tanggal shift
-  if (duplicatedItem.tanggalManual) {
-    delete duplicatedItem.tanggalManual;
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const dataToUse = filteredDataCache || allData;
+
+  const itemToDelete = dataToUse[index];
+
+  const realIndex = allData.findIndex(d => JSON.stringify(d) === JSON.stringify(itemToDelete));
+
+  if (realIndex === -1) {
+    showToast("Data tidak ditemukan.", "error");
+    return;
   }
 
-      data.push(duplicatedItem);
-      localStorage.setItem(DATA_KEY, JSON.stringify(data));
-      updateLocalStorageAndMonitor();;
-    }
+  allData.splice(realIndex, 1);
+  localStorage.setItem(DATA_KEY, JSON.stringify(allData));
+  updateLocalStorageAndMonitor();
+
+  // Jika masih dalam mode filter, pertahankan filter
+  if (filteredDataCache) {
+    renderTable(filteredDataCache);
+  }
+}
+    
+    function duplicateData(index) {
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const dataToUse = filteredDataCache || allData;
+
+  const itemToDuplicate = dataToUse[index];
+  const realIndex = allData.findIndex(d => JSON.stringify(d) === JSON.stringify(itemToDuplicate));
+
+  if (realIndex === -1) {
+    showToast("Data tidak ditemukan.", "error");
+    return;
+  }
+
+  const duplicatedItem = { ...allData[realIndex] };
+
+  // Ganti tanggal dengan shift date saat ini
+  duplicatedItem.tanggal = calculateShiftDate();
+  delete duplicatedItem.tanggalManual;
+
+  allData.push(duplicatedItem);
+  localStorage.setItem(DATA_KEY, JSON.stringify(allData));
+  updateLocalStorageAndMonitor();
+
+  // Jika masih dalam mode filter, pertahankan filter
+  if (filteredDataCache) {
+    renderTable(filteredDataCache);
+  }
+}
     
     // ===== FORM HANDLING =====
     function handleFormSubmit(e) {
