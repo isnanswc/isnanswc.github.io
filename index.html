@@ -1630,17 +1630,22 @@ function updateLocalStorageAndMonitor() {
 
     // ===== FUNGSI TANGGAL SHIFT =====
     function calculateShiftDate() {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const shiftDate = new Date(now);
-      
-      // Jika sebelum jam 7 pagi, gunakan tanggal kemarin
-      if (currentHour < 7) {
-        shiftDate.setDate(shiftDate.getDate() - 1); // Ini akan mengurangi 1 hari dari tanggal saat ini
-      }
-      
-      return shiftDate.toISOString().split('T')[0];
-    }
+  const now = new Date(); // Waktu saat ini
+  const currentHour = now.getHours();
+
+  let shiftDate;
+
+  if (currentHour < 7) {
+    // Jika jam < 07:00, gunakan tanggal kemarin
+    shiftDate = new Date(now);
+    shiftDate.setDate(now.getDate() - 1); // Hanya dikurangi 1 hari
+  } else {
+    // Jika >= 07:00, gunakan tanggal hari ini
+    shiftDate = new Date(now);
+  }
+
+  return shiftDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+}
 
     // Search function
     let currentSearchTerm = '';
