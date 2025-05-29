@@ -677,8 +677,14 @@
             scannerLoader.style.display = show ? 'block' : 'none';
         }
         
+        let lastScanTime = 0;
+
         // Fungsi untuk scan menggunakan jsQR
         function scanWithjsQR() {
+            const now = Date.now();
+            if (now - lastScanTime < 500) return; // minimal 500ms antar-scan
+            lastScanTime = now;
+
             if (!isScanning || videoElement.readyState < videoElement.HAVE_METADATA) return;
             
             try {
@@ -744,19 +750,30 @@
             console.log("Data mentah dari QR:", data); // Tambahkan baris ini
             try {
                 // Validasi data
+               // Validasi data
                 if (typeof data !== 'string' || data.trim() === '') {
+                    console.error("Data tidak valid", { data });
                     throw new Error("Data QR tidak valid");
                 }
-                
-                // Format data: ukuran|no_lot|kode_pack
-                const parts = data.split('|').map(part => part.trim());
-                console.log("Bagian data setelah split:", parts); // Tambahkan baris ini
-                
+
+                // Bersihkan karakter tidak terlihat dan pecah
+                const cleanedData = data.replace(/[^\x20-\x7E]/g, '');
+                const parts = cleanedData.split('|').map(part => part.trim());
+
+                console.log("Raw Data:", data);
+                console.log("Cleaned Data:", cleanedData);
+                console.log("Split Parts:", parts);
+
                 if (parts.length !== 3) {
-                    throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${data}`);
+                    throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${cleanedData}`);
                 }
-                
+
                 const [ukuran, noLot, kodePack] = parts;
+
+                if (!ukuran || !noLot || !kodePack) {
+                    console.warn("Ada bagian kosong", { ukuran, noLot, kodePack });
+                    throw new Error("Semua field harus diisi");
+                }
                 
                 // Validasi field
                 if (!ukuran || !noLot || !kodePack) {
