@@ -140,7 +140,7 @@
     <div class="notification-content" id="notification-content"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr @1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr @latest/dist/jsQR.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js "></script>
 <script>
     let videoStream = null;
@@ -208,19 +208,33 @@
     }
 
     function scanWithjsQR() {
-        if (!isScanning || !videoElement.srcObject) return;
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
-
-        if (code) {
-            processScannedData(code.data);
-        }
+    if (!isScanning || !videoElement.srcObject) {
+        console.warn("Scanner tidak aktif atau video tidak tersedia");
+        return;
     }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    if (canvas.width === 0 || canvas.height === 0) {
+        console.warn("Dimensi video tidak valid");
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+
+    if (code) {
+        console.log("QR Code ditemukan:", code.data);
+        processScannedData(code.data);
+    } else {
+        // console.log("Belum ada QR code terdeteksi");
+    }
+}
 
     function processScannedData(data) {
         try {
