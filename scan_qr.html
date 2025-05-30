@@ -1,264 +1,649 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QR Scanner App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --success-color: #34a853;
+            --error-color: #ea4335;
+            --warning-color: #fbbc05;
+            --bg-color: #f5f5f5;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #dddddd;
+        }
 
-    h1 {
-      text-align: center;
-      color: #333;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-    }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
 
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
-    }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    .btn {
-      padding: 10px 16px;
-      margin: 5px;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .delete-btn {
-      background-color: #dc3545;
-    }
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
 
-    .export-btn {
-      background-color: #28a745;
-    }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    .modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
 
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 320px;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
+        button:hover {
+            background-color: #3367d6;
+        }
 
-    video {
-      width: 100%;
-      height: auto;
-      border-radius: 6px;
-    }
+        button.secondary {
+            background-color: var(--warning-color);
+        }
 
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #333;
-    }
+        button.danger {
+            background-color: var(--error-color);
+        }
 
-    .notification {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 5px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 1000;
-      max-width: 90%;
-      word-wrap: break-word;
-    }
+        button.success {
+            background-color: var(--success-color);
+        }
 
-    .show {
-      opacity: 1;
-    }
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--card-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
 
-    @media (max-width: 480px) {
-      .modal-content {
-        width: 90%;
-      }
-    }
-  </style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
+            margin: 20px 0;
+        }
+
+        #qr-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scanner-overlay::after {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 3px;
+            background-color: var(--primary-color);
+            animation: scanning 2s infinite linear;
+        }
+
+        @keyframes scanning {
+            0% { top: 10%; }
+            100% { top: 90%; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.success {
+            background-color: var(--success-color);
+        }
+
+        .notification.error {
+            background-color: var(--error-color);
+        }
+
+        .notification.info {
+            background-color: var(--primary-color);
+        }
+
+        .notification.warning {
+            background-color: var(--warning-color);
+        }
+
+        .debug-console {
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .debug-console h3 {
+            margin-bottom: 10px;
+            color: #f0f0f0;
+        }
+
+        .debug-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .debug-entry.error {
+            color: #ff6b6b;
+        }
+
+        .debug-entry.warning {
+            color: #ffe66d;
+        }
+
+        .debug-entry.info {
+            color: #6bccff;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>QR Code Scanner</h1>
+            <p>Scan QR codes with format: dimensi|nomor lot|kode pack</p>
+        </header>
 
-<h1>QR Code Scanner</h1>
-<button class="btn" onclick="openModal()">Scan QR</button>
-<button class="btn export-btn" onclick="exportToCSV()">Export to CSV</button>
-<button class="btn" onclick="restartCamera()">Restart Kamera</button>
+        <div class="controls">
+            <button id="scan-btn">Scan QR Code</button>
+            <button id="export-btn" class="success">Export to CSV</button>
+            <button id="clear-btn" class="danger">Clear All Data</button>
+        </div>
 
-<table id="dataTable">
-  <thead>
-    <tr>
-      <th>Dimensi</th>
-      <th>Nomor Lot</th>
-      <th>Kode Pack</th>
-      <th>Aksi</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+        <div class="table-container">
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Dimensi</th>
+                        <th>Nomor Lot</th>
+                        <th>Kode Pack</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
 
-<!-- Modal -->
-<div class="modal" id="qrModal" style="display: none;">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeModal()">&times;</span>
-    <video id="preview"></video>
-    <p id="notifCameraStatus">Status kamera: menunggu...</p>
-    <p id="notifScanResult">Hasil scan: -</p>
-  </div>
-</div>
+        <div class="debug-console">
+            <h3>Debug Console</h3>
+            <div id="debug-output"></div>
+        </div>
+    </div>
 
-<!-- Notification -->
-<div class="notification" id="floatingNotif"></div>
+    <!-- Modal for QR Scanner -->
+    <div class="modal" id="scanner-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>QR Code Scanner</h2>
+            
+            <div class="scanner-container">
+                <video id="qr-video" playsinline></video>
+                <div class="scanner-overlay"></div>
+            </div>
+            
+            <div class="controls">
+                <button id="restart-camera-btn" class="secondary">Restart Camera</button>
+            </div>
+        </div>
+    </div>
 
-<script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script> 
-<script>
-  const modal = document.getElementById('qrModal');
-  const preview = document.getElementById('preview');
-  const notifEl = document.getElementById('floatingNotif');
-  const cameraStatus = document.getElementById('notifCameraStatus');
-  const scanResult = document.getElementById('notifScanResult');
-  const dataTable = document.querySelector('#dataTable tbody');
+    <!-- Notification Element -->
+    <div class="notification" id="notification"></div>
 
-  let scanner = null;
-  let currentStream = null;
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        // DOM Elements
+        const scanBtn = document.getElementById('scan-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const restartCameraBtn = document.getElementById('restart-camera-btn');
+        const scannerModal = document.getElementById('scanner-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const qrVideo = document.getElementById('qr-video');
+        const tableBody = document.getElementById('table-body');
+        const notification = document.getElementById('notification');
+        const debugOutput = document.getElementById('debug-output');
 
-  function showNotification(message, duration = 2000) {
-    notifEl.textContent = message;
-    notifEl.classList.add('show');
-    setTimeout(() => {
-      notifEl.classList.remove('show');
-    }, duration);
-  }
+        // Global variables
+        let scannerActive = false;
+        let stream = null;
+        let scanData = [];
+        const SCAN_FORMAT = /^(.+?)\|(.+?)\|(.+?)$/; // Format: dimensi|nomor lot|kode pack
 
-  function vibrate(pattern) {
-    if ("vibrate" in navigator) {
-      navigator.vibrate(pattern);
-    }
-  }
+        // Initialize the application
+        function init() {
+            loadData();
+            renderTable();
+            setupEventListeners();
+            logDebug('info', 'Application initialized');
+        }
 
-  function openModal() {
-    modal.style.display = 'flex';
-    startScanner();
-  }
+        // Set up event listeners
+        function setupEventListeners() {
+            scanBtn.addEventListener('click', openScanner);
+            exportBtn.addEventListener('click', exportToCSV);
+            clearBtn.addEventListener('click', confirmClearAll);
+            closeModal.addEventListener('click', closeScanner);
+            restartCameraBtn.addEventListener('click', restartCamera);
+        }
 
-  function closeModal() {
-    modal.style.display = 'none';
-    if (scanner) scanner.stop();
-    if (currentStream) {
-      currentStream.getTracks().forEach(track => track.stop());
-      currentStream = null;
-    }
-    preview.srcObject = null;
-    scanResult.textContent = "Hasil scan: -";
-  }
+        // Load data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('qrScanData');
+            if (savedData) {
+                scanData = JSON.parse(savedData);
+                logDebug('info', `Loaded ${scanData.length} records from localStorage`);
+            }
+        }
 
-  async function startScanner() {
-    scanner = new ZXing.BrowserQRCodeReader();
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('qrScanData', JSON.stringify(scanData));
+            logDebug('info', `Saved ${scanData.length} records to localStorage`);
+        }
 
-    try {
-      // Cek apakah kamera tersedia
-      const devices = await scanner.getVideoInputDevices();
-      if (!devices || devices.length === 0) throw new Error("Tidak ada kamera ditemukan");
+        // Render the data table
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            if (scanData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" style="text-align: center;">No data available</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            scanData.forEach((data, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${data.dimensi}</td>
+                    <td>${data.nomorLot}</td>
+                    <td>${data.kodePack}</td>
+                    <td><button class="danger" onclick="deleteRow(${index})">Delete</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
 
-      // Pilih kamera belakang (jika tersedia)
-      const backCamera = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+        // Open the scanner modal
+        function openScanner() {
+            scannerModal.style.display = 'flex';
+            startScanner();
+            vibrate(100); // Short vibration when opening scanner
+            showNotification('info', 'Preparing camera...');
+            logDebug('info', 'Scanner modal opened');
+        }
 
-      cameraStatus.textContent = "Status kamera: sedang aktif...";
-      vibrate([100]);
+        // Close the scanner modal
+        function closeScanner() {
+            scannerActive = false;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            scannerModal.style.display = 'none';
+            logDebug('info', 'Scanner modal closed');
+        }
 
-      // Mulai scan
-      const result = await scanner.decodeFromVideoDeviceOnce(backCamera.deviceId, preview);
+        // Start the QR scanner
+        function startScanner() {
+            scannerActive = true;
+            
+            // Use back camera if available
+            const constraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    qrVideo.srcObject = stream;
+                    qrVideo.play();
+                    
+                    showNotification('info', 'Camera ready. Scanning for QR codes...');
+                    vibrate([100, 50, 100]); // Double vibration when camera starts
+                    logDebug('info', 'Camera started successfully');
+                    
+                    // Start scanning loop
+                    requestAnimationFrame(scanFrame);
+                })
+                .catch(function(err) {
+                    scannerActive = false;
+                    showNotification('error', 'Camera error: ' + err.message);
+                    vibrate([200, 100, 200, 100, 200]); // Error vibration pattern
+                    logDebug('error', 'Camera error: ' + err.message);
+                    console.error('Camera error:', err);
+                });
+        }
 
-      const text = result.text;
-      const [dimensi, nomorLot, kodePack] = text.split('|');
+        // Restart the camera
+        function restartCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            startScanner();
+            showNotification('info', 'Restarting camera...');
+            logDebug('info', 'Camera restart requested');
+        }
 
-      if (dimensi && nomorLot && kodePack) {
-        const row = dataTable.insertRow();
-        row.innerHTML = `
-          <td>${dimensi}</td>
-          <td>${nomorLot}</td>
-          <td>${kodePack}</td>
-          <td><button class="btn delete-btn" onclick="deleteRow(this)">Hapus</button></td>
-        `;
-        scanResult.textContent = "Hasil scan: berhasil";
-        showNotification("✅ Berhasil di-scan", 1500);
-        vibrate([0, 100, 50, 100]);
-        closeModal();
-      } else {
-        scanResult.textContent = "Format salah!";
-        showNotification("⚠️ Format QR tidak sesuai", 2000);
-        vibrate([0, 200, 100, 200]);
-      }
+        // Process each video frame for QR codes
+        function scanFrame() {
+            if (!scannerActive) return;
+            
+            if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = qrVideo.videoWidth;
+                canvas.height = qrVideo.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(qrVideo, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'dontInvert',
+                });
+                
+                if (code) {
+                    processQRCode(code.data);
+                }
+            }
+            
+            if (scannerActive) {
+                requestAnimationFrame(scanFrame);
+            }
+        }
 
-    } catch (err) {
-      console.error("Error saat scan:", err.message || err);
-      cameraStatus.textContent = "Status kamera: error!";
-      showNotification("🔴 Kamera gagal diaktifkan: " + (err.message || "Unknown error"), 3000);
-      vibrate([0, 300, 200, 300]);
-    }
-  }
+        // Process the scanned QR code data
+        function processQRCode(data) {
+            logDebug('info', `Scanned data: ${data}`);
+            
+            // Validate the QR code format
+            const match = data.match(SCAN_FORMAT);
+            if (!match) {
+                showNotification('error', 'Invalid QR format. Expected: dimensi|nomor lot|kode pack');
+                vibrate([300, 100, 300]); // Error vibration pattern
+                logDebug('warning', `Invalid QR format: ${data}`);
+                return;
+            }
+            
+            // Extract data
+            const [_, dimensi, nomorLot, kodePack] = match;
+            const scanResult = { dimensi, nomorLot, kodePack };
+            
+            // Add to data array
+            scanData.push(scanResult);
+            saveData();
+            renderTable();
+            
+            // Show success and close scanner
+            showNotification('success', 'QR code scanned successfully!');
+            vibrate(200); // Success vibration
+            logDebug('success', `QR code scanned: ${JSON.stringify(scanResult)}`);
+            
+            // Close scanner after short delay
+            setTimeout(() => {
+                closeScanner();
+            }, 1000);
+        }
 
-  function deleteRow(btn) {
-    const row = btn.parentNode.parentNode;
-    dataTable.removeChild(row);
-  }
+        // Delete a row from the table
+        function deleteRow(index) {
+            if (index >= 0 && index < scanData.length) {
+                scanData.splice(index, 1);
+                saveData();
+                renderTable();
+                showNotification('info', 'Record deleted');
+                vibrate(50); // Short vibration for delete action
+                logDebug('info', `Deleted record at index ${index}`);
+            }
+        }
 
-  function exportToCSV() {
-    let csv = 'Dimensi,Nomor Lot,Kode Pack\n';
-    Array.from(dataTable.rows).forEach(row => {
-      const cells = row.querySelectorAll('td');
-      csv += `${cells[0].textContent},${cells[1].textContent},${cells[2].textContent}\n`;
-    });
+        // Confirm before clearing all data
+        function confirmClearAll() {
+            if (scanData.length === 0) {
+                showNotification('info', 'No data to clear');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete all data?')) {
+                scanData = [];
+                saveData();
+                renderTable();
+                showNotification('warning', 'All data cleared');
+                vibrate([100, 50, 100, 50, 100]); // Clear data vibration pattern
+                logDebug('warning', 'All data cleared by user');
+            }
+        }
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'data_scan.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    showNotification("📁 Data diekspor ke CSV", 1500);
-  }
+        // Export data to CSV
+        function exportToCSV() {
+            if (scanData.length === 0) {
+                showNotification('info', 'No data to export');
+                return;
+            }
+            
+            // CSV header
+            let csv = 'No.,Dimensi,Nomor Lot,Kode Pack\n';
+            
+            // Add data rows
+            scanData.forEach((row, index) => {
+                csv += `${index + 1},"${row.dimensi}","${row.nomorLot}","${row.kodePack}"\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `qr_scan_data_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('success', 'Data exported to CSV');
+            logDebug('info', 'Data exported to CSV');
+        }
 
-  async function restartCamera() {
-    closeModal();
-    showNotification("🔄 Mencoba restart kamera...", 2000);
-    await new Promise(r => setTimeout(r, 1000));
-    openModal();
-  }
-</script>
+        // Show notification
+        function showNotification(type, message) {
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
 
+        // Vibrate device
+        function vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Debug logging
+        function logDebug(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `debug-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            debugOutput.appendChild(entry);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            
+            // Keep only the last 50 entries
+            while (debugOutput.children.length > 50) {
+                debugOutput.removeChild(debugOutput.firstChild);
+            }
+            
+            // Also log to console
+            if (type === 'error') {
+                console.error(message);
+            } else if (type === 'warning') {
+                console.warn(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Make functions available globally for HTML onclick handlers
+        window.deleteRow = deleteRow;
+    </script>
 </body>
 </html>
