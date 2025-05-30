@@ -330,6 +330,25 @@
             right: 20px;
         }
 
+        .scan-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .scan-status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .scan-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -422,6 +441,10 @@
                 <div class="scanner-overlay"></div>
             </div>
             
+            <div class="scan-status" id="scan-status">
+                Ready to scan
+            </div>
+            
             <div class="recent-scans">
                 <h3>Last 10 Scans</h3>
                 <div class="recent-scans-list" id="recent-scans-list">
@@ -478,13 +501,16 @@
         const modalDebugOutput = document.getElementById('modal-debug-output');
         const recentScansList = document.getElementById('recent-scans-list');
         const modalDebugConsole = document.getElementById('modal-debug-console');
+        const scanStatus = document.getElementById('scan-status');
 
         // Global variables
         let scannerActive = false;
         let stream = null;
         let scanData = [];
         let recentScans = [];
+        let lastScanTime = 0;
         const SCAN_FORMAT = /^(.+?)\|(.+?)\|(.+?)$/; // Format: dimensi|nomor lot|kode pack
+        const SCAN_COOLDOWN = 1000; // 1 second cooldown between scans
 
         // Initialize the application
         function init() {
@@ -632,7 +658,7 @@
                     qrVideo.srcObject = stream;
                     qrVideo.play();
                     
-                    showNotification('info', 'Camera ready. Scanning for QR codes...');
+                    updateScanStatus('info', 'Camera ready. Scanning for QR codes...');
                     vibrate([100, 50, 100]); // Double vibration when camera starts
                     logDebug('info', 'Camera started successfully');
                     
@@ -641,6 +667,7 @@
                 })
                 .catch(function(err) {
                     scannerActive = false;
+                    updateScanStatus('error', 'Camera error: ' + err.message);
                     showNotification('error', 'Camera error: ' + err.message);
                     vibrate([200, 100, 200, 100, 200]); // Error vibration pattern
                     logDebug('error', 'Camera error: ' + err.message);
@@ -655,13 +682,35 @@
                 stream = null;
             }
             startScanner();
+            updateScanStatus('info', 'Restarting camera...');
             showNotification('info', 'Restarting camera...');
             logDebug('info', 'Camera restart requested');
+        }
+
+        // Update scan status display
+        function updateScanStatus(type, message) {
+            scanStatus.textContent = message;
+            scanStatus.className = 'scan-status';
+            
+            if (type === 'success') {
+                scanStatus.classList.add('success');
+            } else if (type === 'error') {
+                scanStatus.classList.add('error');
+            } else if (type === 'info') {
+                // Default style
+            }
         }
 
         // Process each video frame for QR codes
         function scanFrame() {
             if (!scannerActive) return;
+            
+            // Check if we're in cooldown period
+            const now = Date.now();
+            if (now - lastScanTime < SCAN_COOLDOWN) {
+                requestAnimationFrame(scanFrame);
+                return;
+            }
             
             if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
                 const canvas = document.createElement('canvas');
@@ -676,6 +725,7 @@
                 });
                 
                 if (code) {
+                    lastScanTime = now;
                     processQRCode(code.data);
                 }
             }
@@ -701,6 +751,7 @@
             // Validate the QR code format
             const match = data.match(SCAN_FORMAT);
             if (!match) {
+                updateScanStatus('error', 'Invalid QR format');
                 showNotification('error', 'Invalid QR format. Expected: dimensi|nomor lot|kode pack');
                 vibrate([300, 100, 300]); // Error vibration pattern
                 logDebug('warning', `Invalid QR format: ${data}`);
@@ -712,6 +763,7 @@
             
             // Check for duplicate
             if (isDuplicate(dimensi, nomorLot, kodePack)) {
+                updateScanStatus('error', 'Duplicate QR code');
                 showNotification('warning', 'This QR code has already been scanned');
                 vibrate([200, 100, 200]); // Warning vibration pattern
                 logDebug('warning', `Duplicate QR code detected: ${data}`);
@@ -738,15 +790,11 @@
             renderTable();
             renderRecentScans();
             
-            // Show success and close scanner
+            // Show success but keep scanner open
+            updateScanStatus('success', 'Scan successful! Ready for next QR code');
             showNotification('success', 'QR code scanned successfully!');
             vibrate(200); // Success vibration
             logDebug('success', `QR code scanned: ${JSON.stringify(scanResult)}`);
-            
-            // Close scanner after short delay
-            setTimeout(() => {
-                closeScanner();
-            }, 1000);
         }
 
         // Delete a row from the table
