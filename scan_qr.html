@@ -162,13 +162,25 @@
   }
 
   function startScanner() {
-    scanner = new ZXing.BrowserQRCodeReader();
-    cameraStatus.textContent = "Status kamera: sedang aktif...";
+    navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    console.log("Kamera tersedia");
+    stream.getTracks().forEach(track => track.stop());
+  })
+  .catch(err => {
+    console.error("Kamera tidak tersedia:", err);
+    alert("⚠️ Kamera tidak dapat diakses. Pastikan izin diberikan.");
+  });
+  scanner = new ZXing.BrowserQRCodeReader();
+
+  // Delay sedikit agar modal dan video sudah siap
+  setTimeout(() => {
+    cameraStatus.textContent = "Status kamera: mencoba mengaktifkan...";
     vibrate([100]);
+
     scanner.decodeFromVideoDevice(null, preview, (result, err) => {
       if (result) {
         const text = result.text;
-        console.log("Scanned:", text);
         const [dimensi, nomorLot, kodePack] = text.split('|');
         if (dimensi && nomorLot && kodePack) {
           const row = dataTable.insertRow();
@@ -188,14 +200,31 @@
           vibrate([0, 200, 100, 200]);
         }
       }
+
       if (err && !(err instanceof ZXing.NotFoundException)) {
         console.error(err);
         cameraStatus.textContent = "Status kamera: error!";
         showNotification("🔴 Kamera gagal diaktifkan", 2000);
         vibrate([0, 300, 200, 300]);
+
+        // Menampilkan detail error tambahan
+        console.warn("Detail Error:", err.message || err);
+
+        // Fallback: coba daftar perangkat kamera manual
+        scanner.getVideoInputDevices()
+          .then(devices => {
+            if (devices.length === 0) {
+              console.warn("Tidak ada perangkat kamera tersedia.");
+              showNotification("🚫 Tidak ada kamera tersedia.", 3000);
+            } else {
+              console.log("Daftar kamera:", devices);
+              scanner.decodeFromVideoDevice(devices[0].deviceId, preview, () => {});
+            }
+          });
       }
     });
-  }
+  }, 500); // delay 0.5 detik
+}
 
   function deleteRow(btn) {
     const row = btn.parentNode.parentNode;
