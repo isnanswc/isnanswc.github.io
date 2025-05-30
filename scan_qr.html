@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #4285f4;
@@ -63,6 +64,9 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         button:hover {
@@ -135,6 +139,8 @@
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .close-modal {
@@ -235,6 +241,11 @@
             overflow-y: auto;
             margin-top: 20px;
             font-size: 14px;
+            display: none;
+        }
+
+        .debug-console.show {
+            display: block;
         }
 
         .debug-console h3 {
@@ -260,6 +271,65 @@
             color: #6bccff;
         }
 
+        .recent-scans {
+            margin-top: 20px;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .recent-scans h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .recent-scans-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .recent-scan-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .recent-scan-item:last-child {
+            border-bottom: none;
+        }
+
+        .floating-btn {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 900;
+            transition: transform 0.2s;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-btn.debug {
+            bottom: 20px;
+            left: 20px;
+            background-color: #666;
+        }
+
+        .floating-btn.scan {
+            bottom: 20px;
+            right: 20px;
+        }
+
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -279,6 +349,22 @@
                 width: 95%;
                 padding: 15px;
             }
+
+            .floating-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .floating-btn.debug {
+                bottom: 15px;
+                left: 15px;
+            }
+
+            .floating-btn.scan {
+                bottom: 15px;
+                right: 15px;
+            }
         }
     </style>
 </head>
@@ -290,9 +376,12 @@
         </header>
 
         <div class="controls">
-            <button id="scan-btn">Scan QR Code</button>
-            <button id="export-btn" class="success">Export to CSV</button>
-            <button id="clear-btn" class="danger">Clear All Data</button>
+            <button id="export-btn" class="success">
+                <i class="fas fa-file-export"></i> Export to CSV
+            </button>
+            <button id="clear-btn" class="danger">
+                <i class="fas fa-trash-alt"></i> Clear All Data
+            </button>
         </div>
 
         <div class="table-container">
@@ -311,11 +400,15 @@
                 </tbody>
             </table>
         </div>
+    </div>
 
-        <div class="debug-console">
-            <h3>Debug Console</h3>
-            <div id="debug-output"></div>
-        </div>
+    <!-- Floating Action Buttons -->
+    <div class="floating-btn debug" id="debug-btn">
+        <i class="fas fa-bug"></i>
+    </div>
+    
+    <div class="floating-btn scan" id="floating-scan-btn">
+        <i class="fas fa-camera"></i>
     </div>
 
     <!-- Modal for QR Scanner -->
@@ -329,8 +422,36 @@
                 <div class="scanner-overlay"></div>
             </div>
             
+            <div class="recent-scans">
+                <h3>Last 10 Scans</h3>
+                <div class="recent-scans-list" id="recent-scans-list">
+                    <!-- Recent scans will appear here -->
+                </div>
+            </div>
+            
+            <div class="debug-console" id="modal-debug-console">
+                <h3>Debug Log</h3>
+                <div id="modal-debug-output"></div>
+            </div>
+            
             <div class="controls">
-                <button id="restart-camera-btn" class="secondary">Restart Camera</button>
+                <button id="restart-camera-btn" class="secondary">
+                    <i class="fas fa-sync-alt"></i> Restart Camera
+                </button>
+                <button id="toggle-debug-btn" class="secondary">
+                    <i class="fas fa-terminal"></i> Toggle Debug
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Modal -->
+    <div class="modal" id="debug-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Debug Console</h2>
+            <div class="debug-console show">
+                <div id="debug-output"></div>
             </div>
         </div>
     </div>
@@ -341,21 +462,28 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script>
         // DOM Elements
-        const scanBtn = document.getElementById('scan-btn');
         const exportBtn = document.getElementById('export-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const debugBtn = document.getElementById('debug-btn');
+        const floatingScanBtn = document.getElementById('floating-scan-btn');
         const restartCameraBtn = document.getElementById('restart-camera-btn');
+        const toggleDebugBtn = document.getElementById('toggle-debug-btn');
         const scannerModal = document.getElementById('scanner-modal');
-        const closeModal = document.querySelector('.close-modal');
+        const debugModal = document.getElementById('debug-modal');
+        const closeModal = document.querySelectorAll('.close-modal');
         const qrVideo = document.getElementById('qr-video');
         const tableBody = document.getElementById('table-body');
         const notification = document.getElementById('notification');
         const debugOutput = document.getElementById('debug-output');
+        const modalDebugOutput = document.getElementById('modal-debug-output');
+        const recentScansList = document.getElementById('recent-scans-list');
+        const modalDebugConsole = document.getElementById('modal-debug-console');
 
         // Global variables
         let scannerActive = false;
         let stream = null;
         let scanData = [];
+        let recentScans = [];
         const SCAN_FORMAT = /^(.+?)\|(.+?)\|(.+?)$/; // Format: dimensi|nomor lot|kode pack
 
         // Initialize the application
@@ -368,11 +496,22 @@
 
         // Set up event listeners
         function setupEventListeners() {
-            scanBtn.addEventListener('click', openScanner);
+            floatingScanBtn.addEventListener('click', openScanner);
             exportBtn.addEventListener('click', exportToCSV);
             clearBtn.addEventListener('click', confirmClearAll);
-            closeModal.addEventListener('click', closeScanner);
+            debugBtn.addEventListener('click', openDebugModal);
             restartCameraBtn.addEventListener('click', restartCamera);
+            toggleDebugBtn.addEventListener('click', toggleModalDebug);
+            
+            closeModal.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (scannerModal.style.display === 'flex') {
+                        closeScanner();
+                    } else {
+                        debugModal.style.display = 'none';
+                    }
+                });
+            });
         }
 
         // Load data from localStorage
@@ -382,12 +521,19 @@
                 scanData = JSON.parse(savedData);
                 logDebug('info', `Loaded ${scanData.length} records from localStorage`);
             }
+            
+            const savedRecent = localStorage.getItem('qrRecentScans');
+            if (savedRecent) {
+                recentScans = JSON.parse(savedRecent);
+                logDebug('info', `Loaded ${recentScans.length} recent scans from localStorage`);
+            }
         }
 
         // Save data to localStorage
         function saveData() {
             localStorage.setItem('qrScanData', JSON.stringify(scanData));
-            logDebug('info', `Saved ${scanData.length} records to localStorage`);
+            localStorage.setItem('qrRecentScans', JSON.stringify(recentScans));
+            logDebug('info', `Saved ${scanData.length} records and ${recentScans.length} recent scans to localStorage`);
         }
 
         // Render the data table
@@ -408,9 +554,29 @@
                     <td>${data.dimensi}</td>
                     <td>${data.nomorLot}</td>
                     <td>${data.kodePack}</td>
-                    <td><button class="danger" onclick="deleteRow(${index})">Delete</button></td>
+                    <td><button class="danger" onclick="deleteRow(${index})"><i class="fas fa-trash-alt"></i> Delete</button></td>
                 `;
                 tableBody.appendChild(row);
+            });
+        }
+
+        // Render recent scans list
+        function renderRecentScans() {
+            recentScansList.innerHTML = '';
+            
+            if (recentScans.length === 0) {
+                recentScansList.innerHTML = '<div style="text-align: center; padding: 10px;">No recent scans</div>';
+                return;
+            }
+            
+            recentScans.slice(0, 10).forEach((scan, index) => {
+                const item = document.createElement('div');
+                item.className = 'recent-scan-item';
+                item.innerHTML = `
+                    <span>${index + 1}. ${scan.dimensi}|${scan.nomorLot}|${scan.kodePack}</span>
+                    <span>${new Date(scan.timestamp).toLocaleTimeString()}</span>
+                `;
+                recentScansList.appendChild(item);
             });
         }
 
@@ -418,9 +584,22 @@
         function openScanner() {
             scannerModal.style.display = 'flex';
             startScanner();
+            renderRecentScans();
             vibrate(100); // Short vibration when opening scanner
             showNotification('info', 'Preparing camera...');
             logDebug('info', 'Scanner modal opened');
+        }
+
+        // Open debug modal
+        function openDebugModal() {
+            debugModal.style.display = 'flex';
+            logDebug('info', 'Debug modal opened');
+        }
+
+        // Toggle debug console in scanner modal
+        function toggleModalDebug() {
+            modalDebugConsole.classList.toggle('show');
+            logDebug('info', 'Toggled debug console in scanner modal');
         }
 
         // Close the scanner modal
@@ -506,6 +685,15 @@
             }
         }
 
+        // Check if data already exists
+        function isDuplicate(dimensi, nomorLot, kodePack) {
+            return scanData.some(item => 
+                item.dimensi === dimensi && 
+                item.nomorLot === nomorLot && 
+                item.kodePack === kodePack
+            );
+        }
+
         // Process the scanned QR code data
         function processQRCode(data) {
             logDebug('info', `Scanned data: ${data}`);
@@ -521,12 +709,34 @@
             
             // Extract data
             const [_, dimensi, nomorLot, kodePack] = match;
-            const scanResult = { dimensi, nomorLot, kodePack };
             
-            // Add to data array
+            // Check for duplicate
+            if (isDuplicate(dimensi, nomorLot, kodePack)) {
+                showNotification('warning', 'This QR code has already been scanned');
+                vibrate([200, 100, 200]); // Warning vibration pattern
+                logDebug('warning', `Duplicate QR code detected: ${data}`);
+                return;
+            }
+            
+            const scanResult = { 
+                dimensi, 
+                nomorLot, 
+                kodePack,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add to data arrays
             scanData.push(scanResult);
+            recentScans.unshift(scanResult); // Add to beginning of array
+            
+            // Keep only last 10 recent scans
+            if (recentScans.length > 10) {
+                recentScans = recentScans.slice(0, 10);
+            }
+            
             saveData();
             renderTable();
+            renderRecentScans();
             
             // Show success and close scanner
             showNotification('success', 'QR code scanned successfully!');
@@ -560,8 +770,10 @@
             
             if (confirm('Are you sure you want to delete all data?')) {
                 scanData = [];
+                recentScans = [];
                 saveData();
                 renderTable();
+                renderRecentScans();
                 showNotification('warning', 'All data cleared');
                 vibrate([100, 50, 100, 50, 100]); // Clear data vibration pattern
                 logDebug('warning', 'All data cleared by user');
@@ -576,11 +788,11 @@
             }
             
             // CSV header
-            let csv = 'No.,Dimensi,Nomor Lot,Kode Pack\n';
+            let csv = 'No.,Dimensi,Nomor Lot,Kode Pack,Timestamp\n';
             
             // Add data rows
             scanData.forEach((row, index) => {
-                csv += `${index + 1},"${row.dimensi}","${row.nomorLot}","${row.kodePack}"\n`;
+                csv += `${index + 1},"${row.dimensi}","${row.nomorLot}","${row.kodePack}","${row.timestamp || ''}"\n`;
             });
             
             // Create download link
@@ -618,15 +830,27 @@
         // Debug logging
         function logDebug(type, message) {
             const timestamp = new Date().toLocaleTimeString();
+            
+            // Main debug console
             const entry = document.createElement('div');
             entry.className = `debug-entry ${type}`;
             entry.textContent = `[${timestamp}] ${message}`;
             debugOutput.appendChild(entry);
             debugOutput.scrollTop = debugOutput.scrollHeight;
             
+            // Modal debug console
+            const modalEntry = document.createElement('div');
+            modalEntry.className = `debug-entry ${type}`;
+            modalEntry.textContent = `[${timestamp}] ${message}`;
+            modalDebugOutput.appendChild(modalEntry);
+            modalDebugOutput.scrollTop = modalDebugOutput.scrollHeight;
+            
             // Keep only the last 50 entries
             while (debugOutput.children.length > 50) {
                 debugOutput.removeChild(debugOutput.firstChild);
+            }
+            while (modalDebugOutput.children.length > 50) {
+                modalDebugOutput.removeChild(modalDebugOutput.firstChild);
             }
             
             // Also log to console
