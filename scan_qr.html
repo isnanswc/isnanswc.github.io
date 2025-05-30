@@ -679,7 +679,7 @@
         
         // Fungsi untuk scan menggunakan jsQR
         function scanWithjsQR() {
-            if (!isScanning || videoElement.readyState < videoElement.HAVE_METADATA) return;
+            if (!isScanning || videoElement.readyState < videoElement.HAVE_ENOUGH_DATA) return;
             
             try {
                 const canvas = document.createElement('canvas');
@@ -695,7 +695,7 @@
                 
                 // Coba decode QR code
                 const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
+                    inversionAttempts: "both",
                 });
                 
                 if (code) {
@@ -755,7 +755,7 @@
                     console.log("Bagian data setelah split:", parts); // Tambahkan baris ini
                 
                 if (parts.length !== 3) {
-                    throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${data}`);
+                    throw new Error(`Format harus: ukuran|no_lot|kode_pack. Diterima: ${cleanedData}`);
                 }
                 
                 const [ukuran, noLot, kodePack] = parts;
