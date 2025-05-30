@@ -100,7 +100,7 @@
 <h1>QR Code Scanner</h1>
 <button class="btn scan-btn" onclick="openModal()">Scan QR</button>
 <button class="btn export-btn" onclick="exportToCSV()">Export to CSV</button>
-
+<button onclick="restartCamera()">Restart Kamera</button>
 <table id="dataTable">
   <thead>
     <tr>
@@ -247,6 +247,12 @@
     URL.revokeObjectURL(url);
     showNotification("📁 Data diekspor ke CSV", 1500);
   }
+  function restartCamera() {
+  closeModal(); // pastikan modal tertutup
+  setTimeout(() => {
+    startScanner(); // mulai ulang scan
+  }, 1000);
+}
 </script>
 
 </body>
