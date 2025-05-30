@@ -9,16 +9,19 @@
       font-family: Arial, sans-serif;
       padding: 20px;
       background: #f5f5f5;
+      margin: 0;
     }
 
     h1 {
       text-align: center;
+      color: #333;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      background: white;
     }
 
     th, td {
@@ -28,21 +31,28 @@
     }
 
     .btn {
-      padding: 8px 12px;
-      cursor: pointer;
+      padding: 10px 16px;
       margin: 5px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
       border: none;
       border-radius: 4px;
     }
 
-    .scan-btn { background: #007bff; color: white; }
-    .export-btn { background: #28a745; color: white; }
+    .delete-btn {
+      background-color: #dc3545;
+    }
+
+    .export-btn {
+      background-color: #28a745;
+    }
 
     .modal {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      display: none;
+      background: rgba(0,0,0,0.8);
+      display: flex;
       justify-content: center;
       align-items: center;
       z-index: 999;
@@ -54,20 +64,23 @@
       border-radius: 10px;
       width: 320px;
       position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     video {
       width: 100%;
       height: auto;
+      border-radius: 6px;
     }
 
     .close-btn {
       position: absolute;
       top: 10px;
-      right: 10px;
+      right: 15px;
+      font-size: 24px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 18px;
+      color: #333;
     }
 
     .notification {
@@ -82,6 +95,8 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       z-index: 1000;
+      max-width: 90%;
+      word-wrap: break-word;
     }
 
     .show {
@@ -98,9 +113,9 @@
 <body>
 
 <h1>QR Code Scanner</h1>
-<button class="btn scan-btn" onclick="openModal()">Scan QR</button>
+<button class="btn" onclick="openModal()">Scan QR</button>
 <button class="btn export-btn" onclick="exportToCSV()">Export to CSV</button>
-<button onclick="restartCamera()">Restart Kamera</button>
+
 <table id="dataTable">
   <thead>
     <tr>
@@ -114,7 +129,7 @@
 </table>
 
 <!-- Modal -->
-<div class="modal" id="qrModal">
+<div class="modal" id="qrModal" style="display: none;">
   <div class="modal-content">
     <span class="close-btn" onclick="closeModal()">&times;</span>
     <video id="preview"></video>
@@ -135,7 +150,8 @@
   const scanResult = document.getElementById('notifScanResult');
   const dataTable = document.querySelector('#dataTable tbody');
 
-  let scanner;
+  let scanner = null;
+  let currentStream = null;
 
   function showNotification(message, duration = 2000) {
     notifEl.textContent = message;
@@ -151,84 +167,71 @@
     }
   }
 
-  function openModal() {
+  async function openModal() {
     modal.style.display = 'flex';
-    startScanner();
+    await startScanner();
   }
 
   function closeModal() {
     modal.style.display = 'none';
     if (scanner) scanner.stop();
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+      currentStream = null;
+    }
+    preview.srcObject = null;
+    scanResult.textContent = "Hasil scan: -";
   }
 
-  function startScanner() {
-    navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
-    console.log("Kamera tersedia");
-    stream.getTracks().forEach(track => track.stop());
-  })
-  .catch(err => {
-    console.error("Kamera tidak tersedia:", err);
-    alert("⚠️ Kamera tidak dapat diakses. Pastikan izin diberikan.");
-  });
-  scanner = new ZXing.BrowserQRCodeReader();
+  async function startScanner() {
+    scanner = new ZXing.BrowserQRCodeReader();
 
-  // Delay sedikit agar modal dan video sudah siap
-  setTimeout(() => {
-    cameraStatus.textContent = "Status kamera: mencoba mengaktifkan...";
-    vibrate([100]);
+    try {
+      // Dapatkan daftar perangkat kamera
+      const devices = await scanner.getVideoInputDevices();
+      if (!devices || devices.length === 0) throw new Error("Tidak ada kamera ditemukan");
 
-    scanner.decodeFromVideoDevice(null, preview, (result, err) => {
-      if (result) {
-        const text = result.text;
-        const [dimensi, nomorLot, kodePack] = text.split('|');
-        if (dimensi && nomorLot && kodePack) {
-          const row = dataTable.insertRow();
-          row.innerHTML = `
-            <td>${dimensi}</td>
-            <td>${nomorLot}</td>
-            <td>${kodePack}</td>
-            <td><button onclick="deleteRow(this)">Hapus</button></td>
-          `;
-          scanResult.textContent = "Hasil scan: berhasil";
-          showNotification("✅ Berhasil di-scan", 1500);
-          vibrate([0, 100, 50, 100]);
-          closeModal();
-        } else {
-          scanResult.textContent = "Format salah!";
-          showNotification("⚠️ Format QR tidak sesuai", 2000);
-          vibrate([0, 200, 100, 200]);
-        }
+      // Pilih kamera belakang (jika tersedia)
+      const backCamera = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+
+      cameraStatus.textContent = "Status kamera: sedang aktif...";
+      vibrate([100]);
+
+      // Mulai stream dari kamera tertentu
+      const result = await scanner.decodeFromVideoDeviceOnce(backCamera.deviceId, preview);
+
+      const text = result.text;
+      const [dimensi, nomorLot, kodePack] = text.split('|');
+
+      if (dimensi && nomorLot && kodePack) {
+        const row = dataTable.insertRow();
+        row.innerHTML = `
+          <td>${dimensi}</td>
+          <td>${nomorLot}</td>
+          <td>${kodePack}</td>
+          <td><button class="btn delete-btn" onclick="deleteRow(this)">Hapus</button></td>
+        `;
+        scanResult.textContent = "Hasil scan: berhasil";
+        showNotification("✅ Berhasil di-scan", 1500);
+        vibrate([0, 100, 50, 100]);
+        closeModal();
+      } else {
+        scanResult.textContent = "Format salah!";
+        showNotification("⚠️ Format QR tidak sesuai", 2000);
+        vibrate([0, 200, 100, 200]);
       }
 
-      if (err && !(err instanceof ZXing.NotFoundException)) {
-        console.error(err);
-        cameraStatus.textContent = "Status kamera: error!";
-        showNotification("🔴 Kamera gagal diaktifkan", 2000);
-        vibrate([0, 300, 200, 300]);
-
-        // Menampilkan detail error tambahan
-        console.warn("Detail Error:", err.message || err);
-
-        // Fallback: coba daftar perangkat kamera manual
-        scanner.getVideoInputDevices()
-          .then(devices => {
-            if (devices.length === 0) {
-              console.warn("Tidak ada perangkat kamera tersedia.");
-              showNotification("🚫 Tidak ada kamera tersedia.", 3000);
-            } else {
-              console.log("Daftar kamera:", devices);
-              scanner.decodeFromVideoDevice(devices[0].deviceId, preview, () => {});
-            }
-          });
-      }
-    });
-  }, 500); // delay 0.5 detik
-}
+    } catch (err) {
+      console.error(err);
+      cameraStatus.textContent = "Status kamera: error!";
+      showNotification("🔴 Kamera gagal diaktifkan", 2000);
+      vibrate([0, 300, 200, 300]);
+    }
+  }
 
   function deleteRow(btn) {
     const row = btn.parentNode.parentNode;
-    dataTable.deleteRow(row.rowIndex - 1); // karena header ada di index 0
+    dataTable.removeChild(row);
   }
 
   function exportToCSV() {
@@ -247,12 +250,6 @@
     URL.revokeObjectURL(url);
     showNotification("📁 Data diekspor ke CSV", 1500);
   }
-  function restartCamera() {
-  closeModal(); // pastikan modal tertutup
-  setTimeout(() => {
-    startScanner(); // mulai ulang scan
-  }, 1000);
-}
 </script>
 
 </body>
