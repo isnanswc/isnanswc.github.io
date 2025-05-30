@@ -491,7 +491,7 @@
         <div class="notification-content" id="notification-content"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         // Variabel global
@@ -646,7 +646,7 @@
                 isScanning = true;
                 
                 // Mulai scanning dengan jsQR
-                scanInterval = setInterval(scanWithjsQR, 300);
+                scanInterval = setInterval(scanWithZXing, 300);
                 
             } catch (err) {
                 console.error("Error kamera:", err);
@@ -678,44 +678,40 @@
         }
         
         // Fungsi untuk scan menggunakan jsQR
-        function scanWithjsQR() {
-            if (!isScanning || videoElement.readyState < videoElement.HAVE_ENOUGH_DATA) return;
-            
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // Gambar frame video ke canvas
-                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                
-                // Ambil data gambar
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Coba decode QR code
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "both",
-                });
-                
-                if (code) {
-                    // Cegah scan berulang pada QR yang sama dalam 3 detik
-                    if (lastScanned === code.data || (lastScanned && Date.now() - lastScanned.time < 3000)) {
-                        return;
-                    }
-                    
-                    lastScanned = {
-                        data: code.data,
-                        time: Date.now()
-                    };
-                    
-                    processScannedData(code.data);
-                }
-            } catch (err) {
-                console.error("Error scanning:", err);
-                updateScannerStatus("Error saat memindai", "error");
-            }
+        let zxingReader = null;
+
+async function scanWithZXing() {
+    if (!isScanning || videoElement.readyState < videoElement.HAVE_ENOUGH_DATA) return;
+
+    try {
+        // Inisialisasi ZXing jika belum ada
+        if (!zxingReader) {
+            zxingReader = new ZXing.BrowserMultiFormatReader();
         }
+
+        // Deteksi QR Code dari frame video
+        const result = await zxingReader.decodeFromVideoDevice(null, 'qr-video', (result, error) => {
+            if (result) {
+                // Cegah duplikasi scan dalam waktu singkat
+                if (lastScanned === result.text || 
+                    (lastScanned && Date.now() - lastScanned.time < 3000)) {
+                    return;
+                }
+                lastScanned = {
+                    data: result.text,
+                    time: Date.now()
+                };
+                processScannedData(result.text);
+            } else if (error && !(error instanceof ZXing.NotFoundException)) {
+                console.warn("ZXing decoding error:", error?.message || error);
+            }
+        });
+
+    } catch (err) {
+        console.error("Error saat memindai dengan ZXing:", err);
+        updateScannerStatus("Error memindai QR", "error");
+    }
+}
         
         // Fungsi untuk menghentikan scanning
         function stopScanning() {
@@ -723,7 +719,11 @@
             
             clearInterval(scanInterval);
             scanInterval = null;
-            
+              if (zxingReader) {
+                    zxingReader.reset();
+                    zxingReader = null;
+                }
+
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
