@@ -115,6 +115,7 @@
 <h1>QR Code Scanner</h1>
 <button class="btn" onclick="openModal()">Scan QR</button>
 <button class="btn export-btn" onclick="exportToCSV()">Export to CSV</button>
+<button class="btn" onclick="restartCamera()">Restart Kamera</button>
 
 <table id="dataTable">
   <thead>
@@ -167,9 +168,9 @@
     }
   }
 
-  async function openModal() {
+  function openModal() {
     modal.style.display = 'flex';
-    await startScanner();
+    startScanner();
   }
 
   function closeModal() {
@@ -187,7 +188,7 @@
     scanner = new ZXing.BrowserQRCodeReader();
 
     try {
-      // Dapatkan daftar perangkat kamera
+      // Cek apakah kamera tersedia
       const devices = await scanner.getVideoInputDevices();
       if (!devices || devices.length === 0) throw new Error("Tidak ada kamera ditemukan");
 
@@ -197,7 +198,7 @@
       cameraStatus.textContent = "Status kamera: sedang aktif...";
       vibrate([100]);
 
-      // Mulai stream dari kamera tertentu
+      // Mulai scan
       const result = await scanner.decodeFromVideoDeviceOnce(backCamera.deviceId, preview);
 
       const text = result.text;
@@ -222,9 +223,9 @@
       }
 
     } catch (err) {
-      console.error(err);
+      console.error("Error saat scan:", err.message || err);
       cameraStatus.textContent = "Status kamera: error!";
-      showNotification("🔴 Kamera gagal diaktifkan", 2000);
+      showNotification("🔴 Kamera gagal diaktifkan: " + (err.message || "Unknown error"), 3000);
       vibrate([0, 300, 200, 300]);
     }
   }
@@ -249,6 +250,13 @@
     a.click();
     URL.revokeObjectURL(url);
     showNotification("📁 Data diekspor ke CSV", 1500);
+  }
+
+  async function restartCamera() {
+    closeModal();
+    showNotification("🔄 Mencoba restart kamera...", 2000);
+    await new Promise(r => setTimeout(r, 1000));
+    openModal();
   }
 </script>
 
