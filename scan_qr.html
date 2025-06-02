@@ -20,27 +20,23 @@
             --sticky-nav-height: 60px;
             --highlight-color: #fffde7;
         }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
             padding-top: calc(var(--sticky-nav-height) + 20px);
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-
         .sticky-nav {
             position: fixed;
             top: 0;
@@ -56,23 +52,19 @@
             z-index: 1000;
             height: var(--sticky-nav-height);
         }
-
         .sticky-nav h1 {
             font-size: 1.5rem;
             margin: 0;
         }
-
         .nav-actions {
             display: flex;
             gap: 10px;
             align-items: center;
         }
-
         .search-container {
             position: relative;
             margin-right: 10px;
         }
-
         #search-input {
             padding: 8px 30px 8px 10px;
             border-radius: 20px;
@@ -80,7 +72,6 @@
             width: 200px;
             font-size: 14px;
         }
-
         .search-icon {
             position: absolute;
             right: 10px;
@@ -88,7 +79,6 @@
             transform: translateY(-50%);
             color: #666;
         }
-
         .nav-btn {
             background-color: white;
             color: var(--primary-color);
@@ -103,20 +93,16 @@
             gap: 5px;
             transition: all 0.2s;
         }
-
         .nav-btn:hover {
             background-color: #f0f0f0;
         }
-
         .nav-btn.danger {
             background-color: var(--error-color);
             color: white;
         }
-
         .nav-btn.danger:hover {
             background-color: #d32f2f;
         }
-
         .table-container {
             overflow-x: auto;
             background-color: var(--card-color);
@@ -124,19 +110,20 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 12px; /* Diperkecil */
+            table-layout: fixed;
         }
-
         th, td {
-            padding: 12px 8px;
+            padding: 6px 8px; /* Padding lebih kecil */
             text-align: left;
             border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
         th {
             background-color: #f8f9fa;
             font-weight: 600;
@@ -144,55 +131,46 @@
             position: sticky;
             top: var(--sticky-nav-height);
         }
-
         tr:hover {
             background-color: rgba(0, 0, 0, 0.02);
         }
-
         tr.new-scan {
             background-color: var(--highlight-color);
             animation: highlight 3s ease-out;
         }
-
         @keyframes highlight {
             from { background-color: var(--highlight-color); }
             to { background-color: white; }
         }
-
         .star-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             color: #ddd;
             transition: color 0.2s;
             padding: 0 5px;
         }
-
         .star-btn.starred {
             color: var(--warning-color);
         }
-
         .note-cell {
-            max-width: 200px;
+            max-width: 150px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .action-btn {
             background: none;
             border: none;
             cursor: pointer;
             color: var(--primary-color);
             margin: 0 3px;
-            font-size: 14px;
+            font-size: 12px;
         }
-
         .action-btn.delete {
             color: var(--error-color);
         }
-
         .modal {
             display: none;
             position: fixed;
@@ -205,7 +183,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .modal-content {
             background-color: var(--card-color);
             border-radius: 8px;
@@ -217,7 +194,6 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-
         .close-modal {
             position: absolute;
             top: 10px;
@@ -226,14 +202,12 @@
             cursor: pointer;
             color: var(--text-color);
         }
-
         .scanner-container {
             position: relative;
             width: 100%;
             padding-top: 100%;
             margin: 20px 0;
         }
-
         #qr-video {
             position: absolute;
             top: 0;
@@ -243,7 +217,6 @@
             object-fit: cover;
             border-radius: 5px;
         }
-
         .scanner-overlay {
             position: absolute;
             top: 0;
@@ -256,7 +229,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .scanner-overlay::after {
             content: '';
             position: absolute;
@@ -265,12 +237,10 @@
             background-color: var(--primary-color);
             animation: scanning 2s infinite linear;
         }
-
         @keyframes scanning {
             0% { top: 10%; }
             100% { top: 90%; }
         }
-
         .notification {
             position: fixed;
             top: 20px;
@@ -285,27 +255,21 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
-
         .notification.show {
             opacity: 1;
         }
-
         .notification.success {
             background-color: var(--success-color);
         }
-
         .notification.error {
             background-color: var(--error-color);
         }
-
         .notification.info {
             background-color: var(--primary-color);
         }
-
         .notification.warning {
             background-color: var(--warning-color);
         }
-
         .floating-btn {
             position: fixed;
             width: 50px;
@@ -321,22 +285,18 @@
             z-index: 900;
             transition: transform 0.2s;
         }
-
         .floating-btn:hover {
             transform: scale(1.1);
         }
-
         .floating-btn.debug {
             bottom: 20px;
             left: 20px;
             background-color: #666;
         }
-
         .floating-btn.scan {
             bottom: 20px;
             right: 20px;
         }
-
         .scan-status {
             margin-top: 10px;
             padding: 10px;
@@ -345,50 +305,41 @@
             text-align: center;
             font-weight: bold;
         }
-
         .scan-status.success {
             background-color: #d4edda;
             color: #155724;
         }
-
         .scan-status.error {
             background-color: #f8d7da;
             color: #721c24;
         }
-
         .recent-scans {
             margin-top: 20px;
             background-color: #f5f5f5;
             padding: 15px;
             border-radius: 5px;
         }
-
         .recent-scans h3 {
             margin-bottom: 10px;
             color: var(--primary-color);
         }
-
         .recent-scans-list {
             max-height: 150px;
             overflow-y: auto;
         }
-
         .recent-scan-item {
             padding: 8px;
             border-bottom: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
         }
-
         .recent-scan-item:last-child {
             border-bottom: none;
         }
-
         .recent-scan-item.new {
             background-color: var(--highlight-color);
             animation: highlight 3s ease-out;
         }
-
         .note-input {
             width: 100%;
             padding: 8px;
@@ -397,39 +348,43 @@
             font-size: 14px;
         }
 
+        /* RESPONSIVE TABLE FOR MOBILE */
         @media (max-width: 768px) {
             .sticky-nav {
                 flex-direction: column;
                 height: auto;
                 padding: 10px;
             }
-            
             .nav-actions {
                 width: 100%;
                 margin-top: 5px;
                 flex-wrap: wrap;
             }
-            
             .search-container {
                 width: 100%;
                 margin: 5px 0;
             }
-            
             #search-input {
                 width: 100%;
             }
-            
             .container {
                 padding-top: calc(var(--sticky-nav-height) + 80px);
             }
-            
-            th, td {
-                padding: 8px 5px;
-                font-size: 13px;
+            table {
+                font-size: 11px;
             }
-            
+            th, td {
+                padding: 4px 6px;
+                font-size: 11px;
+            }
             .note-cell {
                 max-width: 100px;
+            }
+            .action-btn {
+                font-size: 10px;
+            }
+            td:last-child {
+                max-width: 60px;
             }
         }
     </style>
@@ -451,20 +406,19 @@
             </button>
         </div>
     </nav>
-
     <div class="container">
         <div class="table-container">
             <table id="data-table">
                 <thead>
                     <tr>
-                        <th width="40px">No.</th>
-                        <th width="40px">★</th>
+                        <th>No.</th>
+                        <th>★</th>
                         <th>Dimensi</th>
                         <th>Nomor Lot</th>
                         <th>Kode Pack</th>
-                        <th width="120px">Tanggal Scan</th>
+                        <th>Tanggal Scan</th>
                         <th>Note</th>
-                        <th width="80px">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
@@ -478,7 +432,6 @@
     <div class="floating-btn debug" id="debug-btn">
         <i class="fas fa-bug"></i>
     </div>
-    
     <div class="floating-btn scan" id="floating-scan-btn">
         <i class="fas fa-camera"></i>
     </div>
@@ -488,23 +441,19 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>QR Code Scanner</h2>
-            
             <div class="scanner-container">
                 <video id="qr-video" playsinline></video>
                 <div class="scanner-overlay"></div>
             </div>
-            
             <div class="scan-status" id="scan-status">
                 Ready to scan
             </div>
-            
             <div class="recent-scans">
                 <h3>Last 10 Scans</h3>
                 <div class="recent-scans-list" id="recent-scans-list">
                     <!-- Recent scans will appear here -->
                 </div>
             </div>
-            
             <div class="controls" style="margin-top: 20px;">
                 <button id="restart-camera-btn" class="nav-btn secondary">
                     <i class="fas fa-sync-alt"></i> Restart Camera
