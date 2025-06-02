@@ -7,7 +7,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    
+    <style>
+            <div class="controls" style="margin-top: 20px;">
+                <button id="restart-camera-btn" class="nav-btn secondary">
+                    <i class="fas fa-sync-alt"></i> Restart Camera
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Edit Modal -->
+    <div class="modal" id="note-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Edit Note</h2>
+            <textarea id="note-input" class="note-input" rows="4" placeholder="Add your note here..."></textarea>
+            <div style="margin-top: 15px; text-align: right;">
+                <button id="save-note-btn" class="nav-btn">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Element -->
+    <div class="notification" id="notification"></div>
 
     <script>
         // DOM Elements
