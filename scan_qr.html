@@ -103,34 +103,62 @@
         .nav-btn.danger:hover {
             background-color: #d32f2f;
         }
-        .table-container {
-            overflow-x: auto;
-            background-color: var(--card-color);
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
+         .table-container {
+        background-color: var(--card-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden; /* Hilangkan scroll horizontal */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        table-layout: fixed;
+    }
+
+    th, td {
+        padding: 6px 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+        position: sticky;
+        top: var(--sticky-nav-height);
+        white-space: nowrap;
+    }
+
+    .note-cell {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .action-btn {
+        font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
         table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px; /* Diperkecil */
-            table-layout: fixed;
+            font-size: 12px;
         }
+
         th, td {
-            padding: 6px 8px; /* Padding lebih kecil */
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            padding: 4px 6px;
         }
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-            position: sticky;
-            top: var(--sticky-nav-height);
+
+        .note-cell {
+            max-width: 100px;
         }
+    }
         tr:hover {
             background-color: rgba(0, 0, 0, 0.02);
         }
