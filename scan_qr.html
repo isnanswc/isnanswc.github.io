@@ -18,6 +18,7 @@
             --text-color: #333333;
             --border-color: #dddddd;
             --sticky-nav-height: 60px;
+            --highlight-color: #fffde7;
         }
 
         * {
@@ -64,6 +65,28 @@
         .nav-actions {
             display: flex;
             gap: 10px;
+            align-items: center;
+        }
+
+        .search-container {
+            position: relative;
+            margin-right: 10px;
+        }
+
+        #search-input {
+            padding: 8px 30px 8px 10px;
+            border-radius: 20px;
+            border: none;
+            width: 200px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
         }
 
         .nav-btn {
@@ -124,6 +147,16 @@
 
         tr:hover {
             background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        tr.new-scan {
+            background-color: var(--highlight-color);
+            animation: highlight 3s ease-out;
+        }
+
+        @keyframes highlight {
+            from { background-color: var(--highlight-color); }
+            to { background-color: white; }
         }
 
         .star-btn {
@@ -323,6 +356,39 @@
             color: #721c24;
         }
 
+        .recent-scans {
+            margin-top: 20px;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .recent-scans h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .recent-scans-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .recent-scan-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .recent-scan-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-scan-item.new {
+            background-color: var(--highlight-color);
+            animation: highlight 3s ease-out;
+        }
+
         .note-input {
             width: 100%;
             padding: 8px;
@@ -340,12 +406,21 @@
             
             .nav-actions {
                 width: 100%;
-                justify-content: space-between;
                 margin-top: 5px;
+                flex-wrap: wrap;
+            }
+            
+            .search-container {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            #search-input {
+                width: 100%;
             }
             
             .container {
-                padding-top: calc(var(--sticky-nav-height) + 60px);
+                padding-top: calc(var(--sticky-nav-height) + 80px);
             }
             
             th, td {
@@ -364,11 +439,15 @@
     <nav class="sticky-nav">
         <h1>QR Code Scanner</h1>
         <div class="nav-actions">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
             <button class="nav-btn" id="export-btn">
-                <i class="fas fa-file-excel"></i> Export Excel
+                <i class="fas fa-file-excel"></i> Export
             </button>
             <button class="nav-btn danger" id="clear-btn">
-                <i class="fas fa-trash-alt"></i> Clear All
+                <i class="fas fa-trash-alt"></i> Clear
             </button>
         </div>
     </nav>
@@ -419,6 +498,13 @@
                 Ready to scan
             </div>
             
+            <div class="recent-scans">
+                <h3>Last 10 Scans</h3>
+                <div class="recent-scans-list" id="recent-scans-list">
+                    <!-- Recent scans will appear here -->
+                </div>
+            </div>
+            
             <div class="controls" style="margin-top: 20px;">
                 <button id="restart-camera-btn" class="nav-btn secondary">
                     <i class="fas fa-sync-alt"></i> Restart Camera
@@ -460,6 +546,8 @@
         const scanStatus = document.getElementById('scan-status');
         const noteInput = document.getElementById('note-input');
         const saveNoteBtn = document.getElementById('save-note-btn');
+        const recentScansList = document.getElementById('recent-scans-list');
+        const searchInput = document.getElementById('search-input');
 
         // Global variables
         let scannerActive = false;
@@ -485,6 +573,7 @@
             debugBtn.addEventListener('click', openDebugConsole);
             restartCameraBtn.addEventListener('click', restartCamera);
             saveNoteBtn.addEventListener('click', saveNote);
+            searchInput.addEventListener('input', filterTable);
             
             closeModal.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -494,6 +583,27 @@
                         noteModal.style.display = 'none';
                     }
                 });
+            });
+        }
+
+        // Filter table based on search input
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let matches = false;
+                
+                // Skip the first cell (No.) and last cell (Actions)
+                for (let i = 2; i < cells.length - 1; i++) {
+                    if (cells[i].textContent.toLowerCase().includes(searchTerm)) {
+                        matches = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = matches ? '' : 'none';
             });
         }
 
@@ -523,6 +633,10 @@
             
             scanData.forEach((data, index) => {
                 const row = document.createElement('tr');
+                if (data.isNew) {
+                    row.classList.add('new-scan');
+                    data.isNew = false; // Reset flag after rendering
+                }
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>
@@ -546,6 +660,30 @@
                 `;
                 tableBody.appendChild(row);
             });
+            
+            saveData(); // Save after resetting isNew flags
+        }
+
+        // Render recent scans list
+        function renderRecentScans() {
+            recentScansList.innerHTML = '';
+            
+            const recentData = [...scanData].reverse().slice(0, 10);
+            
+            if (recentData.length === 0) {
+                recentScansList.innerHTML = '<div style="text-align: center; padding: 10px;">No recent scans</div>';
+                return;
+            }
+            
+            recentData.forEach((scan, index) => {
+                const item = document.createElement('div');
+                item.className = `recent-scan-item ${scan.isNew ? 'new' : ''}`;
+                item.innerHTML = `
+                    <span>${scan.dimensi}|${scan.nomorLot}|${scan.kodePack}</span>
+                    <span>${new Date(scan.timestamp).toLocaleTimeString()}</span>
+                `;
+                recentScansList.appendChild(item);
+            });
         }
 
         // Format date and time
@@ -559,6 +697,7 @@
         function openScanner() {
             scannerModal.style.display = 'flex';
             startScanner();
+            renderRecentScans();
             vibrate(100);
             showNotification('info', 'Preparing camera...');
         }
@@ -699,13 +838,15 @@
                 kodePack,
                 timestamp: new Date().toISOString(),
                 starred: false,
-                note: ''
+                note: '',
+                isNew: true
             };
             
             // Add to data array
             scanData.push(scanResult);
             saveData();
             renderTable();
+            renderRecentScans();
             
             // Show success but keep scanner open
             updateScanStatus('success', 'Scan successful! Ready for next QR code');
