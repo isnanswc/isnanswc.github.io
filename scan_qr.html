@@ -584,6 +584,12 @@
             align-items: center;
         }
 
+        /* Add Task Button specific style (fix for sticky nav overlapping) */
+        #add-task-btn {
+            margin-bottom: 10px; /* Jaga jarak bawah */
+            margin-top: 15px; /* Tambahkan jarak atas agar tidak terlalu dekat dengan nav */
+        }
+
         @media (max-width: 768px) {
             .sticky-nav {
                 flex-direction: column;
@@ -595,6 +601,7 @@
                 width: 100%;
                 margin-top: 5px;
                 flex-wrap: wrap;
+                justify-content: center; /* Pusatkan tombol di layar kecil */
             }
             
             .search-container {
@@ -608,11 +615,15 @@
             }
             
             body {
-                padding-top: calc(var(--sticky-nav-height) * 1.5 + 15px); 
+                /* Sesuaikan padding body untuk layar kecil */
+                /* Perkiraan tinggi nav di mobile (50px default height + 20px top/bottom padding + 5px margin-top nav-actions) = sekitar 75px. */
+                /* Beri padding lebih sedikit lebih besar dari perkiraan tinggi nav */
+                padding-top: calc(var(--sticky-nav-height) + 75px); /* Sesuaikan nilai ini sesuai kebutuhan */
             }
 
             .table-wrapper {
-                max-height: calc(100vh - (var(--sticky-nav-height) * 1.5) - 100px); 
+                /* Sesuaikan juga max-height untuk tabel agar tidak terpotong */
+                max-height: calc(100vh - (var(--sticky-nav-height) + 120px)); /* Sesuaikan 120px */
             }
             
             th, td {
@@ -652,7 +663,7 @@
 
     <div class="container">
         <div id="task-list-view" class="active">
-            <button class="nav-btn" id="add-task-btn" style="margin-bottom: 10px;">
+            <button class="nav-btn" id="add-task-btn">
                 <i class="fas fa-plus-circle"></i> Add New Task
             </button>
             <div class="table-wrapper">
@@ -822,7 +833,7 @@
     <script>
         // DOM Elements
         const exportBtn = document.getElementById('export-btn');
-        const shareBtn = document.getElementById('share-btn'); // New share button
+        const shareBtn = document.getElementById('share-btn');
         const clearBtn = document.getElementById('clear-btn');
         const floatingScanBtn = document.getElementById('floating-scan-btn');
         const restartCameraBtn = document.getElementById('restart-camera-btn');
@@ -896,7 +907,7 @@
             exportBtn.addEventListener('click', handleExport);
             clearBtn.addEventListener('click', confirmClearAll);
             searchInput.addEventListener('input', handleSearch);
-            shareBtn.addEventListener('click', handleShare); // New event listener for share button
+            shareBtn.addEventListener('click', handleShare);
             
             // Scanner related
             floatingScanBtn.addEventListener('click', openScanner);
@@ -907,12 +918,15 @@
                 btn.addEventListener('click', function() {
                     if (scannerModal.style.display === 'flex') {
                         closeScanner();
-                    } else if (noteModal.style.display === 'flex') {
+                    }
+                    if (noteModal.style.display === 'flex') { // Changed to if, allowing multiple modals to be open (e.g. scanner + note)
                         noteModal.style.display = 'none';
-                    } else if (addTaskModal.style.display === 'flex') {
+                    }
+                    if (addTaskModal.style.display === 'flex') {
                         addTaskModal.style.display = 'none';
                         addTaskForm.reset(); // Clear form on close
-                    } else if (editTaskModal.style.display === 'flex') {
+                    }
+                    if (editTaskModal.style.display === 'flex') {
                         editTaskModal.style.display = 'none';
                         editTaskForm.reset(); // Clear form on close
                         currentEditTask = null;
@@ -1276,6 +1290,10 @@
                 itemsToRender.sort((a, b) => {
                     let valA, valB;
                     if (currentSort.column === 'index') {
+                        // For index, it's about their original position in the array.
+                        // Since we slice and sort, we rely on the original index for consistency.
+                        // Or, if not stable, you might need to add an original index to items.
+                        // For now, sorting by index is just about reversing if needed.
                         return currentSort.direction === 'asc' ? 1 : -1;
                     } else if (currentSort.column === 'timestamp') {
                         valA = new Date(a[currentSort.column]).getTime();
@@ -1459,6 +1477,8 @@
                 scanStatus.classList.add('error');
             } else if (type === 'info') {
                 scanStatus.classList.add('info');
+            } else if (type === 'warning') { // Added warning style
+                scanStatus.classList.add('warning');
             }
         }
 
@@ -1639,7 +1659,7 @@
                     ['Total Items', task.items.length]
                 ];
                 const wsTaskDetails = XLSX.utils.aoa_to_sheet(taskDetails);
-                XLSX.utils.book_append_sheet(wb, wsTaskDetails, `Task_${task.documentNumber}_Details`);
+                XLSX.utils.book_append_sheet(wb, wsTaskDetails, `Task_${task.documentNumber.replace(/[^a-zA-Z0-9]/g, '_')}_Details`);
 
                 // Prepare items sheet for this task
                 if (task.items.length > 0) {
@@ -1666,7 +1686,7 @@
                     ];
                     wsItems['!cols'] = wscolsItems;
 
-                    XLSX.utils.book_append_sheet(wb, wsItems, `Task_${task.documentNumber}_Items`);
+                    XLSX.utils.book_append_sheet(wb, wsItems, `Task_${task.documentNumber.replace(/[^a-zA-Z0-9]/g, '_')}_Items`);
                 }
             });
 
@@ -1708,8 +1728,10 @@
             const dateStr = new Date().toISOString().slice(0, 10);
             const fileName = `QR_Scan_Report_${dateStr}.xlsx`;
             
-            // Check if Web Share API is available and can share files
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([], 'temp.xlsx')] })) {
+            let sharedSuccessfully = false;
+
+            // Try to share the file using Web Share API
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([], 'dummy.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
                 try {
                     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                     const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -1717,38 +1739,27 @@
 
                     await navigator.share({
                         title: `QR Scan Report - ${currentTask ? currentTask.documentNumber : 'All Tasks'}`,
-                        text: `Check out the QR Scan Report from ${currentTask ? currentTask.documentNumber : 'all tasks'}.`,
+                        text: `Generated QR Scan Report.`,
                         files: [file],
                     });
+                    sharedSuccessfully = true;
                     showNotification('success', 'Excel file shared successfully!');
                 } catch (error) {
                     if (error.name === 'AbortError') {
-                        showNotification('info', 'Share cancelled.');
+                        showNotification('info', 'Share cancelled. File will be downloaded.');
                     } else {
-                        showNotification('error', `Error sharing file: ${error.message}`);
+                        showNotification('error', `Error sharing file: ${error.message}. File will be downloaded.`);
                         console.error('Error sharing file:', error);
-                        // Fallback to direct download if share fails
-                        XLSX.writeFile(wb, fileName);
-                        showNotification('info', 'Excel file downloaded instead.');
                     }
+                    sharedSuccessfully = false; // Ensure this is false if sharing failed
                 }
             } else {
-                // Fallback for browsers/environments without Web Share API for files
+                showNotification('info', 'Web Share API for files not fully supported or unavailable. File will be downloaded.');
+            }
+
+            // Fallback to direct download if sharing wasn't attempted or failed
+            if (!sharedSuccessfully) {
                 XLSX.writeFile(wb, fileName);
-                showNotification('success', 'Data exported to Excel. Share manually.');
-                // Optionally provide WhatsApp link for text sharing if only text is available
-                if (currentTask) {
-                    const message = encodeURIComponent(`QR Scan Report for Task: ${currentTask.documentNumber}\nTotal Items: ${currentTask.items.length}\nDocument: ${currentTask.documentNumber}\nPurpose: ${currentTask.purpose}`);
-                    const whatsappUrl = `https://wa.me/?text=${message}`;
-                    showNotification('info', 'Web Share API not fully supported. Downloaded file. You can also share task details via WhatsApp.');
-                    console.log('WhatsApp Share URL (copy this if needed):', whatsappUrl);
-                    // Open WhatsApp in a new tab, but inform user first
-                    setTimeout(() => {
-                        if (confirm("Web Share API not supported for files. Do you want to share task summary via WhatsApp?")) {
-                            window.open(whatsappUrl, '_blank');
-                        }
-                    }, 1000);
-                }
             }
         }
 
@@ -1759,14 +1770,14 @@
             }
 
             const taskSummaryText = `
-Task Report:
-ID Unik: ${currentTask.taskId}
-Tanggal & Waktu: ${new Date(currentTask.timestamp).toLocaleString()}
-No Dokumen: ${currentTask.documentNumber}
-Tujuan: ${currentTask.purpose}
-Keterangan: ${currentTask.description || '-'}
-Total Scanned Items: ${currentTask.items.length}
-            `.trim();
+*Task Report:*
+*ID Unik:* ${currentTask.taskId}
+*Tanggal & Waktu:* ${new Date(currentTask.timestamp).toLocaleString()}
+*No Dokumen:* ${currentTask.documentNumber}
+*Tujuan:* ${currentTask.purpose}
+*Keterangan:* ${currentTask.description || '-'}
+*Total Scanned Items:* ${currentTask.items.length}
+            `.trim(); // Added markdown for WhatsApp formatting
 
             if (navigator.share) {
                 try {
@@ -1785,7 +1796,7 @@ Total Scanned Items: ${currentTask.items.length}
                     }
                 }
             } else {
-                // Fallback for browsers that don't support Web Share API
+                // Fallback for browsers that don't support Web Share API (e.g., desktop without native share)
                 const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(taskSummaryText + '\n\nOpen this app: ' + window.location.href)}`;
                 window.open(whatsappUrl, '_blank');
                 showNotification('info', 'Web Share API not supported. Opening WhatsApp...');
@@ -1847,7 +1858,7 @@ Total Scanned Items: ${currentTask.items.length}
         window.viewTaskDetail = viewTaskDetail;
         window.openScannerForTask = openScannerForTask;
         window.deleteTask = deleteTask;
-        window.openEditTaskModal = openEditTaskModal; // Make edit task function global
+        window.openEditTaskModal = openEditTaskModal;
         window.toggleStarItem = toggleStarItem;
         window.deleteItem = deleteItem;
         window.editItemNote = editItemNote;
