@@ -905,8 +905,8 @@
             table: 'items' // 'items' or 'tasks'
         };
         // Updated SCAN_FORMAT to capture the length part separately
-        const SCAN_FORMAT = /^(.+?)\s(.+?)\s(.+?)\sMC\sX\s(\d+)\sMM\s=\s(\d+M)$/; // e.g., ALU 1234 0.5 MC X 1000 MM = 500M
-        const SCAN_COOLDOWN = 1000;
+        const SCAN_FORMAT = /^(.+?)\s(.+?)\s(.+?)\sMC\sX\s(\d+)\sMM(?: = (\d+))?$/; // Changed (\d+M) to (\d+)
+const SCAN_COOLDOWN = 1000;
 
         // Initialize the application
         function init() {
@@ -1259,25 +1259,25 @@
         }
 
         // NEW: Function to parse dimension string
-        function parseDimensionString(dimensiString) {
-            // Regex to extract parts: [jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]
-            // Example: ALU 1234 0.5 MC X 1000 MM = 500M
-            const match = dimensiString.match(/^(.*?) (\S+) (\S+) MC X (\d+) MM(?: = (\d+M))?$/);
-            if (match) {
-                const [_, jenis, kodeFormula, thickness, width, length] = match;
-                return {
-                    full: dimensiString,
-                    meterFormat: `${jenis} ${kodeFormula} ${thickness} MC X ${width} MM`,
-                    length: length ? parseFloat(length.replace('M', '')) : 0, // Convert to number
-                    jenis: jenis,
-                    kodeFormula: kodeFormula,
-                    thickness: thickness,
-                    width: parseInt(width)
-                };
-            }
-            return null; // Return null if format doesn't match
-        }
-
+       function parseDimensionString(dimensiString) {
+    // Regex to extract parts: [jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]
+    // Example: CPP L01 25 MC X 2220 MM = 12000
+    const match = dimensiString.match(SCAN_FORMAT); // Menggunakan SCAN_FORMAT yang telah diperbarui
+    if (match) {
+        const [_, jenis, kodeFormula, thickness, width, length] = match;
+        return {
+            full: dimensiString,
+            meterFormat: `${jenis} ${kodeFormula} ${thickness} MC X ${width} MM`,
+            // Convert length to number, now it's just digits so parseFloat is fine
+            length: length ? parseFloat(length) : 0, 
+            jenis: jenis,
+            kodeFormula: kodeFormula,
+            thickness: thickness,
+            width: parseInt(width)
+        };
+    }
+    return null; // Return null if format doesn't match
+}
         // NEW: Function to calculate dimension summary based on type (roll or meter)
         function calculateDimensionSummary(summaryType) {
             const dimensionSummary = {};
@@ -1349,22 +1349,23 @@
             const dimensionTotals = calculateDimensionSummary(selectedSummaryType);
 
             if (Object.keys(dimensionTotals).length > 0) {
-                summaryHtml += `
-                    <h3>Dimension Summary (${selectedSummaryType === 'roll' ? 'Per Roll' : 'Per Meter'}):</h3>
-                    <div class="summary-grid">
-                `;
-                for (const dim in dimensionTotals) {
-                    const value = dimensionTotals[dim];
-                    summaryHtml += `
-                        <div class="summary-item">
-                            ${dim}<br><strong>${value}${selectedSummaryType === 'meter' ? 'M' : ''}</strong>
-                        </div>
-                    `;
-                }
-                summaryHtml += `</div>`;
-            } else {
-                summaryHtml += `<p>No items scanned yet for this task.</p>`;
-            }
+        summaryHtml += `
+            <h3>Dimension Summary (${selectedSummaryType === 'roll' ? 'Per Roll' : 'Per Meter'}):</h3>
+            <div class="summary-grid">
+        `;
+        for (const dim in dimensionTotals) {
+            const value = dimensionTotals[dim];
+            // NEW: Add 'M' suffix only if summaryType is 'meter', as the parsed value is now just a number.
+            summaryHtml += `
+                <div class="summary-item">
+                    ${dim}<br><strong>${value}${selectedSummaryType === 'meter' ? 'M' : ''}</strong>
+                </div>
+            `;
+        }
+        summaryHtml += `</div>`;
+    } else {
+        summaryHtml += `<p>No items scanned yet for this task.</p>`;
+    }
             
             currentTaskSummary.innerHTML = summaryHtml;
         }
@@ -1651,20 +1652,20 @@
 
         // Process the scanned QR code data
         function processQRCode(data) {
-            const match = data.match(SCAN_FORMAT);
-            if (!match) {
-                updateScanStatus('error', 'Invalid QR format');
-                showNotification('error', 'Invalid QR format. Expected: `[jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]`');
-                vibrate([300, 100, 300]);
-                return;
-            }
-            
-            // Extract data: [jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]
-            const [_, jenis, kodeFormula, thickness, width, length] = match;
-            const dimensi = match[0]; // The entire matched string is the dimension
-            const nomorLot = ""; // Assume these aren't in this QR format, or need to be scanned separately
-            const kodePack = ""; // If they are, update SCAN_FORMAT accordingly
-
+    const match = data.match(SCAN_FORMAT);
+    if (!match) {
+        updateScanStatus('error', 'Invalid QR format');
+        // Sesuaikan pesan kesalahan sesuai format baru
+        showNotification('error', 'Invalid QR format. Expected: `[jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]` (without "M")');
+        vibrate([300, 100, 300]);
+        return;
+    }
+    
+    // Extract data
+    const dimensi = match[0]; // The entire matched string is the dimension
+    // Nomor Lot and Kode Pack will still be "N/A" unless explicitly extracted from QR
+    const nomorLot = "N/A"; 
+    const kodePack = "N/A"; 
             // FOR DEMO: Let's assume nomorLot and kodePack are *part of* the dimension if not explicitly in QR.
             // Or you can simplify the QR format to just these 3 for consistency with previous setup.
             // For now, let's keep it simple based on the provided format and add placeholder for lot/pack
