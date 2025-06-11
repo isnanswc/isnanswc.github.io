@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
+    <title>QR Code Scanner & Task Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -32,7 +32,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.4;
-            padding-top: calc(var(--sticky-nav-height) + 10px);
+            padding-top: calc(var(--sticky-nav-height) + 15px); /* Sedikit padding ekstra */
             font-size: 13px;
         }
 
@@ -121,13 +121,42 @@
             background-color: #d32f2f;
         }
 
+        .nav-btn.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .nav-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .nav-btn.info-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .nav-btn.info-btn:hover {
+            background-color: #138496;
+        }
+
+        .nav-btn.warning-btn {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .nav-btn.warning-btn:hover {
+            background-color: #e0ac00;
+        }
+
         .table-wrapper {
             overflow-x: auto;
             background-color: var(--card-color);
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 15px;
-            position: relative;
+            position: relative; 
+            overflow-y: auto; 
+            max-height: calc(100vh - var(--sticky-nav-height) - 100px); 
         }
 
         table {
@@ -140,8 +169,9 @@
 
         thead {
             position: sticky;
-            top: var(--sticky-nav-height);
+            top: 0; 
             z-index: 10;
+            background-color: #f8f9fa; 
         }
 
         th, td {
@@ -472,6 +502,88 @@
             min-height: 80px;
         }
 
+        /* Task specific styles */
+        #task-list-view, #item-list-view {
+            display: none; /* Controlled by JS */
+        }
+
+        #task-list-view.active, #item-list-view.active {
+            display: block;
+        }
+
+        .task-summary {
+            background-color: var(--card-color);
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .task-summary h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .task-summary p {
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .summary-item {
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .summary-item strong {
+            display: block;
+            font-size: 14px;
+            color: var(--text-color);
+            margin-top: 3px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .form-actions {
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .form-actions.flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         @media (max-width: 768px) {
             .sticky-nav {
                 flex-direction: column;
@@ -495,8 +607,12 @@
                 width: 100%;
             }
             
-            .container {
-                /* padding-top: calc(var(--sticky-nav-height) + 10px); */
+            body {
+                padding-top: calc(var(--sticky-nav-height) * 1.5 + 15px); 
+            }
+
+            .table-wrapper {
+                max-height: calc(100vh - (var(--sticky-nav-height) * 1.5) - 100px); 
             }
             
             th, td {
@@ -515,9 +631,8 @@
     </style>
 </head>
 <body>
-    <!-- Sticky Navigation -->
     <nav class="sticky-nav">
-        <h1>QR Code Scanner</h1>
+        <h1 id="nav-title">Task List</h1>
         <div class="nav-actions">
             <div class="search-container">
                 <input type="text" id="search-input" placeholder="Search...">
@@ -526,41 +641,70 @@
             <button class="nav-btn" id="export-btn">
                 <i class="fas fa-file-excel"></i> Export
             </button>
+            <button class="nav-btn info-btn" id="share-btn" style="display: none;">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
             <button class="nav-btn danger" id="clear-btn">
-                <i class="fas fa-trash-alt"></i> Clear
+                <i class="fas fa-trash-alt"></i> Clear All
             </button>
         </div>
     </nav>
 
     <div class="container">
-        <div class="table-wrapper">
-            <table id="data-table">
-                <thead>
-                    <tr>
-                        <th width="40px" class="sortable" data-sort="index">No.</th>
-                        <th width="30px">★</th>
-                        <th class="sortable" data-sort="dimensi">Dimensi</th>
-                        <th class="sortable" data-sort="nomorLot">Nomor Lot</th>
-                        <th class="sortable" data-sort="kodePack">Kode Pack</th>
-                        <th width="100px" class="sortable" data-sort="timestamp">Tanggal</th>
-                        <th>Note</th>
-                        <th width="40px"></th>
-                    </tr>
-                </thead>
-                <BR><BR><BR><BR>
-                <tbody id="table-body">
-                    <!-- Data will be inserted here -->
-                </tbody>
-            </table>
+        <div id="task-list-view" class="active">
+            <button class="nav-btn" id="add-task-btn" style="margin-bottom: 10px;">
+                <i class="fas fa-plus-circle"></i> Add New Task
+            </button>
+            <div class="table-wrapper">
+                <table id="tasks-table">
+                    <thead>
+                        <tr>
+                            <th width="40px">No.</th>
+                            <th width="100px" class="sortable" data-sort="timestamp">Tanggal & Waktu</th>
+                            <th class="sortable" data-sort="documentNumber">No Dokumen</th>
+                            <th class="sortable" data-sort="purpose">Tujuan</th>
+                            <th>Keterangan</th>
+                            <th width="80px">Total Item</th>
+                            <th width="120px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="item-list-view">
+            <button class="nav-btn secondary" id="back-to-tasks-btn" style="margin-bottom: 10px;">
+                <i class="fas fa-arrow-left"></i> Back to Tasks
+            </button>
+            <div class="task-summary" id="current-task-summary">
+                </div>
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th width="40px" class="sortable" data-sort="index">No.</th>
+                            <th width="30px">★</th>
+                            <th class="sortable" data-sort="dimensi">Dimensi</th>
+                            <th class="sortable" data-sort="nomorLot">Nomor Lot</th>
+                            <th class="sortable" data-sort="kodePack">Kode Pack</th>
+                            <th width="100px" class="sortable" data-sort="timestamp">Tanggal</th>
+                            <th>Note</th>
+                            <th width="40px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Floating Action Button -->
     <div class="floating-btn scan" id="floating-scan-btn">
         <i class="fas fa-camera"></i>
     </div>
 
-    <!-- Modal for QR Scanner -->
     <div class="modal" id="scanner-modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -576,10 +720,9 @@
             </div>
             
             <div class="recent-scans">
-                <h3>Last 10 Scans</h3>
+                <h3>Last 10 Scans for Current Task</h3>
                 <div class="recent-scans-list" id="recent-scans-list">
-                    <!-- Recent scans will appear here -->
-                </div>
+                    </div>
             </div>
             
             <div class="controls" style="margin-top: 15px;">
@@ -590,7 +733,77 @@
         </div>
     </div>
 
-    <!-- Note Edit Modal -->
+    <div class="modal" id="add-task-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="font-size: 1.3rem;">Add New Task</h2>
+            <form id="add-task-form">
+                <div class="form-group">
+                    <label for="task-id">ID Unik:</label>
+                    <input type="text" id="task-id" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="task-timestamp">Tanggal & Waktu:</label>
+                    <input type="text" id="task-timestamp" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="task-document-number">No Dokumen:</label>
+                    <input type="text" id="task-document-number" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-purpose">Tujuan:</label>
+                    <input type="text" id="task-purpose" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Keterangan:</label>
+                    <textarea id="task-description" class="note-input"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="nav-btn">
+                        <i class="fas fa-plus"></i> Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-task-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="font-size: 1.3rem;">Edit Task</h2>
+            <form id="edit-task-form">
+                <div class="form-group">
+                    <label for="edit-task-id">ID Unik:</label>
+                    <input type="text" id="edit-task-id" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-task-timestamp">Tanggal & Waktu:</label>
+                    <input type="text" id="edit-task-timestamp" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-task-document-number">No Dokumen:</label>
+                    <input type="text" id="edit-task-document-number" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-task-purpose">Tujuan:</label>
+                    <input type="text" id="edit-task-purpose" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-task-description">Keterangan:</label>
+                    <textarea id="edit-task-description" class="note-input"></textarea>
+                </div>
+                <div class="form-actions flex">
+                    <button type="button" class="nav-btn secondary" id="cancel-edit-task-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="nav-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal" id="note-modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -604,12 +817,12 @@
         </div>
     </div>
 
-    <!-- Notification Element -->
     <div class="notification" id="notification"></div>
 
     <script>
         // DOM Elements
         const exportBtn = document.getElementById('export-btn');
+        const shareBtn = document.getElementById('share-btn'); // New share button
         const clearBtn = document.getElementById('clear-btn');
         const floatingScanBtn = document.getElementById('floating-scan-btn');
         const restartCameraBtn = document.getElementById('restart-camera-btn');
@@ -617,117 +830,358 @@
         const noteModal = document.getElementById('note-modal');
         const closeModal = document.querySelectorAll('.close-modal');
         const qrVideo = document.getElementById('qr-video');
-        const tableBody = document.getElementById('table-body');
+        const tableBody = document.getElementById('table-body'); // For items
+        const tasksTableBody = document.getElementById('tasks-table-body'); // For tasks
         const notification = document.getElementById('notification');
         const scanStatus = document.getElementById('scan-status');
         const noteInput = document.getElementById('note-input');
         const saveNoteBtn = document.getElementById('save-note-btn');
         const recentScansList = document.getElementById('recent-scans-list');
         const searchInput = document.getElementById('search-input');
-        const sortableHeaders = document.querySelectorAll('th.sortable');
+        const sortableHeaders = document.querySelectorAll('th.sortable'); // For items table
+        const tasksSortableHeaders = document.querySelectorAll('#tasks-table th.sortable'); // For tasks table
+
+        // Task specific elements
+        const taskListView = document.getElementById('task-list-view');
+        const itemListView = document.getElementById('item-list-view');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const addTaskModal = document.getElementById('add-task-modal');
+        const addTaskForm = document.getElementById('add-task-form');
+        const taskIdInput = document.getElementById('task-id');
+        const taskTimestampInput = document.getElementById('task-timestamp');
+        const taskDocumentNumberInput = document.getElementById('task-document-number');
+        const taskPurposeInput = document.getElementById('task-purpose');
+        const taskDescriptionInput = document.getElementById('task-description');
+        const backToTasksBtn = document.getElementById('back-to-tasks-btn');
+        const currentTaskSummary = document.getElementById('current-task-summary');
+        const navTitle = document.getElementById('nav-title');
+
+        // Edit Task Modal elements
+        const editTaskModal = document.getElementById('edit-task-modal');
+        const editTaskForm = document.getElementById('edit-task-form');
+        const editTaskIdInput = document.getElementById('edit-task-id');
+        const editTaskTimestampInput = document.getElementById('edit-task-timestamp');
+        const editTaskDocumentNumberInput = document.getElementById('edit-task-document-number');
+        const editTaskPurposeInput = document.getElementById('edit-task-purpose');
+        const editTaskDescriptionInput = document.getElementById('edit-task-description');
+        const cancelEditTaskBtn = document.getElementById('cancel-edit-task-btn');
 
         // Global variables
         let scannerActive = false;
         let stream = null;
-        let scanData = [];
+        let tasksData = []; // Array to store all tasks
+        let currentTask = null; // The task currently being viewed/scanned for
         let lastScanTime = 0;
-        let currentEditIndex = -1;
+        let currentEditItemIndex = -1; // Index for editing notes on items
+        let currentEditTask = null; // Stores the task object being edited
         let currentSort = {
             column: null,
-            direction: 'asc'
+            direction: 'asc',
+            table: 'items' // 'items' or 'tasks'
         };
         const SCAN_FORMAT = /^(.+?)\|(.+?)\|(.+?)$/;
         const SCAN_COOLDOWN = 1000;
 
         // Initialize the application
         function init() {
-            loadData();
-            renderTable();
+            loadTasksData();
+            renderTasksTable();
             setupEventListeners();
+            showView('task-list-view'); // Show task list by default
         }
 
         // Set up event listeners
         function setupEventListeners() {
-            floatingScanBtn.addEventListener('click', openScanner);
-            exportBtn.addEventListener('click', exportToExcel);
+            // Global actions
+            exportBtn.addEventListener('click', handleExport);
             clearBtn.addEventListener('click', confirmClearAll);
+            searchInput.addEventListener('input', handleSearch);
+            shareBtn.addEventListener('click', handleShare); // New event listener for share button
+            
+            // Scanner related
+            floatingScanBtn.addEventListener('click', openScanner);
             restartCameraBtn.addEventListener('click', restartCamera);
-            saveNoteBtn.addEventListener('click', saveNote);
-            searchInput.addEventListener('input', filterTable);
             
-            // Add sorting event listeners
-            sortableHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const column = header.getAttribute('data-sort');
-                    sortTable(column);
-                });
-            });
-            
+            // Modals
             closeModal.forEach(btn => {
                 btn.addEventListener('click', function() {
                     if (scannerModal.style.display === 'flex') {
                         closeScanner();
                     } else if (noteModal.style.display === 'flex') {
                         noteModal.style.display = 'none';
+                    } else if (addTaskModal.style.display === 'flex') {
+                        addTaskModal.style.display = 'none';
+                        addTaskForm.reset(); // Clear form on close
+                    } else if (editTaskModal.style.display === 'flex') {
+                        editTaskModal.style.display = 'none';
+                        editTaskForm.reset(); // Clear form on close
+                        currentEditTask = null;
                     }
+                });
+            });
+
+            // Note modal specific
+            saveNoteBtn.addEventListener('click', saveNote);
+
+            // Task management
+            addTaskBtn.addEventListener('click', openAddTaskModal);
+            addTaskForm.addEventListener('submit', handleAddTask);
+            backToTasksBtn.addEventListener('click', () => showView('task-list-view'));
+
+            // Edit Task Form
+            editTaskForm.addEventListener('submit', handleEditTaskSave);
+            cancelEditTaskBtn.addEventListener('click', () => {
+                editTaskModal.style.display = 'none';
+                editTaskForm.reset();
+                currentEditTask = null;
+            });
+
+            // Add sorting event listeners for items table
+            document.querySelectorAll('#data-table th.sortable').forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-sort');
+                    sortItemsTable(column);
+                });
+            });
+
+            // Add sorting event listeners for tasks table
+            document.querySelectorAll('#tasks-table th.sortable').forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-sort');
+                    sortTasksTable(column);
                 });
             });
         }
 
-        // Sort table by column
-        function sortTable(column) {
-            // Reset previous sort indicators
-            sortableHeaders.forEach(header => {
+        // --- View Management ---
+        function showView(viewId) {
+            taskListView.classList.remove('active');
+            itemListView.classList.remove('active');
+            floatingScanBtn.style.display = 'none'; // Hide by default
+            shareBtn.style.display = 'none'; // Hide share button by default
+
+            if (viewId === 'task-list-view') {
+                taskListView.classList.add('active');
+                navTitle.textContent = 'Task List';
+                renderTasksTable(); // Re-render tasks on view
+                searchInput.value = ''; // Clear search when switching view
+                searchInput.removeEventListener('input', filterItemsTable); // Remove old listener
+                searchInput.addEventListener('input', filterTasksTable); // Add new listener
+            } else if (viewId === 'item-list-view') {
+                itemListView.classList.add('active');
+                if (currentTask) {
+                    navTitle.textContent = `Task: ${currentTask.documentNumber}`;
+                    floatingScanBtn.style.display = 'flex'; // Show scan button for items
+                    shareBtn.style.display = 'flex'; // Show share button for item view
+                }
+                renderItemsTable(); // Re-render items on view
+                renderCurrentTaskSummary();
+                searchInput.value = ''; // Clear search when switching view
+                searchInput.removeEventListener('input', filterTasksTable); // Remove old listener
+                searchInput.addEventListener('input', filterItemsTable); // Add new listener
+            }
+        }
+
+        // --- Data Handling ---
+        function generateUniqueId() {
+            return 'TASK-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
+        }
+
+        function loadTasksData() {
+            const savedData = localStorage.getItem('qrTasksData');
+            if (savedData) {
+                tasksData = JSON.parse(savedData);
+            }
+        }
+
+        function saveTasksData() {
+            localStorage.setItem('qrTasksData', JSON.stringify(tasksData));
+        }
+
+        // --- Task List Functions ---
+        function openAddTaskModal() {
+            const now = new Date();
+            taskIdInput.value = generateUniqueId();
+            taskTimestampInput.value = now.toLocaleString();
+            taskDocumentNumberInput.value = ''; // Clear previous input
+            taskPurposeInput.value = ''; // Clear previous input
+            taskDescriptionInput.value = ''; // Clear previous input
+            addTaskModal.style.display = 'flex';
+        }
+
+        function handleAddTask(event) {
+            event.preventDefault(); // Prevent form submission
+            const taskId = taskIdInput.value;
+            const documentNumber = taskDocumentNumberInput.value.trim();
+            const purpose = taskPurposeInput.value.trim();
+            const description = taskDescriptionInput.value.trim();
+            const timestamp = new Date().toISOString();
+
+            if (!documentNumber || !purpose) {
+                showNotification('error', 'No Dokumen and Tujuan are required!');
+                return;
+            }
+
+            const newTask = {
+                taskId: taskId,
+                timestamp: timestamp,
+                documentNumber: documentNumber,
+                purpose: purpose,
+                description: description,
+                items: [] // Initialize with an empty array for scanned items
+            };
+            tasksData.push(newTask);
+            saveTasksData();
+            renderTasksTable();
+            addTaskModal.style.display = 'none';
+            addTaskForm.reset();
+            showNotification('success', 'New task added!');
+        }
+
+        // New function to open edit task modal
+        function openEditTaskModal(taskId) {
+            currentEditTask = tasksData.find(task => task.taskId === taskId);
+            if (currentEditTask) {
+                editTaskIdInput.value = currentEditTask.taskId;
+                editTaskTimestampInput.value = new Date(currentEditTask.timestamp).toLocaleString();
+                editTaskDocumentNumberInput.value = currentEditTask.documentNumber;
+                editTaskPurposeInput.value = currentEditTask.purpose;
+                editTaskDescriptionInput.value = currentEditTask.description || '';
+                editTaskModal.style.display = 'flex';
+            } else {
+                showNotification('error', 'Task not found for editing.');
+            }
+        }
+
+        // New function to handle saving edited task
+        function handleEditTaskSave(event) {
+            event.preventDefault();
+            if (currentEditTask) {
+                currentEditTask.documentNumber = editTaskDocumentNumberInput.value.trim();
+                currentEditTask.purpose = editTaskPurposeInput.value.trim();
+                currentEditTask.description = editTaskDescriptionInput.value.trim();
+
+                if (!currentEditTask.documentNumber || !currentEditTask.purpose) {
+                    showNotification('error', 'No Dokumen and Tujuan are required!');
+                    return;
+                }
+
+                saveTasksData();
+                renderTasksTable(); // Re-render the tasks list
+                if (currentTask && currentTask.taskId === currentEditTask.taskId) {
+                    // If the edited task is the currently viewed task, update its summary
+                    renderCurrentTaskSummary();
+                    navTitle.textContent = `Task: ${currentTask.documentNumber}`;
+                }
+                editTaskModal.style.display = 'none';
+                editTaskForm.reset();
+                currentEditTask = null;
+                showNotification('success', 'Task updated successfully!');
+            }
+        }
+
+        function renderTasksTable() {
+            tasksTableBody.innerHTML = '';
+            if (tasksData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="7" style="text-align: center;">No tasks available. Click "Add New Task" to create one.</td>';
+                tasksTableBody.appendChild(row);
+                return;
+            }
+
+            // Apply sorting for tasks data
+            const sortedTasks = [...tasksData];
+            if (currentSort.table === 'tasks' && currentSort.column) {
+                 sortedTasks.sort((a, b) => {
+                    let valA, valB;
+                    if (currentSort.column === 'timestamp') {
+                        valA = new Date(a[currentSort.column]).getTime();
+                        valB = new Date(b[currentSort.column]).getTime();
+                    } else {
+                        valA = a[currentSort.column]?.toString().toLowerCase() || '';
+                        valB = b[currentSort.column]?.toString().toLowerCase() || '';
+                    }
+                    
+                    if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            sortedTasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                const date = task.timestamp ? new Date(task.timestamp) : null;
+                const dateStr = date ? date.toLocaleString() : '-';
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="date-cell">${dateStr}</td>
+                    <td>${task.documentNumber}</td>
+                    <td>${task.purpose}</td>
+                    <td class="note-cell" title="${task.description || ''}">${task.description || '-'}</td>
+                    <td>${task.items.length}</td>
+                    <td>
+                        <button class="nav-btn info-btn" onclick="viewTaskDetail('${task.taskId}')">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </button>
+                        <button class="nav-btn warning-btn" onclick="openEditTaskModal('${task.taskId}')" style="margin-left: 5px;">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="nav-btn" onclick="openScannerForTask('${task.taskId}')" style="margin-left: 5px;">
+                            <i class="fas fa-qrcode"></i> Add Item
+                        </button>
+                        <button class="nav-btn danger" onclick="deleteTask('${task.taskId}')" style="margin-left: 5px;">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </td>
+                `;
+                tasksTableBody.appendChild(row);
+            });
+        }
+
+        function sortTasksTable(column) {
+            // Reset previous sort indicators for tasks table
+            document.querySelectorAll('#tasks-table th.sortable').forEach(header => {
                 header.classList.remove('sort-asc', 'sort-desc');
             });
             
             // If sorting the same column, reverse direction
-            if (currentSort.column === column) {
+            if (currentSort.table === 'tasks' && currentSort.column === column) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSort.column = column;
                 currentSort.direction = 'asc';
+                currentSort.table = 'tasks';
             }
             
             // Add sort indicator to current header
-            const currentHeader = document.querySelector(`th[data-sort="${column}"]`);
+            const currentHeader = document.querySelector(`#tasks-table th[data-sort="${column}"]`);
             currentHeader.classList.add(`sort-${currentSort.direction}`);
             
-            // Sort the data
-            scanData.sort((a, b) => {
-                let valA, valB;
-                
-                if (column === 'index') {
-                    // Special case for index (original order)
-                    return currentSort.direction === 'asc' ? 1 : -1;
-                } else if (column === 'timestamp') {
-                    valA = new Date(a[column]).getTime();
-                    valB = new Date(b[column]).getTime();
-                } else {
-                    valA = a[column]?.toString().toLowerCase() || '';
-                    valB = b[column]?.toString().toLowerCase() || '';
-                }
-                
-                if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-                if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-            
-            renderTable();
+            renderTasksTable();
         }
 
-        // Filter table based on search input
-        function filterTable() {
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task and all its items? This cannot be undone.')) {
+                tasksData = tasksData.filter(task => task.taskId !== taskId);
+                saveTasksData();
+                renderTasksTable();
+                showNotification('warning', 'Task deleted successfully');
+                vibrate([100, 50, 100, 50, 100]);
+            }
+        }
+
+        function filterTasksTable() {
             const searchTerm = searchInput.value.toLowerCase();
-            const rows = tableBody.querySelectorAll('tr');
+            const rows = tasksTableBody.querySelectorAll('tr');
             
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 let matches = false;
                 
-                // Skip the first cell (No.), star cell, and last cell (Actions)
-                for (let i = 2; i < cells.length - 1; i++) {
-                    if (cells[i].textContent.toLowerCase().includes(searchTerm)) {
+                // Iterate through cells 2 to 5 (Tanggal & Waktu, No Dokumen, Tujuan, Keterangan)
+                for (let i = 1; i <= 4; i++) { 
+                    if (cells[i] && cells[i].textContent.toLowerCase().includes(searchTerm)) {
                         matches = true;
                         break;
                     }
@@ -737,31 +1191,107 @@
             });
         }
 
-        // Load data from localStorage
-        function loadData() {
-            const savedData = localStorage.getItem('qrScanData');
-            if (savedData) {
-                scanData = JSON.parse(savedData);
+        // --- Item List Functions (Existing Scanner Functionality Adapted) ---
+        function viewTaskDetail(taskId) {
+            currentTask = tasksData.find(task => task.taskId === taskId);
+            if (currentTask) {
+                showView('item-list-view');
+                renderItemsTable();
+                renderCurrentTaskSummary();
+            } else {
+                showNotification('error', 'Task not found!');
             }
         }
 
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('qrScanData', JSON.stringify(scanData));
+        function openScannerForTask(taskId) {
+            currentTask = tasksData.find(task => task.taskId === taskId);
+            if (currentTask) {
+                openScanner();
+                renderRecentScans();
+                showNotification('info', `Scanning for task: ${currentTask.documentNumber}`);
+            } else {
+                showNotification('error', 'Task not found for scanning!');
+            }
         }
 
-        // Render the data table
-        function renderTable() {
-            tableBody.innerHTML = '';
+        function renderCurrentTaskSummary() {
+            if (!currentTask) {
+                currentTaskSummary.innerHTML = '';
+                return;
+            }
+
+            const date = new Date(currentTask.timestamp);
+            const dateStr = date.toLocaleString();
+
+            // Calculate dimension totals
+            const dimensionTotals = {};
+            currentTask.items.forEach(item => {
+                dimensionTotals[item.dimensi] = (dimensionTotals[item.dimensi] || 0) + 1;
+            });
+
+            let summaryHtml = `
+                <h2>Task Details</h2>
+                <p><strong>ID Unik:</strong> ${currentTask.taskId}</p>
+                <p><strong>Tanggal & Waktu:</strong> ${dateStr}</p>
+                <p><strong>No Dokumen:</strong> ${currentTask.documentNumber}</p>
+                <p><strong>Tujuan:</strong> ${currentTask.purpose}</p>
+                <p><strong>Keterangan:</strong> ${currentTask.description || '-'}</p>
+                <p><strong>Total Scanned Items:</strong> ${currentTask.items.length}</p>
+            `;
+
+            if (Object.keys(dimensionTotals).length > 0) {
+                summaryHtml += `
+                    <h3>Dimension Summary:</h3>
+                    <div class="summary-grid">
+                `;
+                for (const dim in dimensionTotals) {
+                    summaryHtml += `
+                        <div class="summary-item">
+                            ${dim}<br><strong>${dimensionTotals[dim]}</strong>
+                        </div>
+                    `;
+                }
+                summaryHtml += `</div>`;
+            } else {
+                summaryHtml += `<p>No items scanned yet for this task.</p>`;
+            }
             
-            if (scanData.length === 0) {
+            currentTaskSummary.innerHTML = summaryHtml;
+        }
+
+        // Render the item data table for the current task
+        function renderItemsTable() {
+            tableBody.innerHTML = '';
+            if (!currentTask || currentTask.items.length === 0) {
                 const row = document.createElement('tr');
-                row.innerHTML = '<td colspan="8" style="text-align: center;">No data available</td>';
+                row.innerHTML = '<td colspan="8" style="text-align: center;">No items scanned for this task.</td>';
                 tableBody.appendChild(row);
                 return;
             }
+
+            const itemsToRender = [...currentTask.items];
             
-            scanData.forEach((data, index) => {
+            // Apply sorting for items data
+            if (currentSort.table === 'items' && currentSort.column) {
+                itemsToRender.sort((a, b) => {
+                    let valA, valB;
+                    if (currentSort.column === 'index') {
+                        return currentSort.direction === 'asc' ? 1 : -1;
+                    } else if (currentSort.column === 'timestamp') {
+                        valA = new Date(a[currentSort.column]).getTime();
+                        valB = new Date(b[currentSort.column]).getTime();
+                    } else {
+                        valA = a[currentSort.column]?.toString().toLowerCase() || '';
+                        valB = b[currentSort.column]?.toString().toLowerCase() || '';
+                    }
+                    
+                    if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            
+            itemsToRender.forEach((data, index) => {
                 const row = document.createElement('tr');
                 if (data.isNew) {
                     row.classList.add('new-scan');
@@ -775,7 +1305,7 @@
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>
-                        <button class="star-btn ${data.starred ? 'starred' : ''}" onclick="toggleStar(${index})">
+                        <button class="star-btn ${data.starred ? 'starred' : ''}" onclick="toggleStarItem('${currentTask.taskId}', ${index})">
                             <i class="fas fa-star"></i>
                         </button>
                     </td>
@@ -788,10 +1318,10 @@
                         <div class="action-menu">
                             <button class="action-btn">⋯</button>
                             <div class="action-dropdown">
-                                <button onclick="editNote(${index})">
+                                <button onclick="editItemNote('${currentTask.taskId}', ${index})">
                                     <i class="fas fa-edit"></i> Edit Note
                                 </button>
-                                <button onclick="deleteRow(${index})" style="color: var(--error-color);">
+                                <button onclick="deleteItem('${currentTask.taskId}', ${index})" style="color: var(--error-color);">
                                     <i class="fas fa-trash-alt"></i> Delete
                                 </button>
                             </div>
@@ -801,19 +1331,40 @@
                 tableBody.appendChild(row);
             });
             
-            saveData(); // Save after resetting isNew flags
+            saveTasksData(); // Save after resetting isNew flags
         }
 
-        // Render recent scans list
+        function sortItemsTable(column) {
+            // Reset previous sort indicators for items table
+            document.querySelectorAll('#data-table th.sortable').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            // If sorting the same column, reverse direction
+            if (currentSort.table === 'items' && currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+                currentSort.table = 'items';
+            }
+            
+            // Add sort indicator to current header
+            const currentHeader = document.querySelector(`#data-table th[data-sort="${column}"]`);
+            currentHeader.classList.add(`sort-${currentSort.direction}`);
+            
+            renderItemsTable();
+        }
+
+        // Render recent scans list for the current task
         function renderRecentScans() {
             recentScansList.innerHTML = '';
-            
-            const recentData = [...scanData].reverse().slice(0, 10);
-            
-            if (recentData.length === 0) {
-                recentScansList.innerHTML = '<div style="text-align: center; padding: 8px;">No recent scans</div>';
+            if (!currentTask || currentTask.items.length === 0) {
+                recentScansList.innerHTML = '<div style="text-align: center; padding: 8px;">No recent scans for this task</div>';
                 return;
             }
+            
+            const recentData = [...currentTask.items].reverse().slice(0, 10);
             
             recentData.forEach((scan, index) => {
                 const item = document.createElement('div');
@@ -832,11 +1383,15 @@
 
         // Open the scanner modal
         function openScanner() {
+            if (!currentTask) {
+                showNotification('error', 'Please select or add a task first to scan items.');
+                return;
+            }
             scannerModal.style.display = 'flex';
             startScanner();
             renderRecentScans();
             vibrate(100);
-            showNotification('info', 'Preparing camera...');
+            updateScanStatus('info', 'Preparing camera...');
         }
 
         // Close the scanner modal
@@ -902,6 +1457,8 @@
                 scanStatus.classList.add('success');
             } else if (type === 'error') {
                 scanStatus.classList.add('error');
+            } else if (type === 'info') {
+                scanStatus.classList.add('info');
             }
         }
 
@@ -938,9 +1495,10 @@
             }
         }
 
-        // Check if data already exists
-        function isDuplicate(dimensi, nomorLot, kodePack) {
-            return scanData.some(item => 
+        // Check if item data already exists within the current task
+        function isItemDuplicate(dimensi, nomorLot, kodePack) {
+            if (!currentTask) return false;
+            return currentTask.items.some(item => 
                 item.dimensi === dimensi && 
                 item.nomorLot === nomorLot && 
                 item.kodePack === kodePack
@@ -961,10 +1519,10 @@
             // Extract data
             const [_, dimensi, nomorLot, kodePack] = match;
             
-            // Check for duplicate
-            if (isDuplicate(dimensi, nomorLot, kodePack)) {
-                updateScanStatus('error', 'Duplicate QR code');
-                showNotification('warning', 'This QR code has already been scanned');
+            // Check for duplicate within the current task
+            if (isItemDuplicate(dimensi, nomorLot, kodePack)) {
+                updateScanStatus('warning', 'Duplicate QR code in this task');
+                showNotification('warning', 'This QR code has already been scanned for this task');
                 vibrate([200, 100, 200]);
                 return;
             }
@@ -979,117 +1537,291 @@
                 isNew: true
             };
             
-            // Add to data array
-            scanData.push(scanResult);
-            saveData();
-            renderTable();
-            renderRecentScans();
-            
-            // Show success but keep scanner open
-            updateScanStatus('success', 'Scan successful! Ready for next QR code');
-            showNotification('success', 'QR code scanned successfully!');
-            vibrate(200);
-        }
-
-        // Toggle star status
-        function toggleStar(index) {
-            if (index >= 0 && index < scanData.length) {
-                scanData[index].starred = !scanData[index].starred;
-                saveData();
-                renderTable();
+            // Add to current task's items array
+            if (currentTask) {
+                currentTask.items.push(scanResult);
+                saveTasksData();
+                renderItemsTable(); // Re-render items for current task
+                renderRecentScans();
+                renderCurrentTaskSummary(); // Update summary with new item count
+                
+                // Show success but keep scanner open
+                updateScanStatus('success', 'Scan successful! Ready for next QR code');
+                showNotification('success', 'QR code scanned successfully!');
+                vibrate(200);
+            } else {
+                updateScanStatus('error', 'No active task selected.');
+                showNotification('error', 'Please select a task to scan items.');
             }
         }
 
-        // Edit note
-        function editNote(index) {
-            currentEditIndex = index;
-            noteInput.value = scanData[index].note || '';
-            noteModal.style.display = 'flex';
+        // Toggle star status for an item
+        function toggleStarItem(taskId, itemIndex) {
+            const task = tasksData.find(t => t.taskId === taskId);
+            if (task && itemIndex >= 0 && itemIndex < task.items.length) {
+                task.items[itemIndex].starred = !task.items[itemIndex].starred;
+                saveTasksData();
+                renderItemsTable();
+            }
         }
 
-        // Save note
+        // Edit note for an item
+        function editItemNote(taskId, itemIndex) {
+            currentTask = tasksData.find(t => t.taskId === taskId); // Ensure currentTask is set correctly
+            if (currentTask && itemIndex >= 0 && itemIndex < currentTask.items.length) {
+                currentEditItemIndex = itemIndex; // Store index for item in currentTask
+                noteInput.value = currentTask.items[itemIndex].note || '';
+                noteModal.style.display = 'flex';
+            }
+        }
+
+        // Save note for an item
         function saveNote() {
-            if (currentEditIndex >= 0 && currentEditIndex < scanData.length) {
-                scanData[currentEditIndex].note = noteInput.value.trim();
-                saveData();
-                renderTable();
+            if (currentTask && currentEditItemIndex >= 0 && currentEditItemIndex < currentTask.items.length) {
+                currentTask.items[currentEditItemIndex].note = noteInput.value.trim();
+                saveTasksData();
+                renderItemsTable();
                 noteModal.style.display = 'none';
                 showNotification('success', 'Note saved successfully');
+                currentEditItemIndex = -1; // Reset index
             }
         }
 
-        // Delete a row from the table
-        function deleteRow(index) {
-            if (index >= 0 && index < scanData.length) {
+        // Delete an item from the current task
+        function deleteItem(taskId, itemIndex) {
+            const task = tasksData.find(t => t.taskId === taskId);
+            if (task && itemIndex >= 0 && itemIndex < task.items.length) {
                 if (confirm('Are you sure you want to delete this item?')) {
-                    scanData.splice(index, 1);
-                    saveData();
-                    renderTable();
-                    showNotification('info', 'Record deleted');
+                    task.items.splice(itemIndex, 1);
+                    saveTasksData();
+                    renderItemsTable();
+                    renderCurrentTaskSummary(); // Update summary after deletion
+                    showNotification('info', 'Item deleted');
                     vibrate(50);
                 }
             }
         }
 
-        // Confirm before clearing all data
+        // --- Global Actions ---
         function confirmClearAll() {
-            if (scanData.length === 0) {
+            if (tasksData.length === 0) {
                 showNotification('info', 'No data to clear');
                 return;
             }
             
-            if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
-                scanData = [];
-                saveData();
-                renderTable();
+            if (confirm('Are you sure you want to delete ALL tasks and their items? This cannot be undone.')) {
+                tasksData = [];
+                currentTask = null; // Reset current task
+                saveTasksData();
+                renderTasksTable();
                 showNotification('warning', 'All data cleared');
                 vibrate([100, 50, 100, 50, 100]);
+                showView('task-list-view'); // Go back to task list
             }
         }
 
-        // Export data to Excel
-        function exportToExcel() {
-            if (scanData.length === 0) {
+        async function handleExport() {
+            if (tasksData.length === 0) {
                 showNotification('info', 'No data to export');
                 return;
             }
             
-            // Prepare data for export
-            const exportData = scanData.map((item, index) => ({
-                'No.': index + 1,
-                'Important': item.starred ? '★' : '',
-                'Dimensi': item.dimensi,
-                'Nomor Lot': item.nomorLot,
-                'Kode Pack': item.kodePack,
-                'Tanggal Scan': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
-                'Note': item.note || ''
-            }));
-            
-            // Create worksheet
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            
-            // Set column widths
-            const wscols = [
-                {wch: 5},   // No.
-                {wch: 8},   // Star
-                {wch: 20},  // Dimensi
-                {wch: 15},  // Nomor Lot
-                {wch: 15},  // Kode Pack
-                {wch: 20},  // Tanggal Scan
-                {wch: 30}   // Note
-            ];
-            ws['!cols'] = wscols;
-            
-            // Create workbook
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "QR Scan Data");
-            
-            // Export to file
+
+            tasksData.forEach(task => {
+                // Prepare task details sheet
+                const taskDetails = [
+                    ['Task ID', task.taskId],
+                    ['Tanggal & Waktu', new Date(task.timestamp).toLocaleString()],
+                    ['No Dokumen', task.documentNumber],
+                    ['Tujuan', task.purpose],
+                    ['Keterangan', task.description || ''],
+                    ['Total Items', task.items.length]
+                ];
+                const wsTaskDetails = XLSX.utils.aoa_to_sheet(taskDetails);
+                XLSX.utils.book_append_sheet(wb, wsTaskDetails, `Task_${task.documentNumber}_Details`);
+
+                // Prepare items sheet for this task
+                if (task.items.length > 0) {
+                    const exportItems = task.items.map((item, index) => ({
+                        'No.': index + 1,
+                        'Important': item.starred ? '★' : '',
+                        'Dimensi': item.dimensi,
+                        'Nomor Lot': item.nomorLot,
+                        'Kode Pack': item.kodePack,
+                        'Tanggal Scan': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
+                        'Note': item.note || ''
+                    }));
+                    const wsItems = XLSX.utils.json_to_sheet(exportItems);
+                    
+                    // Set column widths for items sheet
+                    const wscolsItems = [
+                        {wch: 5},   // No.
+                        {wch: 8},   // Star
+                        {wch: 20},  // Dimensi
+                        {wch: 15},  // Nomor Lot
+                        {wch: 15},  // Kode Pack
+                        {wch: 20},  // Tanggal Scan
+                        {wch: 30}   // Note
+                    ];
+                    wsItems['!cols'] = wscolsItems;
+
+                    XLSX.utils.book_append_sheet(wb, wsItems, `Task_${task.documentNumber}_Items`);
+                }
+            });
+
+            // If you also want a combined sheet of all items from all tasks:
+            const allItems = [];
+            tasksData.forEach(task => {
+                task.items.forEach(item => {
+                    allItems.push({
+                        'Task ID': task.taskId,
+                        'No Dokumen Task': task.documentNumber,
+                        'Tujuan Task': task.purpose,
+                        'Dimensi Item': item.dimensi,
+                        'Nomor Lot Item': item.nomorLot,
+                        'Kode Pack Item': item.kodePack,
+                        'Tanggal Scan Item': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
+                        'Note Item': item.note || '',
+                        'Important Item': item.starred ? '★' : ''
+                    });
+                });
+            });
+
+            if (allItems.length > 0) {
+                const wsAllItems = XLSX.utils.json_to_sheet(allItems);
+                const wscolsAllItems = [
+                    {wch: 15}, // Task ID
+                    {wch: 20}, // No Dokumen Task
+                    {wch: 20}, // Tujuan Task
+                    {wch: 15}, // Dimensi Item
+                    {wch: 15}, // Nomor Lot Item
+                    {wch: 15}, // Kode Pack Item
+                    {wch: 25}, // Tanggal Scan Item
+                    {wch: 30}, // Note Item
+                    {wch: 10}  // Important Item
+                ];
+                wsAllItems['!cols'] = wscolsAllItems;
+                XLSX.utils.book_append_sheet(wb, wsAllItems, "All Scanned Items Combined");
+            }
+
             const dateStr = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `QR_Scan_Data_${dateStr}.xlsx`);
+            const fileName = `QR_Scan_Report_${dateStr}.xlsx`;
             
-            showNotification('success', 'Data exported to Excel');
+            // Check if Web Share API is available and can share files
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([], 'temp.xlsx')] })) {
+                try {
+                    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const file = new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                    await navigator.share({
+                        title: `QR Scan Report - ${currentTask ? currentTask.documentNumber : 'All Tasks'}`,
+                        text: `Check out the QR Scan Report from ${currentTask ? currentTask.documentNumber : 'all tasks'}.`,
+                        files: [file],
+                    });
+                    showNotification('success', 'Excel file shared successfully!');
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        showNotification('info', 'Share cancelled.');
+                    } else {
+                        showNotification('error', `Error sharing file: ${error.message}`);
+                        console.error('Error sharing file:', error);
+                        // Fallback to direct download if share fails
+                        XLSX.writeFile(wb, fileName);
+                        showNotification('info', 'Excel file downloaded instead.');
+                    }
+                }
+            } else {
+                // Fallback for browsers/environments without Web Share API for files
+                XLSX.writeFile(wb, fileName);
+                showNotification('success', 'Data exported to Excel. Share manually.');
+                // Optionally provide WhatsApp link for text sharing if only text is available
+                if (currentTask) {
+                    const message = encodeURIComponent(`QR Scan Report for Task: ${currentTask.documentNumber}\nTotal Items: ${currentTask.items.length}\nDocument: ${currentTask.documentNumber}\nPurpose: ${currentTask.purpose}`);
+                    const whatsappUrl = `https://wa.me/?text=${message}`;
+                    showNotification('info', 'Web Share API not fully supported. Downloaded file. You can also share task details via WhatsApp.');
+                    console.log('WhatsApp Share URL (copy this if needed):', whatsappUrl);
+                    // Open WhatsApp in a new tab, but inform user first
+                    setTimeout(() => {
+                        if (confirm("Web Share API not supported for files. Do you want to share task summary via WhatsApp?")) {
+                            window.open(whatsappUrl, '_blank');
+                        }
+                    }, 1000);
+                }
+            }
         }
+
+        async function handleShare() {
+            if (!currentTask) {
+                showNotification('error', 'Please select a task to share its summary.');
+                return;
+            }
+
+            const taskSummaryText = `
+Task Report:
+ID Unik: ${currentTask.taskId}
+Tanggal & Waktu: ${new Date(currentTask.timestamp).toLocaleString()}
+No Dokumen: ${currentTask.documentNumber}
+Tujuan: ${currentTask.purpose}
+Keterangan: ${currentTask.description || '-'}
+Total Scanned Items: ${currentTask.items.length}
+            `.trim();
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `QR Scan Task: ${currentTask.documentNumber}`,
+                        text: taskSummaryText,
+                        url: window.location.href // Share current page URL
+                    });
+                    showNotification('success', 'Task summary shared successfully!');
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        showNotification('info', 'Share cancelled.');
+                    } else {
+                        showNotification('error', `Error sharing: ${error.message}`);
+                        console.error('Error sharing:', error);
+                    }
+                }
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(taskSummaryText + '\n\nOpen this app: ' + window.location.href)}`;
+                window.open(whatsappUrl, '_blank');
+                showNotification('info', 'Web Share API not supported. Opening WhatsApp...');
+            }
+        }
+
+
+        function handleSearch() {
+            // Delegate search to the active view's filter function
+            if (taskListView.classList.contains('active')) {
+                filterTasksTable();
+            } else if (itemListView.classList.contains('active')) {
+                filterItemsTable();
+            }
+        }
+        
+        function filterItemsTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let matches = false;
+                
+                // Skip the first cell (No.), star cell, and last cell (Actions)
+                for (let i = 2; i < cells.length - 1; i++) {
+                    if (cells[i].textContent.toLowerCase().includes(searchTerm)) {
+                        matches = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
 
         // Show notification
         function showNotification(type, message) {
@@ -1112,9 +1844,13 @@
         document.addEventListener('DOMContentLoaded', init);
 
         // Make functions available globally for HTML onclick handlers
-        window.toggleStar = toggleStar;
-        window.deleteRow = deleteRow;
-        window.editNote = editNote;
+        window.viewTaskDetail = viewTaskDetail;
+        window.openScannerForTask = openScannerForTask;
+        window.deleteTask = deleteTask;
+        window.openEditTaskModal = openEditTaskModal; // Make edit task function global
+        window.toggleStarItem = toggleStarItem;
+        window.deleteItem = deleteItem;
+        window.editItemNote = editItemNote;
     </script>
 </body>
 </html>
