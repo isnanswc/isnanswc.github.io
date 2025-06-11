@@ -649,7 +649,7 @@
                 <input type="text" id="search-input" placeholder="Search...">
                 <i class="fas fa-search search-icon"></i>
             </div>
-            <button class="nav-btn" id="export-btn">
+            <button class="nav-btn" id="export-btn" style="display: none;">
                 <i class="fas fa-file-excel"></i> Export
             </button>
             <button class="nav-btn info-btn" id="share-btn" style="display: none;">
@@ -881,7 +881,7 @@
         let scannerActive = false;
         let stream = null;
         let tasksData = []; // Array to store all tasks
-        let currentTask = null; // The task currently being viewed/scanned for
+        let currentTask = null; // The task currently being viewed/scanned for (null if in task list view)
         let lastScanTime = 0;
         let currentEditItemIndex = -1; // Index for editing notes on items
         let currentEditTask = null; // Stores the task object being edited
@@ -919,7 +919,7 @@
                     if (scannerModal.style.display === 'flex') {
                         closeScanner();
                     }
-                    if (noteModal.style.display === 'flex') { // Changed to if, allowing multiple modals to be open (e.g. scanner + note)
+                    if (noteModal.style.display === 'flex') {
                         noteModal.style.display = 'none';
                     }
                     if (addTaskModal.style.display === 'flex') {
@@ -973,10 +973,13 @@
             itemListView.classList.remove('active');
             floatingScanBtn.style.display = 'none'; // Hide by default
             shareBtn.style.display = 'none'; // Hide share button by default
+            exportBtn.style.display = 'none'; // Hide export button by default
 
             if (viewId === 'task-list-view') {
                 taskListView.classList.add('active');
                 navTitle.textContent = 'Task List';
+                currentTask = null; // Set currentTask to null when in task list view
+                exportBtn.style.display = 'flex'; // Show export button for all tasks
                 renderTasksTable(); // Re-render tasks on view
                 searchInput.value = ''; // Clear search when switching view
                 searchInput.removeEventListener('input', filterItemsTable); // Remove old listener
@@ -987,6 +990,7 @@
                     navTitle.textContent = `Task: ${currentTask.documentNumber}`;
                     floatingScanBtn.style.display = 'flex'; // Show scan button for items
                     shareBtn.style.display = 'flex'; // Show share button for item view
+                    exportBtn.style.display = 'flex'; // Show export button for current task
                 }
                 renderItemsTable(); // Re-render items on view
                 renderCurrentTaskSummary();
@@ -1516,13 +1520,30 @@
         }
 
         // Check if item data already exists within the current task
-        function isItemDuplicate(dimensi, nomorLot, kodePack) {
+        function isItemDuplicateInCurrentTask(dimensi, nomorLot, kodePack) {
             if (!currentTask) return false;
             return currentTask.items.some(item => 
                 item.dimensi === dimensi && 
                 item.nomorLot === nomorLot && 
                 item.kodePack === kodePack
             );
+        }
+
+        // NEW: Check for duplicate across ALL tasks
+        function isItemDuplicateAcrossAllTasks(dimensi, nomorLot, kodePack, currentTaskId) {
+            for (const task of tasksData) {
+                // Skip the current task being scanned into, as we handle its duplicates separately
+                if (task.taskId === currentTaskId) continue; 
+                
+                if (task.items.some(item => 
+                    item.dimensi === dimensi && 
+                    item.nomorLot === nomorLot && 
+                    item.kodePack === kodePack
+                )) {
+                    return { isDuplicate: true, taskId: task.taskId, documentNumber: task.documentNumber };
+                }
+            }
+            return { isDuplicate: false, taskId: null, documentNumber: null };
         }
 
         // Process the scanned QR code data
@@ -1540,11 +1561,21 @@
             const [_, dimensi, nomorLot, kodePack] = match;
             
             // Check for duplicate within the current task
-            if (isItemDuplicate(dimensi, nomorLot, kodePack)) {
+            if (isItemDuplicateInCurrentTask(dimensi, nomorLot, kodePack)) {
                 updateScanStatus('warning', 'Duplicate QR code in this task');
                 showNotification('warning', 'This QR code has already been scanned for this task');
                 vibrate([200, 100, 200]);
                 return;
+            }
+
+            // NEW: Check for duplicate across all tasks
+            const crossTaskDuplicate = isItemDuplicateAcrossAllTasks(dimensi, nomorLot, kodePack, currentTask.taskId);
+            if (crossTaskDuplicate.isDuplicate) {
+                updateScanStatus('info', `Item already scanned in Task: ${crossTaskDuplicate.documentNumber}`);
+                showNotification('info', `This item has already been scanned in Task: ${crossTaskDuplicate.documentNumber}`);
+                vibrate([100, 100, 100]); // A softer vibration for info
+                // We still add it to the current task if it's not a duplicate *within* the current task,
+                // but the user gets informed. If you want to prevent adding, add 'return;' here.
             }
             
             const scanResult = { 
@@ -1566,9 +1597,11 @@
                 renderCurrentTaskSummary(); // Update summary with new item count
                 
                 // Show success but keep scanner open
-                updateScanStatus('success', 'Scan successful! Ready for next QR code');
-                showNotification('success', 'QR code scanned successfully!');
-                vibrate(200);
+                if (!crossTaskDuplicate.isDuplicate) { // Only show success if not a cross-task duplicate
+                    updateScanStatus('success', 'Scan successful! Ready for next QR code');
+                    showNotification('success', 'QR code scanned successfully!');
+                    vibrate(200);
+                }
             } else {
                 updateScanStatus('error', 'No active task selected.');
                 showNotification('error', 'Please select a task to scan items.');
@@ -1641,14 +1674,31 @@
         }
 
         async function handleExport() {
-            if (tasksData.length === 0) {
-                showNotification('info', 'No data to export');
-                return;
+            // Determine which tasks to export based on current view
+            let tasksToExport = [];
+            let fileNamePrefix = "";
+
+            if (currentTask) { // Exporting a specific task
+                if (currentTask.items.length === 0) {
+                    showNotification('info', 'No items in this task to export.');
+                    return;
+                }
+                tasksToExport = [currentTask];
+                fileNamePrefix = `Task_${currentTask.documentNumber.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                showNotification('info', 'Preparing to export current task...');
+            } else { // Exporting all tasks
+                if (tasksData.length === 0) {
+                    showNotification('info', 'No tasks available to export.');
+                    return;
+                }
+                tasksToExport = tasksData;
+                fileNamePrefix = "All_Tasks_Report";
+                showNotification('info', 'Preparing to export all tasks...');
             }
             
             const wb = XLSX.utils.book_new();
 
-            tasksData.forEach(task => {
+            tasksToExport.forEach(task => {
                 // Prepare task details sheet
                 const taskDetails = [
                     ['Task ID', task.taskId],
@@ -1690,25 +1740,24 @@
                 }
             });
 
-            // If you also want a combined sheet of all items from all tasks:
-            const allItems = [];
-            tasksData.forEach(task => {
-                task.items.forEach(item => {
-                    allItems.push({
-                        'Task ID': task.taskId,
-                        'No Dokumen Task': task.documentNumber,
-                        'Tujuan Task': task.purpose,
-                        'Dimensi Item': item.dimensi,
-                        'Nomor Lot Item': item.nomorLot,
-                        'Kode Pack Item': item.kodePack,
-                        'Tanggal Scan Item': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
-                        'Note Item': item.note || '',
-                        'Important Item': item.starred ? '★' : ''
+            // Only add "All Scanned Items Combined" sheet if exporting all tasks
+            if (!currentTask && allItems.length > 0) { // If not currentTask, means we are in all tasks view
+                const allItems = [];
+                tasksData.forEach(task => {
+                    task.items.forEach(item => {
+                        allItems.push({
+                            'Task ID': task.taskId,
+                            'No Dokumen Task': task.documentNumber,
+                            'Tujuan Task': task.purpose,
+                            'Dimensi Item': item.dimensi,
+                            'Nomor Lot Item': item.nomorLot,
+                            'Kode Pack Item': item.kodePack,
+                            'Tanggal Scan Item': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
+                            'Note Item': item.note || '',
+                            'Important Item': item.starred ? '★' : ''
+                        });
                     });
                 });
-            });
-
-            if (allItems.length > 0) {
                 const wsAllItems = XLSX.utils.json_to_sheet(allItems);
                 const wscolsAllItems = [
                     {wch: 15}, // Task ID
@@ -1726,7 +1775,7 @@
             }
 
             const dateStr = new Date().toISOString().slice(0, 10);
-            const fileName = `QR_Scan_Report_${dateStr}.xlsx`;
+            const fileName = `${fileNamePrefix}_${dateStr}.xlsx`;
             
             let sharedSuccessfully = false;
 
