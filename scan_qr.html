@@ -904,9 +904,16 @@
             direction: 'asc',
             table: 'items' // 'items' or 'tasks'
         };
-        // Updated SCAN_FORMAT to capture the length part separately
-        const SCAN_FORMAT = /^(.+?)\s(.+?)\s(.+?)\sMC\sX\s(\d+)\sMM(?: = (\d+))?$/; // Changed (\d+M) to (\d+)
-const SCAN_COOLDOWN = 1000;
+
+        // NEW: Updated SCAN_FORMAT to capture the full QR string format: DIMENSI|NO LOT|KODE PACK
+        // This regex captures three groups separated by '|'
+        const SCAN_FORMAT = /^(.+)\|(.+)\|(.+)$/; 
+
+        // NEW: This regex is specifically for parsing the 'dimensi' part AFTER it has been separated.
+        // e.g., VMCPP M01 25 MC X 860 MM = 4000
+        const DIMENSION_PART_FORMAT = /^(.+?)\s(.+?)\s(.+?)\sMC\sX\s(\d+)\sMM(?: = (\d+))?$/; 
+
+        const SCAN_COOLDOWN = 1000;
 
         // Initialize the application
         function init() {
@@ -982,6 +989,8 @@ const SCAN_COOLDOWN = 1000;
             });
 
             // NEW: Event listener for summary type selection
+            // This needs to be set up on the summaryTypeSelect element itself
+            // but also handle re-attaching if the summary HTML is re-rendered.
             summaryTypeSelect.addEventListener('change', renderCurrentTaskSummary);
         }
 
@@ -1011,7 +1020,7 @@ const SCAN_COOLDOWN = 1000;
                     exportBtn.style.display = 'flex'; // Show export button for current task
                 }
                 renderItemsTable(); // Re-render items on view
-                renderCurrentTaskSummary();
+                renderCurrentTaskSummary(); // Render summary for current task
                 searchInput.value = ''; // Clear search when switching view
                 searchInput.removeEventListener('input', filterTasksTable); // Remove old listener
                 searchInput.addEventListener('input', filterItemsTable); // Add new listener
@@ -1258,40 +1267,41 @@ const SCAN_COOLDOWN = 1000;
             }
         }
 
-        // NEW: Function to parse dimension string
-       function parseDimensionString(dimensiString) {
-    // Regex to extract parts: [jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]
-    // Example: CPP L01 25 MC X 2220 MM = 12000
-    const match = dimensiString.match(SCAN_FORMAT); // Menggunakan SCAN_FORMAT yang telah diperbarui
-    if (match) {
-        const [_, jenis, kodeFormula, thickness, width, length] = match;
-        return {
-            full: dimensiString,
-            meterFormat: `${jenis} ${kodeFormula} ${thickness} MC X ${width} MM`,
-            // Convert length to number, now it's just digits so parseFloat is fine
-            length: length ? parseFloat(length) : 0, 
-            jenis: jenis,
-            kodeFormula: kodeFormula,
-            thickness: thickness,
-            width: parseInt(width)
-        };
-    }
-    return null; // Return null if format doesn't match
-}
+        // NEW: Function to parse dimension string (used for the first part of QR)
+        function parseDimensionString(dimensiString) {
+            // Regex to extract parts: [jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]
+            // Example: VMCPP M01 25 MC X 860 MM = 4000
+            const match = dimensiString.match(DIMENSION_PART_FORMAT); 
+            if (match) {
+                const [_, jenis, kodeFormula, thickness, width, length] = match;
+                return {
+                    full: dimensiString,
+                    meterFormat: `${jenis} ${kodeFormula} ${thickness} MC X ${width} MM`,
+                    length: length ? parseFloat(length) : 0, 
+                    jenis: jenis,
+                    kodeFormula: kodeFormula,
+                    thickness: thickness,
+                    width: parseInt(width)
+                };
+            }
+            return null; 
+        }
+
         // NEW: Function to calculate dimension summary based on type (roll or meter)
         function calculateDimensionSummary(summaryType) {
             const dimensionSummary = {};
             if (!currentTask || !currentTask.items) return dimensionSummary;
 
             currentTask.items.forEach(item => {
-                const parsed = parseDimensionString(item.dimensi);
+                const parsed = parseDimensionString(item.dimensi); // item.dimensi is the first part of QR
                 if (!parsed) {
-                    // Handle cases where dimension string doesn't match expected format
-                    const key = item.dimensi;
+                    // Fallback for cases where dimension part doesn't match expected format
+                    const key = item.dimensi; 
                     if (summaryType === 'roll') {
                         dimensionSummary[key] = (dimensionSummary[key] || 0) + 1;
-                    } else { // Fallback for meter, sum 0 if length can't be parsed
-                         dimensionSummary[key] = (dimensionSummary[key] || 0) + 0; // Or just count as 1 roll if parsing failed
+                    } else { 
+                         // If parsing failed, we can't sum meters reliably, so count as 1 roll or 0 meter
+                         dimensionSummary[key] = (dimensionSummary[key] || 0) + 0; 
                     }
                     return;
                 }
@@ -1308,7 +1318,6 @@ const SCAN_COOLDOWN = 1000;
             });
             return dimensionSummary;
         }
-
 
         function renderCurrentTaskSummary() {
             if (!currentTask) {
@@ -1337,9 +1346,12 @@ const SCAN_COOLDOWN = 1000;
             `;
             
             // Re-select the dropdown element as it might be recreated by innerHTML
-            setTimeout(() => { // Use setTimeout to ensure element exists after innerHTML update
+            // and re-attach the event listener to ensure it works after re-rendering.
+            setTimeout(() => { 
                 const reSelectedSummaryTypeSelect = document.getElementById('summary-type-select');
                 if (reSelectedSummaryTypeSelect) {
+                    // Remove existing listener to prevent duplicates
+                    reSelectedSummaryTypeSelect.removeEventListener('change', renderCurrentTaskSummary); 
                     reSelectedSummaryTypeSelect.addEventListener('change', renderCurrentTaskSummary);
                 }
             }, 0);
@@ -1349,23 +1361,23 @@ const SCAN_COOLDOWN = 1000;
             const dimensionTotals = calculateDimensionSummary(selectedSummaryType);
 
             if (Object.keys(dimensionTotals).length > 0) {
-        summaryHtml += `
-            <h3>Dimension Summary (${selectedSummaryType === 'roll' ? 'Per Roll' : 'Per Meter'}):</h3>
-            <div class="summary-grid">
-        `;
-        for (const dim in dimensionTotals) {
-            const value = dimensionTotals[dim];
-            // NEW: Add 'M' suffix only if summaryType is 'meter', as the parsed value is now just a number.
-            summaryHtml += `
-                <div class="summary-item">
-                    ${dim}<br><strong>${value}${selectedSummaryType === 'meter' ? 'M' : ''}</strong>
-                </div>
-            `;
-        }
-        summaryHtml += `</div>`;
-    } else {
-        summaryHtml += `<p>No items scanned yet for this task.</p>`;
-    }
+                summaryHtml += `
+                    <h3>Dimension Summary (${selectedSummaryType === 'roll' ? 'Per Roll' : 'Per Meter'}):</h3>
+                    <div class="summary-grid">
+                `;
+                for (const dim in dimensionTotals) {
+                    const value = dimensionTotals[dim];
+                    // Add 'M' suffix only if summaryType is 'meter', as the parsed value is now just a number.
+                    summaryHtml += `
+                        <div class="summary-item">
+                            ${dim}<br><strong>${value}${selectedSummaryType === 'meter' ? 'M' : ''}</strong>
+                        </div>
+                    `;
+                }
+                summaryHtml += `</div>`;
+            } else {
+                summaryHtml += `<p>No items scanned yet for this task.</p>`;
+            }
             
             currentTaskSummary.innerHTML = summaryHtml;
         }
@@ -1434,7 +1446,8 @@ const SCAN_COOLDOWN = 1000;
                     <td>${data.kodePack}</td>
                     <td class="date-cell">${dateStr}</td>
                     <td class="note-cell" title="${data.note || ''}">${data.note || '-'}</td>
-                    <td class="other-tasks-cell" title="Scanned on Tasks: ${otherTasksInfo}">${otherTasksInfo}</td> <td>
+                    <td class="other-tasks-cell" title="Scanned on Tasks: ${otherTasksInfo}">${otherTasksInfo}</td>
+                    <td>
                         <div class="action-menu">
                             <button class="action-btn">⋯</button>
                             <div class="action-dropdown">
@@ -1579,7 +1592,7 @@ const SCAN_COOLDOWN = 1000;
                 scanStatus.classList.add('error');
             } else if (type === 'info') {
                 scanStatus.classList.add('info');
-            } else if (type === 'warning') { // Added warning style
+            } else if (type === 'warning') { 
                 scanStatus.classList.add('warning');
             }
         }
@@ -1627,7 +1640,7 @@ const SCAN_COOLDOWN = 1000;
             );
         }
 
-        // NEW: Check for duplicate across ALL tasks and update `scannedOnOtherTasks`
+        // Check for duplicate across ALL tasks and update `scannedOnOtherTasks`
         function isItemDuplicateAcrossAllTasks(dimensi, nomorLot, kodePack, currentTaskId) {
             let foundOtherTasks = [];
             for (const task of tasksData) {
@@ -1652,30 +1665,32 @@ const SCAN_COOLDOWN = 1000;
 
         // Process the scanned QR code data
         function processQRCode(data) {
-    const match = data.match(SCAN_FORMAT);
-    if (!match) {
-        updateScanStatus('error', 'Invalid QR format');
-        // Sesuaikan pesan kesalahan sesuai format baru
-        showNotification('error', 'Invalid QR format. Expected: `[jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]` (without "M")');
-        vibrate([300, 100, 300]);
-        return;
-    }
-    
-    // Extract data
-    const dimensi = match[0]; // The entire matched string is the dimension
-    // Nomor Lot and Kode Pack will still be "N/A" unless explicitly extracted from QR
-    const nomorLot = "N/A"; 
-    const kodePack = "N/A"; 
-            // FOR DEMO: Let's assume nomorLot and kodePack are *part of* the dimension if not explicitly in QR.
-            // Or you can simplify the QR format to just these 3 for consistency with previous setup.
-            // For now, let's keep it simple based on the provided format and add placeholder for lot/pack
-            // If your QR code also contains lot/pack, update SCAN_FORMAT.
-            // For now, I'll use placeholders if they are not derived from the new format.
-            // If the original QR format was `dimensi|nomorLot|kodePack`, then we need to adjust.
-            // Assuming the `dimensi` variable already holds the full string as per the regex.
+            // First, try to match the overall QR format: DIMENSI|NO LOT|KODE PACK
+            const fullMatch = data.match(SCAN_FORMAT);
+            if (!fullMatch) {
+                updateScanStatus('error', 'Invalid QR format');
+                showNotification('error', 'Invalid QR format. Expected: `DIMENSI|NO LOT|KODE PACK`');
+                vibrate([300, 100, 300]);
+                return;
+            }
+
+            // Extract the three main parts
+            const dimensiFullString = fullMatch[1].trim(); 
+            const nomorLot = fullMatch[2].trim();
+            const kodePack = fullMatch[3].trim();
+
+            // Now, parse the 'dimensi' part using the specific dimension format
+            const parsedDimension = parseDimensionString(dimensiFullString);
+
+            if (!parsedDimension) {
+                updateScanStatus('error', 'Invalid Dimension Part Format');
+                showNotification('error', 'The dimension part of the QR code is invalid. Expected: `[jenis] [kode formula] [thickness] MC X [WIDTH] MM = [LENGTH]`');
+                vibrate([300, 100, 300]);
+                return;
+            }
             
             // Check for duplicate within the current task
-            if (isItemDuplicateInCurrentTask(dimensi, "N/A", "N/A")) { // Using N/A if lot/pack are not extracted from new format
+            if (isItemDuplicateInCurrentTask(parsedDimension.full, nomorLot, kodePack)) { 
                 updateScanStatus('warning', 'Duplicate QR code in this task');
                 showNotification('warning', 'This QR code has already been scanned for this task');
                 vibrate([200, 100, 200]);
@@ -1683,26 +1698,26 @@ const SCAN_COOLDOWN = 1000;
             }
 
             // Check for duplicate across all tasks
-            const crossTaskDuplicates = isItemDuplicateAcrossAllTasks(dimensi, "N/A", "N/A", currentTask.taskId);
+            const crossTaskDuplicates = isItemDuplicateAcrossAllTasks(parsedDimension.full, nomorLot, kodePack, currentTask.taskId);
             
             const scanResult = { 
-                dimensi: dimensi, 
-                nomorLot: "N/A", // Placeholder if not from QR. Adjust if your QR has it.
-                kodePack: "N/A", // Placeholder if not from QR. Adjust if your QR has it.
+                dimensi: parsedDimension.full, 
+                nomorLot: nomorLot, 
+                kodePack: kodePack, 
                 timestamp: new Date().toISOString(),
                 starred: false,
                 note: '',
                 isNew: true,
-                scannedOnOtherTasks: crossTaskDuplicates // Store document numbers of other tasks
+                scannedOnOtherTasks: crossTaskDuplicates 
             };
             
             // Add to current task's items array
             if (currentTask) {
                 currentTask.items.push(scanResult);
-                saveTasksData(); // Save after adding new item (and potentially updating existing ones in other tasks)
-                renderItemsTable(); // Re-render items for current task
+                saveTasksData(); 
+                renderItemsTable(); 
                 renderRecentScans();
-                renderCurrentTaskSummary(); // Update summary with new item count
+                renderCurrentTaskSummary(); 
                 
                 let notificationMessage = 'QR code scanned successfully!';
                 let notificationType = 'success';
@@ -1711,7 +1726,7 @@ const SCAN_COOLDOWN = 1000;
                     notificationType = 'info';
                     notificationMessage = `Item also found in Task(s): ${crossTaskDuplicates.join(', ')}`;
                     updateScanStatus('info', notificationMessage);
-                    vibrate([100, 100, 100]); // A softer vibration for info
+                    vibrate([100, 100, 100]); 
                 } else {
                     updateScanStatus('success', 'Scan successful! Ready for next QR code');
                     vibrate(200);
@@ -1761,11 +1776,11 @@ const SCAN_COOLDOWN = 1000;
             const task = tasksData.find(t => t.taskId === taskId);
             if (task && itemIndex >= 0 && itemIndex < task.items.length) {
                 if (confirm('Are you sure you want to delete this item?')) {
-                    const deletedItem = task.items.splice(itemIndex, 1)[0]; // Remove item
+                    const deletedItem = task.items.splice(itemIndex, 1)[0]; 
                     
-                    // NEW: Update `scannedOnOtherTasks` for other occurrences of this item
+                    // Update `scannedOnOtherTasks` for other occurrences of this item
                     tasksData.forEach(otherTask => {
-                        if (otherTask.taskId !== taskId) { // Only update other tasks
+                        if (otherTask.taskId !== taskId) { 
                             otherTask.items.forEach(otherItem => {
                                 if (otherItem.dimensi === deletedItem.dimensi &&
                                     otherItem.nomorLot === deletedItem.nomorLot &&
@@ -1781,7 +1796,7 @@ const SCAN_COOLDOWN = 1000;
 
                     saveTasksData();
                     renderItemsTable();
-                    renderCurrentTaskSummary(); // Update summary after deletion
+                    renderCurrentTaskSummary(); 
                     showNotification('info', 'Item deleted');
                     vibrate(50);
                 }
@@ -1877,7 +1892,7 @@ const SCAN_COOLDOWN = 1000;
 
             // Only add "All Scanned Items Combined" sheet if exporting all tasks
             if (!currentTask) { // If not currentTask, means we are in all tasks view
-                const allCombinedItems = []; // Renamed to avoid confusion with `allItems` array
+                const allCombinedItems = []; 
                 tasksData.forEach(task => {
                     task.items.forEach(item => {
                         allCombinedItems.push({
@@ -1895,7 +1910,7 @@ const SCAN_COOLDOWN = 1000;
                     });
                 });
 
-                if (allCombinedItems.length > 0) { // Only add if there are items
+                if (allCombinedItems.length > 0) { 
                     const wsAllItems = XLSX.utils.json_to_sheet(allCombinedItems);
                     const wscolsAllItems = [
                         {wch: 15}, // Task ID
@@ -1940,7 +1955,7 @@ const SCAN_COOLDOWN = 1000;
                         showNotification('error', `Error sharing file: ${error.message}. File will be downloaded.`);
                         console.error('Error sharing file:', error);
                     }
-                    sharedSuccessfully = false; // Ensure this is false if sharing failed
+                    sharedSuccessfully = false; 
                 }
             } else {
                 showNotification('info', 'Web Share API for files not fully supported or unavailable. File will be downloaded.');
@@ -1966,14 +1981,14 @@ const SCAN_COOLDOWN = 1000;
 *Tujuan:* ${currentTask.purpose}
 *Keterangan:* ${currentTask.description || '-'}
 *Total Scanned Items:* ${currentTask.items.length}
-            `.trim(); // Added markdown for WhatsApp formatting
+            `.trim(); 
 
             if (navigator.share) {
                 try {
                     await navigator.share({
                         title: `QR Scan Task: ${currentTask.documentNumber}`,
                         text: taskSummaryText,
-                        url: window.location.href // Share current page URL
+                        url: window.location.href 
                     });
                     showNotification('success', 'Task summary shared successfully!');
                 } catch (error) {
