@@ -735,6 +735,7 @@ table td[style*="color: red"] {
         <tr>
           <th><input type="checkbox" onclick="toggleAll(this)" /></th>
           <th>No</th>
+          <th>UNIQ ID</th>
           <th>Tanggal</th>
           <th>Mesin</th>
           <th>Supplier</th>
@@ -929,6 +930,11 @@ table td[style*="color: red"] {
         </div>
          <div class="form-section">
           <div class="form-row">
+            <label for="uniqID">Label ID</label>
+            <input name="uniqId" id="uniqId" class="auto-input" readonly />
+          </div>
+
+          <div class="form-row">
             <span for="kode">OD STANDARD VMCPP = OD2.4</span>
           </div>
           <div class="form-row">
@@ -967,6 +973,11 @@ const rowsPerPage = 50;
     let currentEditIndex = -1;
     
     // ===== INITIALIZATION =====
+
+    function generateUniqID() {
+  return 'LBL-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
+}
+
     document.addEventListener('DOMContentLoaded', function() {
       updateLocalStorageAndMonitor();
       setupEventListeners();
@@ -1190,7 +1201,8 @@ const rowsPerPage = 50;
     // ===== DATA TABLE FUNCTIONS =====
     // Update the renderTable function
 function renderTable(filteredData = null) {
-  const data = filteredData || JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const data = filteredData || allData;
   const tbody = document.getElementById("dataBody");
   tbody.innerHTML = "";
 
@@ -1200,10 +1212,15 @@ function renderTable(filteredData = null) {
   const end = Math.min(start + rowsPerPage, totalRows);
   const paginatedData = data.slice(start, end);
 
-  const duplicateKodePacks = getDuplicateKodePacks(data);
+  // Cari indeks absolut untuk setiap item dalam hasil pencarian
+  const absoluteIndices = paginatedData.map(item => 
+    allData.findIndex(d => d.uniqId === item.uniqId)
+  );
+
+  const duplicateKodePacks = getDuplicateKodePacks(allData);
 
   paginatedData.forEach((item, index) => {
-    const absoluteIndex = start + index;
+    const absoluteIndex = absoluteIndices[index];
     const row = document.createElement("tr");
     let machineClass;
 
@@ -1225,6 +1242,7 @@ function renderTable(filteredData = null) {
     row.innerHTML = `
       <td><input type="checkbox" class="row-check" data-index="${absoluteIndex}" onchange="updateBulkActionsVisibility()"/></td>
       <td>${absoluteIndex + 1}</td>
+      <td>${item.uniqId || '-'}</td>
       <td>${formatTanggalIndonesia(item.tanggal)}</td>
       <td><span class="${machineClass}">${item.mesin}</span></td>
       <td>${item.supplier || 'INHOUSE'}</td> 
@@ -1253,12 +1271,12 @@ function updatePaginationControls(totalPages) {
     const button = document.createElement('button');
     button.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
     button.textContent = i;
-    button.onclick = () => {
-      currentPage = i;
-      renderTable(currentSearchTerm ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
-        Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
-      ) : null);
-    };
+   button.onclick = () => {
+  currentPage = i;
+  renderTable(currentSearchTerm ? data.filter(item =>
+    Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
+  ) : null);
+};
     topPageNumbers.appendChild(button);
   }
 
@@ -1290,12 +1308,11 @@ function prevPage() {
 }
 
 function nextPage() {
-  const data = currentSearchTerm
-    ? JSON.parse(localStorage.getItem(DATA_KEY)).filter(item =>
-        Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
-      )
-    : JSON.parse(localStorage.getItem(DATA_KEY)) || [];
-
+  const allData = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const data = currentSearchTerm ? 
+    allData.filter(item => Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)) : 
+    allData;
+  
   const totalPages = Math.ceil(data.length / rowsPerPage);
   if (currentPage < totalPages) {
     currentPage++;
@@ -1303,21 +1320,7 @@ function nextPage() {
   }
 }
 
-function prevPage() {
-  if (currentPage > 1) {
-    currentPage--;
-    renderTable();
-  }
-}
 
-function nextPage() {
-  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-  const totalPages = Math.ceil(data.length / rowsPerPage);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderTable();
-  }
-}
 
 // ===== STORAGE MONITORING =====
 // ===== UPDATE STORAGE USAGE =====
@@ -1399,62 +1402,77 @@ function updateLocalStorageAndMonitor() {
       }
     }
     
-    function duplicateData(index) {
-      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-      const duplicatedItem = { ...data[index] };
+   function duplicateData(index) {
+  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const duplicatedItem = { ...data[index] };
 
-     // Gunakan tanggal shift saat ini untuk data duplikat
+  // Tambahkan UNIQ ID baru untuk data duplikat
+  duplicatedItem.uniqId = generateUniqID();
+
+  // Gunakan tanggal shift saat ini untuk data duplikat
   duplicatedItem.tanggal = calculateShiftDate();
+
   // Hapus tanggalManual jika ada di duplikat, agar tidak menimpa tanggal shift
   if (duplicatedItem.tanggalManual) {
     delete duplicatedItem.tanggalManual;
   }
 
-      data.push(duplicatedItem);
-      localStorage.setItem(DATA_KEY, JSON.stringify(data));
-      updateLocalStorageAndMonitor();;
-    }
+  data.push(duplicatedItem);
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  updateLocalStorageAndMonitor();
+}
     
     // ===== FORM HANDLING =====
     function handleFormSubmit(e) {
-      e.preventDefault();
-      
-      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
-      const formData = new FormData(form);
-      const newData = {};
-      
-      // Ambil semua data dari form kecuali tanggalManual
-      formData.forEach((val, key) => {
-        if (key !== 'tanggalManual') {
-          newData[key] = val;
-        }
-      });
-
-      // Secara eksplisit tambahkan tanggalManual jika ada nilainya
-      if (form.tanggalManual.value) {
-        newData.tanggalManual = form.tanggalManual.value;
-      } else {
-        // Jika tanggalManual kosong, pastikan tidak ada properti ini
-        delete newData.tanggalManual; 
-      }
-
-      // Tetapkan tanggal utama data: jika tanggalManual ada, gunakan itu, jika tidak, gunakan tanggalShift
-      newData.tanggal = form.tanggalManual.value || form.tanggalShift.value;
+  e.preventDefault();
+  const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const formData = new FormData(form);
+  const newData = {};
   
-      
-      if (currentEditIndex >= 0 && currentEditIndex < data.length) {
-        data[currentEditIndex] = newData;
-      } else {
-        data.push(newData);
-      }
-      
-      localStorage.setItem(DATA_KEY, JSON.stringify(data));
-      closeModal();
-      updateLocalStorageAndMonitor();
-        // Reset form termasuk tanggal manual
-      form.reset();
-      form.tanggalManual.value = ''; // Pastikan tanggalManual direset
+  // Ambil semua data dari form kecuali tanggalManual
+  formData.forEach((val, key) => {
+    if (key !== 'tanggalManual') {
+      newData[key] = val;
     }
+  });
+
+  // Tambahkan UNIQ ID jika belum ada
+  if (!newData.uniqId) {
+    newData.uniqId = generateUniqID(); // Fungsi pembuat UNIQ ID
+  }
+
+  // Secara eksplisit tambahkan tanggalManual jika ada nilainya
+  if (form.tanggalManual.value) {
+    newData.tanggalManual = form.tanggalManual.value;
+  } else {
+    delete newData.tanggalManual; 
+  }
+
+  // Tetapkan tanggal utama data: jika tanggalManual ada, gunakan itu, jika tidak, gunakan tanggalShift
+  newData.tanggal = form.tanggalManual.value || form.tanggalShift.value;
+
+  if (currentEditIndex >= 0 && currentEditIndex < data.length) {
+    data[currentEditIndex] = newData;
+  } else {
+    data.push(newData);
+  }
+
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  closeModal();
+  if (currentSearchTerm) {
+    const filteredData = data.filter(item => 
+      Object.values(item).join(' ').toLowerCase().includes(currentSearchTerm)
+    );
+    renderTable(filteredData);
+  } else {
+    renderTable();
+  }
+  
+  showToast("Data berhasil disimpan", "success");
+  updateLocalStorageAndMonitor();
+  form.reset();
+  form.tanggalManual.value = '';
+}
     
     // ===== PREVIEW FUNCTIONS =====
     function previewSelected() {
@@ -1564,6 +1582,7 @@ function updateLocalStorageAndMonitor() {
               <td colspan="5" style="padding:2px; font-size:11px;">${item.keterangan || '-'}</td>
             </tr>
           </table>
+          <strong><text style="font-size: 9px"">${item.uniqId}<text></strong>
         </div>`;
     }
     
@@ -1584,6 +1603,7 @@ function updateLocalStorageAndMonitor() {
 
       const worksheetData = data.map((item, index) => ({
         No: index + 1,
+        'UNIQ ID': item.uniqId,
         Tanggal:new Date(item.tanggal).toLocaleDateString('en-GB'),
         Mesin: item.mesin,
         Supplier: item.supplier || 'INHOUSE',
@@ -1630,44 +1650,54 @@ function updateLocalStorageAndMonitor() {
 
     // ===== FUNGSI TANGGAL SHIFT =====
     function calculateShiftDate() {
-  const now = new Date(); // Waktu saat ini
+  const now = new Date();
   const currentHour = now.getHours();
+  const shiftDate = new Date(now); // Buat copy dari tanggal sekarang
 
-  let shiftDate;
-
+  // Shift malam (19:00 - 07:00) menggunakan tanggal hari sebelumnya
   if (currentHour < 7) {
-    // Jika jam < 07:00, gunakan tanggal kemarin
-    shiftDate = new Date(now);
-    shiftDate.setDate(now.getDate() - 1); // Hanya dikurangi 1 hari
-  } else {
-    // Jika >= 07:00, gunakan tanggal hari ini
-    shiftDate = new Date(now);
+    shiftDate.setDate(now.getDate() - 1); // Hanya kurangi 1 hari
   }
+  // Shift pagi/siang tetap menggunakan tanggal sekarang
 
-  return shiftDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+  return shiftDate.toISOString().split('T')[0];
 }
 
     // Search function
     let currentSearchTerm = '';
 
-    function searchData() {
-      currentSearchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+   function searchData() {
+  const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+  currentSearchTerm = searchTerm;
+  
+  if (!searchTerm) {
+    currentPage = 1;
+    renderTable();
+    return;
+  }
 
-      if (currentSearchTerm.trim() === '') {
-        currentPage = 1;
-        renderTable(); // Tampilkan semua data
-        return;
-      }
+  const data = JSON.parse(localStorage.getItem(DATA_KEY) || []);
+  const filteredData = data.filter(item => {
+    // Cari di semua field yang relevan
+    const searchFields = [
+      item.supplier || '',
+      item.spk,
+      item.lot,
+      item.turunan,
+      item.jenis,
+      item.kode,
+      item.kodePack,
+      item.subKode,
+      formatTanggalIndonesia(item.tanggal),
+      getMonthName(item.tanggal)
+    ].join(' ').toLowerCase();
+    
+    return searchFields.includes(searchTerm);
+  });
 
-      const filteredData = data.filter(item => {
-        const values = Object.values(item).join(' ').toLowerCase();
-        return values.includes(currentSearchTerm);
-      });
-
-      currentPage = 1;
-      renderTable(filteredData); // Render tabel dengan data filter
-    }
+  currentPage = 1;
+  renderTable(filteredData);
+}
 
     function deleteSelected() {
       const checkboxes = document.querySelectorAll('.row-check:checked');
