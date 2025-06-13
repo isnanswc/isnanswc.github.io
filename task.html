@@ -39,13 +39,13 @@
         // Global Firebase variables (will be populated by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-             apiKey: "AIzaSyCXqjFa7EUhysR75cXO_CT_YrN3XGdWgaU",
-  authDomain: "adiwarna-app.firebaseapp.com",
-  projectId: "adiwarna-app",
-  storageBucket: "adiwarna-app.firebasestorage.app",
-  messagingSenderId: "862969169952",
-  appId: "1:862969169952:web:9002823f6bb107c2a69445",
-  measurementId: "G-LZQHYV0WX8"
+               apiKey: "AIzaSyCXqjFa7EUhysR75cXO_CT_YrN3XGdWgaU",
+    authDomain: "adiwarna-app.firebaseapp.com",
+    projectId: "adiwarna-app",
+    storageBucket: "adiwarna-app.firebasestorage.app",
+    messagingSenderId: "862969169952",
+    appId: "1:862969169952:web:9002823f6bb107c2a69445",
+    measurementId: "G-LZQHYV0WX8"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -1211,6 +1211,7 @@
         // --- Authentication & User Management ---
         async function initAuth() {
             window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
+                console.log("Auth state changed:", user);
                 if (user) {
                     // User is signed in. Get user data from Firestore.
                     const userDoc = await window.firestoreGetDoc(window.firestoreDoc(await getCollectionRef('users'), user.uid));
@@ -1257,44 +1258,40 @@
                 }
             } else {
                  // Or sign in anonymously if no token, for initial access setup
-                 try {
-                     await window.firebaseSignInAnonymously(window.firebaseAuth);
-                     console.log("Signed in anonymously.");
-                 } catch (error) {
-                     console.error("Anonymous sign-in failed:", error);
-                 }
+                console.log("Anonymous sign-in disabled for now to allow real user login.");
             }
         }
 
         async function ensureSuperadminExists() {
-            const usersColRef = await getCollectionRef('users');
-            const q = window.firestoreQuery(usersColRef, window.firestoreWhere('email', '==', SUPERADMIN_EMAIL));
-            const querySnapshot = await window.firestoreGetDocs(q);
+  const usersColRef = await getCollectionRef('users');
+  const q = window.firestoreQuery(usersColRef, window.firestoreWhere('email', '==', SUPERADMIN_EMAIL));
+  const querySnapshot = await window.firestoreGetDocs(q);
 
-            if (querySnapshot.empty) {
-                console.log("Superadmin doesn't exist, creating default superadmin...");
-                try {
-                    // Create Auth user with a temporary password (will be reset by user via forgot password flow)
-                    const tempPassword = generateRandomPassword(12);
-                    const tempUserCredential = await window.firebaseCreateUserWithEmailAndPassword(window.firebaseAuth, SUPERADMIN_EMAIL, tempPassword);
-                    const superadminData = {
-                        uid: tempUserCredential.user.uid,
-                        username: 'superadmin',
-                        email: SUPERADMIN_EMAIL,
-                        userName: 'Default Superadmin',
-                        role: 'superadmin',
-                        scopeId: 'global', // Default scope for superadmin
-                        keterangan: 'Default system administrator',
-                        isDeleted: false
-                    };
-                    await setDocWithId('users', tempUserCredential.user.uid, superadminData); // Create Firestore profile
-                    console.log('Default superadmin created successfully. Password:', tempPassword); // Log password for initial setup
-                    // For a real app, this password should be securely transmitted, not logged.
-                } catch (error) {
-                    console.error("Error creating default superadmin:", error);
-                }
-            }
-        }
+  if (querySnapshot.empty) {
+    console.log("Superadmin doesn't exist, creating default superadmin...");
+    try {
+      const tempPassword = generateRandomPassword(12);
+      const tempUserCredential = await window.firebaseCreateUserWithEmailAndPassword(
+        window.firebaseAuth,
+        SUPERADMIN_EMAIL,
+        tempPassword
+      );
+      const superadminData = {
+        uid: tempUserCredential.user.uid,
+        email: SUPERADMIN_EMAIL,
+        username: 'superadmin',
+        role: 'superadmin',
+        scopeId: 'global',
+        isDeleted: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await setDocWithId('users', tempUserCredential.user.uid, superadminData);
+      console.log('Default superadmin created successfully. Password:', tempPassword);
+    } catch (error) {
+      console.error("Error creating default superadmin:", error);
+    }
+  }
+}
 
         async function handleLogin(event) {
             event.preventDefault();
@@ -1304,6 +1301,7 @@
                 await window.firebaseSignInWithEmailAndPassword(window.firebaseAuth, email, password);
                 showNotification('success', 'Login berhasil!');
                 loginForm.reset();
+                showView('task-list-view');
             } catch (error) {
                 console.error("Login error:", error);
                 showNotification('error', `Login gagal: ${error.message}`);
