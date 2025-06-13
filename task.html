@@ -588,6 +588,9 @@
             <button class="nav-btn danger" id="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Logout (<span id="current-username"></span>)
             </button>
+            <button id="back-to-main-btn" class="nav-btn secondary hidden">
+            <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
+            </button>
         </div>
     </nav>
 
@@ -1492,6 +1495,25 @@
                 searchInput.removeEventListener('input', filterScopesTable);
                 searchInput.addEventListener('input', filterAuditTable);
             }
+
+            const views = document.querySelectorAll('[id$="-view"]');
+  views.forEach(view => view.classList.add('hidden'));
+
+  // Tampilkan view yang diminta
+  const targetView = document.getElementById(viewId);
+  if (targetView) {
+    targetView.classList.remove('hidden');
+  }
+
+  // Tampilkan/menghilangkan tombol kembali
+  const backBtn = document.getElementById('back-to-main-btn');
+  if (backBtn) {
+    if (viewId !== 'task-list-view') {
+      backBtn.classList.remove('hidden');
+    } else {
+      backBtn.classList.add('hidden');
+    }
+  }
         }
 
         // --- Event Listeners Setup ---
@@ -1586,6 +1608,11 @@
                     handleTableSort(tableId, column);
                 });
             });
+
+            document.getElementById('back-to-main-btn').addEventListener('click', () => {
+  showView('task-list-view'); // Arahkan ke halaman utama
+  navTitle.textContent = 'Daftar Tugas'; // Sesuaikan judul navigasi
+});
         }
 
         function handleTableSort(tableId, column) {
