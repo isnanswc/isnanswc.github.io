@@ -1053,9 +1053,11 @@
         const SUPERADMIN_EMAIL = 'isnanswc@gmail.com';
 
         // --- Utility Functions ---
-        function generateUniqueId(prefix = 'ID-') {
-            return prefix + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
-        }
+      function generateUniqueId(prefix = '') {
+  const timestamp = Date.now().toString(36); // Convert timestamp ke base36
+  const randomStr = Math.random().toString(36).substring(2, 7); // 5 karakter acak
+  return prefix + timestamp + randomStr;
+}
 
         function generateRandomPassword(length = 10) {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
@@ -1655,7 +1657,9 @@
             const now = new Date();
             taskIdInput.value = generateUniqueId('TASK-');
             taskTimestampInput.value = now.toLocaleString();
-            addTaskForm.reset(); // Clear previous input
+             taskDocumentNumberInput.value = '';
+  taskPurposeInput.value = '';
+           
             populateTaskScopeSelects(); // Populate scopes dropdown
             addTaskModal.classList.remove('hidden');
         }
@@ -1685,6 +1689,7 @@
                 scopeId: scopeId,
                 createdByUserId: currentUser.uid,
                 createdByUserDisplayName: currentUser.userName || currentUser.email,
+                createdAt: window.serverTimestamp(),
                 items: [] // No items are stored directly in task anymore
             };
 
@@ -1692,7 +1697,9 @@
             if (result) {
                 showNotification('success', 'Tugas baru berhasil ditambahkan!');
                 addTaskModal.classList.add('hidden');
-            }
+            } else {
+    showNotification('error', 'Gagal menambahkan tugas.');
+  }
         }
 
         async function openEditTaskModal(taskId) {
