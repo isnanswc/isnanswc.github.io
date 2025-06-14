@@ -516,9 +516,41 @@
                 width: 50%; /* lg:w-1/2 */
             }
         }
+
+        @keyframes loading-bar {
+            from { width: 0%; }
+            to { width: 100%; }
+            }
+
+            #loading-progress-bar.animate-pulse {
+            animation: loading-bar 2s ease-out forwards;
+            }
+
+            /* Untuk pembungkus teks perubahan */
+            .change-cell {
+            max-height: 100px; /* Atur tinggi maksimal */
+            overflow-y: auto;  /* Tambahkan scroll vertikal jika konten melebihi tinggi */
+            white-space: pre-line; /* Agar teks terlihat rapi dengan line break */
+            word-wrap: break-word;
+            }
+
+            /* Opsional: styling tambahan untuk tooltip saat hover */
+            .change-cell[title] {
+            cursor: help;
+            }
     </style>
 </head>
 <body>
+    <!-- Progress Bar -->
+<div id="loading-progress" class="hidden h-1 w-full bg-gray-200 overflow-hidden">
+  <div class="animate-pulse h-full w-0 bg-blue-500" id="loading-progress-bar"></div>
+</div>
+
+<!-- Offline Mode Alert -->
+<div id="offline-alert" class="hidden bg-yellow-100 text-yellow-800 p-3 text-center font-medium">
+  Anda sedang offline. Beberapa data mungkin tidak terbaru atau tidak tersedia.
+</div>
+
     <div class="modal-confirm hidden" id="custom-confirm-modal">
         <div class="modal-confirm-content">
             <p id="custom-confirm-message"></p>
@@ -539,7 +571,17 @@
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password:</label>
-                    <input type="password" id="login-password" placeholder="********" required class="w-full">
+                    <div class="relative">
+                    <input type="password" id="login-password" placeholder="********" required class="w-full pr-10">
+                    <button 
+                        type="button" 
+                        id="toggle-login-password" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        title="Lihat Password"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    </div>
                 </div>
                 <button type="submit" class="nav-btn primary w-full mt-4">Login</button>
             </form>
@@ -1052,6 +1094,79 @@
 
         const SUPERADMIN_EMAIL = 'isnanswc@gmail.com';
 
+        // === Progress Bar Control ===
+        function startLoading() {
+        const progressBar = document.getElementById('loading-progress-bar');
+        progressBar.style.width = '0%';
+        progressBar.classList.add('w-0', 'animate-pulse');
+        document.getElementById('loading-progress').classList.remove('hidden');
+        }
+
+        function updateLoadingProgress(percent) {
+        const progressBar = document.getElementById('loading-progress-bar');
+        progressBar.style.width = percent + '%';
+        }
+
+        function finishLoading() {
+        const progressBar = document.getElementById('loading-progress-bar');
+        progressBar.style.width = '100%';
+        setTimeout(() => {
+            document.getElementById('loading-progress').classList.add('hidden');
+            progressBar.style.width = '0%';
+        }, 300);
+        }
+
+        // === Offline/Online Detection ===
+        function setupNetworkStatus() {
+        const offlineAlert = document.getElementById('offline-alert');
+
+        function showOfflineAlert() {
+            offlineAlert.classList.remove('hidden');
+        }
+
+        function hideOfflineAlert() {
+            offlineAlert.classList.add('hidden');
+        }
+
+        window.addEventListener('online', () => {
+            hideOfflineAlert();
+        });
+
+        window.addEventListener('offline', () => {
+            showOfflineAlert();
+        });
+
+        // Initial check
+        if (!navigator.onLine) {
+            showOfflineAlert();
+        } else {
+            hideOfflineAlert();
+        }
+        }
+
+        // Panggil saat DOM siap
+        document.addEventListener("DOMContentLoaded", () => {
+        setupNetworkStatus();
+        });
+
+
+        // Toggle show/hide password pada login form
+
+        const toggleLoginPasswordBtn = document.getElementById('toggle-login-password');
+
+        if (toggleLoginPasswordBtn) {
+        toggleLoginPasswordBtn.addEventListener('click', () => {
+            const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            loginPasswordInput.setAttribute('type', type);
+            
+            // Ganti ikon mata
+            toggleLoginPasswordBtn.innerHTML = type === 'password' 
+            ? '<i class="fas fa-eye"></i>' 
+            : '<i class="fas fa-eye-slash"></i>';
+        });
+        }
+
+
         // --- Utility Functions ---
       function generateUniqueId(prefix = '') {
   const timestamp = Date.now().toString(36); // Convert timestamp ke base36
@@ -1098,10 +1213,12 @@
 
         // --- Firebase Firestore Operations ---
         async function getCollectionRef(collectionName) {
+            startLoading();
              return window.firestoreCollection(window.firestoreDb, `artifacts/${window.APP_ID}/public/data/${collectionName}`);
         }
 
         async function createDoc(collectionName, data) {
+            startLoading();
             try {
                 const colRef = await getCollectionRef(collectionName);
                 const docRef = await window.firestoreAddDoc(colRef, {
@@ -1120,6 +1237,7 @@
         }
 
         async function setDocWithId(collectionName, docId, data) {
+            startLoading();
             try {
                 const docRef = window.firestoreDoc(await getCollectionRef(collectionName), docId);
                 const docSnap = await window.firestoreGetDoc(docRef);
@@ -1147,6 +1265,7 @@
         }
 
         async function updateDocById(collectionName, docId, data) {
+            startLoading();
             try {
                 const docRef = window.firestoreDoc(await getCollectionRef(collectionName), docId);
                 const docSnap = await window.firestoreGetDoc(docRef);
@@ -1168,6 +1287,7 @@
         }
 
         async function softDeleteDoc(collectionName, docId) {
+            startLoading();
             try {
                 const docRef = window.firestoreDoc(await getCollectionRef(collectionName), docId);
                 const docSnap = await window.firestoreGetDoc(docRef);
@@ -1215,6 +1335,7 @@
 
         // --- Authentication & User Management ---
         async function initAuth() {
+            startLoading();
             window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
                 console.log("Auth state changed:", user);
                 if (user) {
@@ -1314,6 +1435,7 @@
         }
 
         async function handleLogout() {
+            startLoading();
             try {
                 await window.firebaseSignOut(window.firebaseAuth);
                 showNotification('info', 'Logout berhasil.');
@@ -1648,21 +1770,49 @@
         }
 
 
-        // --- Task List Functions ---
+       
+
         function openAddTaskModal() {
-            if (!currentUser) {
-                showNotification('error', 'Mohon login untuk menambah tugas.');
-                return;
-            }
-            const now = new Date();
+  if (!currentUser) {
+    showNotification('error', 'Mohon login untuk menambah tugas.');
+    return;
+  }
+
+  // Reset form
+  addTaskForm.reset();
+  taskScopeSelect.innerHTML = '<option value="">Pilih Scope</option>';
+ const now = new Date();
             taskIdInput.value = generateUniqueId('TASK-');
             taskTimestampInput.value = now.toLocaleString();
-             taskDocumentNumberInput.value = '';
-  taskPurposeInput.value = '';
-           
-            populateTaskScopeSelects(); // Populate scopes dropdown
-            addTaskModal.classList.remove('hidden');
-        }
+
+
+  // Populate scopes (hanya jika bukan normal_user atau untuk keperluan history)
+  if (window.allScopes && currentUser.role !== 'normal_user') {
+    window.allScopes.forEach(scope => {
+      if (!scope.isDeleted) {
+        const option = `<option value="${scope.id}">${scope.name}</option>`;
+        taskScopeSelect.insertAdjacentHTML('beforeend', option);
+      }
+    });
+  }
+
+  // Jika user normal_user, set scope otomatis
+  if (currentUser.role === 'normal_user' && currentUser.scopeId) {
+    const scope = window.allScopes.find(s => s.id === currentUser.scopeId);
+    if (scope) {
+      taskScopeSelect.innerHTML = `<option value="${scope.id}" selected>${scope.name}</option>`;
+    } else {
+      taskScopeSelect.innerHTML = `<option value="${currentUser.scopeId}" selected>${currentUser.scopeId}</option>`;
+    }
+    taskScopeSelect.disabled = true; // Tidak bisa diganti
+  } else {
+    taskScopeSelect.disabled = false;
+  }
+
+  // Tampilkan modal
+  addTaskModal.classList.remove('hidden');
+}
+
 
         async function handleAddTask(event) {
             event.preventDefault();
@@ -1770,6 +1920,7 @@
         }
 
         function renderTasksTable() {
+            startLoading();
             tasksTableBody.innerHTML = '';
             let tasksToDisplay = window.allTasks ? [...window.allTasks] : [];
 
@@ -2804,7 +2955,11 @@
                     <td>${log.entityId || '-'}</td>
                     <td>${log.userId || '-'}</td>
                     <td>${log.userName || '-'}</td>
-                    <td><div class="note-cell" title="${changesContent.replace(/<br>/g, '\n')}">${changesContent}</div></td>
+                    <td>
+                    <div class="change-cell" title="${changesContent.replace(/<br>/g, ' ')}">
+                        ${changesContent}
+                    </div>
+                    </td>
                 `;
                 auditTableBody.appendChild(row);
             });
@@ -3039,6 +3194,8 @@
             }
         }
 
+
+        
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', async () => {
             setupEventListeners();
