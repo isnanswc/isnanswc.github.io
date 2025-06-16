@@ -165,7 +165,7 @@
         .floating-btn {
             position: fixed;
             bottom: 1.5rem;
-            right: 1.5rem;
+            left: 1.5rem;
             width: 3.5rem;
             height: 3.5rem;
             border-radius: 9999px;
@@ -1400,7 +1400,7 @@
                         // This case might happen if we use `createUserWithEmailAndPassword` but the Firestore doc fails.
                         // For this app, all users should have a Firestore profile.
                         showNotification('error', 'User profile not found. Please contact support.');
-                        await window.firebaseSignOut(window.firebaseAuth); // Force sign out if no profile
+                        // await window.firebaseSignOut(window.firebaseAuth); // Force sign out if no profile
                     }
                 } else {
                     // User is signed out.
@@ -2747,17 +2747,31 @@ if (backBtn) {
                         keterangan,
                         isDeleted: false
                     };
-                    await setDocWithId('users', userCredential.user.uid, newUserData); // Use setDocWithId with auth UID
+                    try {
+                        await setDocWithId('users', userCredential.user.uid, newUserData);
+                    } catch (error) {
+                        console.error("Error saving to Firestore:", error);
+                        showNotification('error', 'Gagal menyimpan data pengguna ke database.');
+                        // JANGAN signOut di sini!
+                        return;
+                    }
                     showNotification('success', 'Pengguna baru berhasil ditambahkan!');
                 } catch (error) {
+                    userModal.classList.add('hidden'); // Tutup modal
                     console.error("Error adding new user:", error);
                     showNotification('error', `Gagal menambah pengguna: ${error.message}`);
                     return;
                 }
             }
-            userModal.classList.add('hidden');
-            userForm.reset();
-            currentEditUser = null;
+            try {
+                // Proses pembuatan akun dan simpan ke Firestore
+            } catch (error) {
+                showNotification('error', `Gagal menambah pengguna: ${error.message}`);
+            } finally {
+                userModal.classList.add('hidden'); // Tutup modal
+                userForm.reset(); // Reset form
+                currentEditUser = null;
+            }
         }
 
         async function deleteUser(userId) {
