@@ -89,7 +89,6 @@
             background-color: #f3f4f6; /* bg-gray-100 */
             color: #374151; /* text-gray-800 */
         }
-        /* PERBAIKAN: Menambahkan kelas .hidden yang digunakan oleh JavaScript */
         .hidden {
             display: none;
         }
@@ -194,7 +193,6 @@
             align-items: center;
             justify-content: center;
             z-index: 1100;
-            /* PERBAIKAN: Menghapus 'display: none'. Visibilitas dikontrol oleh kelas .hidden */
         }
         .modal-content {
             background-color: #ffffff;
@@ -439,7 +437,6 @@
             align-items: center;
             justify-content: center;
             z-index: 1200;
-            /* PERBAIKAN: Menghapus 'display: none'. Visibilitas dikontrol oleh kelas .hidden */
         }
         .modal-confirm-content {
             background-color: #ffffff;
@@ -526,7 +523,6 @@
             animation: loading-bar 2s ease-out forwards;
             }
 
-            /* Untuk pembungkus teks perubahan */
             .change-cell {
             max-height: 100px; /* Atur tinggi maksimal */
             overflow-y: auto;  /* Tambahkan scroll vertikal jika konten melebihi tinggi */
@@ -534,21 +530,64 @@
             word-wrap: break-word;
             }
 
-            /* Opsional: styling tambahan untuk tooltip saat hover */
             .change-cell[title] {
             cursor: help;
             }
+
+            .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            }
+
+            .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+            }
+
+        /** PERUBAHAN BARU: Style untuk status badge */
+        .status-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: white;
+            white-space: nowrap;
+        }
+        .status-open { background-color: #22c55e; } /* bg-green-500 */
+        .status-close { background-color: #ef4444; } /* bg-red-500 */
     </style>
 </head>
 <body>
-    <!-- Progress Bar -->
-<div id="loading-progress" class="hidden h-1 w-full bg-gray-200 overflow-hidden">
+    <div id="loading-progress" class="hidden h-1 w-full bg-gray-200 overflow-hidden">
   <div class="animate-pulse h-full w-0 bg-blue-500" id="loading-progress-bar"></div>
 </div>
 
-<!-- Offline Mode Alert -->
 <div id="offline-alert" class="hidden bg-yellow-100 text-yellow-800 p-3 text-center font-medium">
   Anda sedang offline. Beberapa data mungkin tidak terbaru atau tidak tersedia.
+</div>
+
+<div id="loading-screen" class="loading-screen">
+  <div class="spinner"></div>
+  <p>Mohon tunggu, sedang memuat data...</p>
 </div>
 
     <div class="modal-confirm hidden" id="custom-confirm-modal">
@@ -611,10 +650,7 @@
     <nav class="sticky-nav hidden" id="main-nav">
         <h1 id="nav-title" class="text-xl font-semibold">Task List</h1>
         <div class="nav-actions">
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Cari..." class="px-3 py-1.5 rounded-full border-none w-40 text-sm focus:ring-blue-500 focus:border-blue-500">
-                <i class="fas fa-search search-icon absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-xs"></i>
-            </div>
+           
             <button class="nav-btn info hidden" id="export-btn">
                 <i class="fas fa-file-excel"></i> Export
             </button>
@@ -633,6 +669,10 @@
             <button id="back-to-main-btn" class="nav-btn secondary hidden">
             <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
             </button>
+             <div class="search-container">
+                <input type="text" id="search-input" placeholder="Cari..." class="px-3 py-1.5 rounded-full border-none w-40 text-sm focus:ring-blue-500 focus:border-blue-500">
+               
+            </div>
         </div>
     </nav>
 
@@ -652,7 +692,7 @@
                             <th>Keterangan</th>
                             <th class="sortable" data-sort="createdByUserDisplayName">Dibuat Oleh</th>
                             <th class="sortable" data-sort="scopeId">Scope</th>
-                            <th class="w-20">Total Item</th>
+                            <th class="sortable" data-sort="status">Status</th>  <th class="w-20">Total Item</th>
                             <th class="w-32">Aksi</th>
                         </tr>
                     </thead>
@@ -1321,6 +1361,9 @@
                 }
             }
 
+            // Don't log empty changes
+            if (Object.keys(changes).length === 0) return;
+
             await window.firestoreAddDoc(window.firestoreCollection(window.firestoreDb, `artifacts/${window.APP_ID}/public/data/audit`), {
                 action,
                 entityType,
@@ -1337,6 +1380,7 @@
         async function initAuth() {
             startLoading();
             window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
+                const loadingScreen = document.getElementById('loading-screen');
                 console.log("Auth state changed:", user);
                 if (user) {
                     // User is signed in. Get user data from Firestore.
@@ -1371,6 +1415,7 @@
                     showView('login-view');
                     mainNav.classList.add('hidden');
                 }
+                 loadingScreen.style.display = 'none';
             });
 
             // Attempt initial sign-in if custom token is available from Canvas
@@ -1409,7 +1454,7 @@
         role: 'superadmin',
         scopeId: 'global',
         isDeleted: false,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: window.serverTimestamp()
       };
       await setDocWithId('users', tempUserCredential.user.uid, superadminData);
       console.log('Default superadmin created successfully. Password:', tempPassword);
@@ -1577,9 +1622,14 @@
             } else if (viewId === 'item-list-view') {
                 if (currentTask) {
                     navTitle.textContent = `Tugas: ${currentTask.documentNumber}`;
-                    floatingScanBtn.classList.remove('hidden'); // Show scan button for items
-                    shareBtn.classList.remove('hidden'); // Show share button for item view
-                    exportBtn.classList.remove('hidden'); // Show export button for current task
+                     /** PERUBAHAN BARU: Visibilitas tombol scan tergantung status tugas */
+                    if (currentTask.status === 'open') {
+                        floatingScanBtn.classList.remove('hidden');
+                    } else {
+                        floatingScanBtn.classList.add('hidden');
+                    }
+                    shareBtn.classList.remove('hidden'); 
+                    exportBtn.classList.remove('hidden'); 
                 }
                 renderItemsTable();
                 renderCurrentTaskSummary();
@@ -1630,14 +1680,14 @@
   }
 
   // Tampilkan/menghilangkan tombol kembali
-  const backBtn = document.getElementById('back-to-main-btn');
-  if (backBtn) {
-    if (viewId !== 'task-list-view') {
-      backBtn.classList.remove('hidden');
-    } else {
-      backBtn.classList.add('hidden');
-    }
+const backBtn = document.getElementById('back-to-main-btn');
+if (backBtn) {
+  if (viewId === 'task-list-view' || viewId === 'item-list-view') {
+    backBtn.classList.add('hidden'); // Sembunyikan tombol di task list & item list
+  } else {
+    backBtn.classList.remove('hidden');
   }
+}
         }
 
         // --- Event Listeners Setup ---
@@ -1734,9 +1784,9 @@
             });
 
             document.getElementById('back-to-main-btn').addEventListener('click', () => {
-  showView('task-list-view'); // Arahkan ke halaman utama
-  navTitle.textContent = 'Daftar Tugas'; // Sesuaikan judul navigasi
-});
+              showView('task-list-view'); // Arahkan ke halaman utama
+              navTitle.textContent = 'Daftar Tugas'; // Sesuaikan judul navigasi
+            });
         }
 
         function handleTableSort(tableId, column) {
@@ -1769,49 +1819,46 @@
             else if (tableId === 'audit-table') renderAuditTable();
         }
 
-
-       
-
         function openAddTaskModal() {
-  if (!currentUser) {
-    showNotification('error', 'Mohon login untuk menambah tugas.');
-    return;
-  }
+          if (!currentUser) {
+            showNotification('error', 'Mohon login untuk menambah tugas.');
+            return;
+          }
 
-  // Reset form
-  addTaskForm.reset();
-  taskScopeSelect.innerHTML = '<option value="">Pilih Scope</option>';
- const now = new Date();
-            taskIdInput.value = generateUniqueId('TASK-');
-            taskTimestampInput.value = now.toLocaleString();
+          // Reset form
+          addTaskForm.reset();
+          taskScopeSelect.innerHTML = '<option value="">Pilih Scope</option>';
+         const now = new Date();
+                    taskIdInput.value = generateUniqueId('TASK-');
+                    taskTimestampInput.value = now.toLocaleString();
 
 
-  // Populate scopes (hanya jika bukan normal_user atau untuk keperluan history)
-  if (window.allScopes && currentUser.role !== 'normal_user') {
-    window.allScopes.forEach(scope => {
-      if (!scope.isDeleted) {
-        const option = `<option value="${scope.id}">${scope.name}</option>`;
-        taskScopeSelect.insertAdjacentHTML('beforeend', option);
-      }
-    });
-  }
+          // Populate scopes (hanya jika bukan normal_user atau untuk keperluan history)
+          if (window.allScopes && currentUser.role !== 'normal_user') {
+            window.allScopes.forEach(scope => {
+              if (!scope.isDeleted) {
+                const option = `<option value="${scope.id}">${scope.name}</option>`;
+                taskScopeSelect.insertAdjacentHTML('beforeend', option);
+              }
+            });
+          }
 
-  // Jika user normal_user, set scope otomatis
-  if (currentUser.role === 'normal_user' && currentUser.scopeId) {
-    const scope = window.allScopes.find(s => s.id === currentUser.scopeId);
-    if (scope) {
-      taskScopeSelect.innerHTML = `<option value="${scope.id}" selected>${scope.name}</option>`;
-    } else {
-      taskScopeSelect.innerHTML = `<option value="${currentUser.scopeId}" selected>${currentUser.scopeId}</option>`;
-    }
-    taskScopeSelect.disabled = true; // Tidak bisa diganti
-  } else {
-    taskScopeSelect.disabled = false;
-  }
+          // Jika user normal_user, set scope otomatis
+          if (currentUser.role === 'normal_user' && currentUser.scopeId) {
+            const scope = window.allScopes.find(s => s.id === currentUser.scopeId);
+            if (scope) {
+              taskScopeSelect.innerHTML = `<option value="${scope.id}" selected>${scope.name}</option>`;
+            } else {
+              taskScopeSelect.innerHTML = `<option value="${currentUser.scopeId}" selected>${currentUser.scopeId}</option>`;
+            }
+            taskScopeSelect.disabled = true; // Tidak bisa diganti
+          } else {
+            taskScopeSelect.disabled = false;
+          }
 
-  // Tampilkan modal
-  addTaskModal.classList.remove('hidden');
-}
+          // Tampilkan modal
+          addTaskModal.classList.remove('hidden');
+        }
 
 
         async function handleAddTask(event) {
@@ -1832,30 +1879,38 @@
             }
 
             const newTaskData = {
-                id: taskId, // Use custom ID
+                id: taskId,
                 documentNumber: documentNumber,
                 purpose: purpose,
                 description: description,
                 scopeId: scopeId,
+                status: 'open', /** PERUBAHAN BARU: Status default saat tugas dibuat */
                 createdByUserId: currentUser.uid,
                 createdByUserDisplayName: currentUser.userName || currentUser.email,
                 createdAt: window.serverTimestamp(),
-                items: [] // No items are stored directly in task anymore
+                items: []
             };
 
-            const result = await setDocWithId('tasks', taskId, newTaskData); // Use setDocWithId to use custom ID
+            const result = await setDocWithId('tasks', taskId, newTaskData);
             if (result) {
                 showNotification('success', 'Tugas baru berhasil ditambahkan!');
                 addTaskModal.classList.add('hidden');
             } else {
-    showNotification('error', 'Gagal menambahkan tugas.');
-  }
+                showNotification('error', 'Gagal menambahkan tugas.');
+            }
         }
 
         async function openEditTaskModal(taskId) {
             const taskDoc = await window.firestoreGetDoc(window.firestoreDoc(await getCollectionRef('tasks'), taskId));
             if (taskDoc.exists()) {
                 const taskData = { id: taskDoc.id, ...taskDoc.data() };
+
+                /** PERUBAHAN BARU: Cek status sebelum mengedit */
+                if (taskData.status === 'close') {
+                    showNotification('error', 'Tugas yang sudah ditutup tidak dapat diedit.');
+                    return;
+                }
+
                 currentTask = taskData; // Set currentTask to the task being edited
                 editTaskIdInput.value = taskData.id;
                 editTaskTimestampInput.value = taskData.createdAt ? new Date(taskData.createdAt.toDate()).toLocaleString() : 'N/A';
@@ -1897,14 +1952,20 @@
         }
 
         async function deleteTask(taskId) {
+            const taskToDelete = window.allTasks.find(t => t.id === taskId);
+            if (!taskToDelete) {
+                showNotification('error', 'Tugas tidak ditemukan.');
+                return;
+            }
+
+            /** PERUBAHAN BARU: Cek status sebelum menghapus */
+            if (taskToDelete.status === 'close') {
+                showNotification('error', 'Tugas yang sudah ditutup tidak dapat dihapus. Buka kembali untuk menghapus.');
+                return;
+            }
+
             const confirm = await showConfirm('Apakah Anda yakin ingin menghapus tugas ini? Ini akan juga menghapus semua item di dalamnya (soft delete).');
             if (confirm) {
-                const taskToDelete = window.allTasks.find(t => t.id === taskId);
-                if (!taskToDelete) {
-                    showNotification('error', 'Tugas tidak ditemukan.');
-                    return;
-                }
-
                 // Soft delete task
                 await softDeleteDoc('tasks', taskId);
 
@@ -1915,7 +1976,6 @@
                 }
 
                 showNotification('info', 'Tugas dan item terkait berhasil dihapus (soft delete).');
-                // No need to manually update window.allTasks/allItems here, onSnapshot will handle it.
             }
         }
 
@@ -1924,7 +1984,6 @@
             tasksTableBody.innerHTML = '';
             let tasksToDisplay = window.allTasks ? [...window.allTasks] : [];
 
-            // Apply filtering
             const searchTerm = searchInput.value.toLowerCase();
             if (searchTerm) {
                 tasksToDisplay = tasksToDisplay.filter(task => {
@@ -1932,25 +1991,26 @@
                             task.purpose?.toLowerCase().includes(searchTerm) ||
                             task.description?.toLowerCase().includes(searchTerm) ||
                             task.createdByUserDisplayName?.toLowerCase().includes(searchTerm) ||
+                            (task.status || 'open').toLowerCase().includes(searchTerm) || /** PERUBAHAN BARU */
                             (window.allScopes?.find(s => s.id === task.scopeId)?.name || task.scopeId).toLowerCase().includes(searchTerm));
                 });
             }
 
             if (tasksToDisplay.length === 0) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="9" class="text-center py-4">${searchTerm ? 'Tidak ada tugas yang cocok dengan pencarian.' : 'Tidak ada tugas tersedia. Klik "Tambah Tugas Baru" untuk membuat satu.'}</td>`;
+                /** PERUBAHAN BARU: colspan diubah menjadi 10 */
+                row.innerHTML = `<td colspan="10" class="text-center py-4">${searchTerm ? 'Tidak ada tugas yang cocok.' : 'Tidak ada tugas tersedia.'}</td>`;
                 tasksTableBody.appendChild(row);
                 return;
             }
 
-            // Apply sorting for tasks data
             if (currentSort.table === 'tasks-table' && currentSort.column) {
                  tasksToDisplay.sort((a, b) => {
                     let valA, valB;
                     if (currentSort.column === 'createdAt') {
                         valA = a.createdAt ? a.createdAt.toDate().getTime() : 0;
                         valB = b.createdAt ? b.createdAt.toDate().getTime() : 0;
-                    } else if (currentSort.column === 'totalItems') { // Placeholder for calculated field
+                    } else if (currentSort.column === 'totalItems') {
                         valA = window.allItems.filter(item => item.taskId === a.id).length;
                         valB = window.allItems.filter(item => item.taskId === b.id).length;
                     }
@@ -1972,6 +2032,26 @@
                 const totalItems = window.allItems ? window.allItems.filter(item => item.taskId === task.id && !item.isDeleted).length : 0;
                 const scopeName = window.allScopes ? (window.allScopes.find(s => s.id === task.scopeId)?.name || task.scopeId) : task.scopeId;
 
+                /** PERUBAHAN BARU: Logika untuk status dan tombol aksi dinamis */
+                const isClosed = task.status === 'close';
+                const statusBadge = isClosed
+                    ? '<span class="status-badge status-close">Close</span>'
+                    : '<span class="status-badge status-open">Open</span>';
+                
+                let actionButtons = '';
+                if (isClosed) {
+                    if (userRole === 'superadmin') {
+                        actionButtons += `<button onclick="window.toggleTaskStatus('${task.id}')" class="text-green-600 hover:text-green-800"><i class="fas fa-lock-open"></i> Buka Ulang</button>`;
+                    }
+                } else {
+                    actionButtons += `<button onclick="window.openEditTaskModal('${task.id}')"><i class="fas fa-edit"></i> Edit</button>`;
+                    actionButtons += `<button onclick="window.openScannerForTask('${task.id}')"><i class="fas fa-qrcode"></i> Tambah Item</button>`;
+                    actionButtons += `<button onclick="window.deleteTask('${task.id}')" class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i> Hapus</button>`;
+                    if (userRole === 'superadmin') {
+                        actionButtons += `<button onclick="window.toggleTaskStatus('${task.id}')" class="text-yellow-600 hover:text-yellow-800"><i class="fas fa-lock"></i> Tutup Tugas</button>`;
+                    }
+                }
+
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td class="date-cell">${dateStr}</td>
@@ -1980,6 +2060,7 @@
                     <td class="note-cell" title="${task.description || ''}">${task.description || '-'}</td>
                     <td>${task.createdByUserDisplayName || '-'}</td>
                     <td>${scopeName}</td>
+                    <td>${statusBadge}</td>
                     <td>${totalItems}</td>
                     <td>
                         <button class="nav-btn info text-xs p-1" onclick="window.viewTaskDetail('${task.id}')">
@@ -1988,15 +2069,7 @@
                         <div class="action-menu ml-1 inline-block">
                             <button class="action-btn text-base">⋯</button>
                             <div class="action-dropdown">
-                                <button onclick="window.openEditTaskModal('${task.id}')">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button onclick="window.openScannerForTask('${task.id}')">
-                                    <i class="fas fa-qrcode"></i> Tambah Item
-                                </button>
-                                <button onclick="window.deleteTask('${task.id}')" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash-alt"></i> Hapus
-                                </button>
+                                ${actionButtons}
                             </div>
                         </div>
                     </td>
@@ -2006,7 +2079,6 @@
         }
 
         function filterTasksTable() {
-            // Re-rendering is now the primary method for filtering
             renderTasksTable();
         }
 
@@ -2025,6 +2097,11 @@
         function openScannerForTask(taskId) {
             const selectedTask = window.allTasks.find(task => task.id === taskId);
             if (selectedTask) {
+                /** PERUBAHAN BARU: Cek status sebelum scan */
+                if (selectedTask.status === 'close') {
+                    showNotification('error', 'Tidak dapat menambah item ke tugas yang sudah ditutup.');
+                    return;
+                }
                 currentTask = { ...selectedTask, items: window.allItems.filter(item => item.taskId === selectedTask.id && !item.isDeleted) };
                 openScanner();
                 renderRecentScans();
@@ -2091,6 +2168,10 @@
             const dateStr = date ? date.toLocaleString() : '-';
             const totalItems = window.allItems ? window.allItems.filter(item => item.taskId === currentTask.id && !item.isDeleted).length : 0;
             const scopeName = window.allScopes ? (window.allScopes.find(s => s.id === currentTask.scopeId)?.name || currentTask.scopeId) : currentTask.scopeId;
+            
+            /** PERUBAHAN BARU: Menambahkan tampilan status di ringkasan */
+            const statusText = currentTask.status === 'close' ? 'Ditutup (Closed)' : 'Terbuka (Open)';
+            const statusColor = currentTask.status === 'close' ? 'text-red-600' : 'text-green-600';
 
             let currentSelectedSummaryType = 'roll';
             const existingSelect = document.getElementById('summary-type-select');
@@ -2107,6 +2188,7 @@
                 <p><strong>Keterangan:</strong> ${currentTask.description || '-'}</p>
                 <p><strong>Dibuat Oleh:</strong> ${currentTask.createdByUserDisplayName || '-'}</p>
                 <p><strong>Scope:</strong> ${scopeName}</p>
+                <p><strong>Status Tugas:</strong> <span class="font-bold ${statusColor}">${statusText}</span></p>
                 <p><strong>Total Item Ter-scan:</strong> ${totalItems}</p>
                 <div class="summary-control-group flex items-center gap-2 mt-3 pt-2 border-t border-gray-200">
                     <label for="summary-type-select" class="text-sm font-medium text-gray-700">Tipe Ringkasan:</label>
@@ -2151,7 +2233,6 @@
             tableBody.innerHTML = '';
             let itemsToDisplay = currentTask ? [...currentTask.items] : [];
             
-            // Apply filtering
             const searchTerm = searchInput.value.toLowerCase();
             if (searchTerm) {
                 itemsToDisplay = itemsToDisplay.filter(item => {
@@ -2166,12 +2247,11 @@
 
             if (itemsToDisplay.length === 0) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="10" class="text-center py-4">${searchTerm ? 'Tidak ada item yang cocok dengan pencarian.' : 'Tidak ada item yang di-scan untuk tugas ini.'}</td>`;
+                row.innerHTML = `<td colspan="10" class="text-center py-4">${searchTerm ? 'Tidak ada item yang cocok.' : 'Tidak ada item di-scan.'}</td>`;
                 tableBody.appendChild(row);
                 return;
             }
 
-            // Apply sorting for items data
             if (currentSort.table === 'data-table' && currentSort.column) {
                 itemsToDisplay.sort((a, b) => {
                     let valA, valB;
@@ -2543,6 +2623,35 @@
                 await softDeleteDoc('items', itemId);
                 showNotification('info', 'Item berhasil dihapus (soft delete).');
                 vibrate(50);
+            }
+        }
+
+        /** PERUBAHAN BARU: Fungsi untuk mengubah status tugas */
+        async function toggleTaskStatus(taskId) {
+            if (userRole !== 'superadmin') {
+                showNotification('error', 'Hanya superadmin yang dapat mengubah status tugas.');
+                return;
+            }
+
+            const taskRef = window.firestoreDoc(await getCollectionRef('tasks'), taskId);
+            const taskSnap = await window.firestoreGetDoc(taskRef);
+
+            if (!taskSnap.exists()) {
+                showNotification('error', 'Tugas tidak ditemukan.');
+                return;
+            }
+
+            const currentStatus = taskSnap.data().status || 'open';
+            const newStatus = currentStatus === 'open' ? 'close' : 'open';
+            const actionVerb = newStatus === 'close' ? 'menutup' : 'membuka kembali';
+            const entityType = 'tasks';
+            const oldData = taskSnap.data();
+            const newData = { ...oldData, status: newStatus };
+
+            const confirm = await showConfirm(`Apakah Anda yakin ingin ${actionVerb} tugas ini?`);
+            if (confirm) {
+                await updateDocById(entityType, taskId, { status: newStatus });
+                showNotification('success', `Tugas berhasil diubah statusnya menjadi ${newStatus}.`);
             }
         }
 
@@ -3194,16 +3303,13 @@
             }
         }
 
-
-        
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', async () => {
             setupEventListeners();
             await initAuth(); // Start Firebase Auth listener
-            // View will be set by onAuthStateChanged
         });
 
-        // Make functions available globally for HTML onclick handlers (needed for dynamic content)
+        // Make functions available globally for HTML onclick handlers
         window.viewTaskDetail = viewTaskDetail;
         window.openScannerForTask = openScannerForTask;
         window.deleteTask = deleteTask;
@@ -3215,6 +3321,7 @@
         window.deleteUser = deleteUser;
         window.openEditScopeModal = openEditScopeModal;
         window.deleteScope = deleteScope;
+        window.toggleTaskStatus = toggleTaskStatus; /** PERUBAHAN BARU */
     </script>
 </body>
 </html>
