@@ -1659,18 +1659,26 @@ function updateLocalStorageAndMonitor() {
 
     // ===== FUNGSI TANGGAL SHIFT =====
     function calculateShiftDate() {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const shiftDate = new Date(now); // Buat copy dari tanggal sekarang
+      const now = new Date(); // Objek Date di zona waktu lokal
+      const currentHour = now.getHours();
 
-  // Shift malam (19:00 - 07:00) menggunakan tanggal hari sebelumnya
-  if (currentHour < 7) {
-    shiftDate.setDate(now.getDate() - 1); // Hanya kurangi 1 hari
-  }
-  // Shift pagi/siang tetap menggunakan tanggal sekarang
+      // Buat objek Date baru yang akan kita modifikasi
+      // Penting untuk membuat salinan, bukan mengubah 'now' secara langsung jika 'now' digunakan di tempat lain
+      const shiftDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  return shiftDate.toISOString().split('T')[0];
-}
+      // Jika jam saat ini kurang dari 7 pagi, itu adalah shift malam hari sebelumnya
+      if (currentHour < 7) {
+        // Kurangi satu hari dari tanggal *lokal*
+        shiftDate.setDate(shiftDate.getDate() - 1);
+      }
+
+      // Format tanggal ke YYYY-MM-DD menggunakan metode tanggal lokal
+      const year = shiftDate.getFullYear();
+      const month = (shiftDate.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
+      const day = shiftDate.getDate().toString().padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    }
 
     // Search function
     let currentSearchTerm = '';
