@@ -475,61 +475,6 @@
             gap: 1rem; /* gap-4 */
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .sticky-nav {
-                flex-direction: column;
-                height: auto;
-                padding: 8px;
-            }
-            .nav-actions {
-                width: 100%;
-                margin-top: 5px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .search-container {
-                width: 100%;
-                margin: 5px 0;
-                order: -1;
-            }
-            #search-input {
-                width: 100%;
-            }
-            body { padding-top: 130px; /* Adjust for larger nav */ }
-            .table-wrapper { max-height: calc(100vh - 180px); }
-            th, td { padding: 6px 4px; font-size: 11px; }
-            .note-cell { max-width: 80px; }
-            .action-dropdown { min-width: 100px; }
-            .summary-control-group {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .summary-control-group select {
-                width: 100%;
-                max-width: 100%;
-            }
-            .modal-content {
-                width: 91.666667%; /* md:w-2/3 -> 11/12 on small screen */
-            }
-            .modal-confirm-content {
-                width: 91.666667%; /* md:w-1/3 -> 11/12 on small screen */
-            }
-        }
-        @media (min-width: 768px) { /* md breakpoint */
-            .modal-content {
-                width: 66.666667%; /* md:w-2/3 */
-            }
-            .modal-confirm-content {
-                width: 33.333333%; /* md:w-1/3 */
-            }
-        }
-        @media (min-width: 1024px) { /* lg breakpoint */
-            .modal-content {
-                width: 50%; /* lg:w-1/2 */
-            }
-        }
-
         @keyframes loading-bar {
             from { width: 0%; }
             to { width: 100%; }
@@ -590,21 +535,149 @@
         }
         .status-open { background-color: #22c55e; } /* bg-green-500 */
         .status-close { background-color: #ef4444; } /* bg-red-500 */
+
+        /* Style untuk Hamburger Menu */
+        .hamburger-menu {
+            display: none; /* Sembunyikan di layar besar */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Style untuk Ringkasan Baru */
+        .summary-group {
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            margin-bottom: 0.5rem; /* mb-2 */
+            overflow: hidden;
+        }
+        .summary-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem; /* px-4 py-3 */
+            background-color: #f9fafb; /* bg-gray-50 */
+            cursor: pointer;
+            font-weight: 600; /* font-semibold */
+        }
+        .summary-group-header:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+        .summary-totals {
+            font-weight: 700; /* font-bold */
+            color: #1d4ed8; /* text-blue-700 */
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+        .summary-group-details {
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        .summary-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0; /* py-1 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .summary-detail-item .totals {
+            font-weight: 500; /* font-medium */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .expand-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+        .summary-group-header.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sticky-nav {
+                flex-direction: row; /* Ubah kembali ke row */
+                flex-wrap: wrap; /* Izinkan wrapping */
+                justify-content: space-between;
+                height: auto;
+                padding: 8px 15px; /* Sesuaikan padding */
+            }
+            .hamburger-menu {
+                display: block; /* Tampilkan hamburger di layar kecil */
+                order: 2; /* Pindahkan ke kanan */
+            }
+            .nav-actions {
+                display: none; /* Sembunyikan link navigasi secara default */
+                flex-direction: column;
+                width: 100%;
+                background-color: #1f2937; /* bg-gray-900 */
+                order: 3; /* Pastikan berada di bawah */
+                margin-top: 10px;
+            }
+            .nav-actions.active {
+                display: flex; /* Tampilkan saat aktif */
+            }
+            .nav-actions .nav-btn, .nav-actions .search-container {
+                width: 100%;
+                margin-bottom: 5px;
+                justify-content: flex-start;
+                padding-left: 15px;
+            }
+            .search-container {
+                width: 100%;
+                margin: 5px 0;
+            }
+            #search-input {
+                width: 100%;
+            }
+            body { padding-top: 80px; /* Sesuaikan padding body */ }
+            .table-wrapper { max-height: calc(100vh - 180px); }
+            th, td { padding: 6px 4px; font-size: 11px; }
+            .note-cell { max-width: 80px; }
+            .action-dropdown { min-width: 100px; }
+            .summary-control-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .summary-control-group select {
+                width: 100%;
+                max-width: 100%;
+            }
+            .modal-content {
+                width: 91.666667%; /* md:w-2/3 -> 11/12 on small screen */
+            }
+            .modal-confirm-content {
+                width: 91.666667%; /* md:w-1/3 -> 11/12 on small screen */
+            }
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .modal-content {
+                width: 66.666667%; /* md:w-2/3 */
+            }
+            .modal-confirm-content {
+                width: 33.333333%; /* md:w-1/3 */
+            }
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .modal-content {
+                width: 50%; /* lg:w-1/2 */
+            }
+        }
     </style>
 </head>
 <body>
     <div id="loading-progress" class="hidden h-1 w-full bg-gray-200 overflow-hidden">
-  <div class="animate-pulse h-full w-0 bg-blue-500" id="loading-progress-bar"></div>
-</div>
+        <div class="animate-pulse h-full w-0 bg-blue-500" id="loading-progress-bar"></div>
+    </div>
 
-<div id="offline-alert" class="hidden bg-yellow-100 text-yellow-800 p-3 text-center font-medium">
-  Anda sedang offline. Beberapa data mungkin tidak terbaru atau tidak tersedia.
-</div>
+    <div id="offline-alert" class="hidden bg-yellow-100 text-yellow-800 p-3 text-center font-medium">
+        Anda sedang offline. Beberapa data mungkin tidak terbaru atau tidak tersedia.
+    </div>
 
-<div id="loading-screen" class="loading-screen">
-  <div class="spinner"></div>
-  <p>Mohon tunggu, sedang memuat data...</p>
-</div>
+    <div id="loading-screen" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Mohon tunggu, sedang memuat data...</p>
+    </div>
 
     <div class="modal-confirm hidden" id="custom-confirm-modal">
         <div class="modal-confirm-content">
@@ -665,8 +738,12 @@
 
     <nav class="sticky-nav hidden" id="main-nav">
         <h1 id="nav-title" class="text-xl font-semibold">Task List</h1>
-        <div class="nav-actions">
 
+        <button id="hamburger-btn" class="hamburger-menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    
+        <div class="nav-actions" id="nav-actions-container">
             <button class="nav-btn info hidden" id="export-btn">
                 <i class="fas fa-file-excel"></i> Export
             </button>
@@ -683,11 +760,10 @@
                 <i class="fas fa-sign-out-alt"></i> Logout (<span id="current-username"></span>)
             </button>
             <button id="back-to-main-btn" class="nav-btn secondary hidden">
-            <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
+                <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
             </button>
              <div class="search-container">
                 <input type="text" id="search-input" placeholder="Cari..." class="px-3 py-1.5 rounded-full border-none w-40 text-sm focus:ring-blue-500 focus:border-blue-500">
-
             </div>
         </div>
     </nav>
@@ -1087,6 +1163,8 @@
         const backToTasksBtn = document.getElementById('back-to-tasks-btn');
         const currentTaskSummary = document.getElementById('current-task-summary');
         const navTitle = document.getElementById('nav-title');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const navActionsContainer = document.getElementById('nav-actions-container');
 
         // Edit Task Modal elements
         const editTaskModal = document.getElementById('edit-task-modal');
@@ -1734,6 +1812,24 @@
 
         // --- Event Listeners Setup ---
         function setupEventListeners() {
+            // Listener untuk Hamburger Menu
+            hamburgerBtn.addEventListener('click', () => {
+                navActionsContainer.classList.toggle('active');
+            });
+
+            // Listener untuk expand/collapse ringkasan (menggunakan event delegation)
+            currentTaskSummary.addEventListener('click', (event) => {
+                const header = event.target.closest('.summary-group-header');
+                if (header) {
+                    const targetId = header.dataset.target;
+                    const details = document.getElementById(targetId);
+                    if (details) {
+                        header.classList.toggle('expanded');
+                        details.classList.toggle('hidden');
+                    }
+                }
+            });
+
             // Login & Auth
             loginForm.addEventListener('submit', handleLogin);
             logoutBtn.addEventListener('click', handleLogout);
@@ -2282,8 +2378,6 @@
             }
         }
 
-        // ... Sisa dari fungsi-fungsi item (parseDimensionString, renderCurrentTaskSummary, dll) TIDAK PERLU DIUBAH ...
-        // ... (Kode dari baris ~2000 hingga ~3300 di file asli) ...
         // NEW: Function to parse dimension string
         function parseDimensionString(dimensiString) {
             const match = dimensiString.match(DIMENSION_PART_FORMAT);
@@ -2303,103 +2397,99 @@
             return null;
         }
 
-        // NEW: Function to calculate dimension summary based on type (roll or meter)
-        function calculateDimensionSummary(summaryType) {
-            const dimensionSummary = {};
-            if (!currentTask || !currentTask.items) return dimensionSummary;
-
-            currentTask.items.forEach(item => {
-                const parsed = parseDimensionString(item.dimensi);
-                if (!parsed) {
-                    const key = item.dimensi;
-                    if (summaryType === 'roll') {
-                        dimensionSummary[key] = (dimensionSummary[key] || 0) + 1;
-                    } else {
-                         dimensionSummary[key] = (dimensionSummary[key] || 0) + 0;
-                    }
-                    return;
-                }
-
-                if (summaryType === 'roll') {
-                    const key = parsed.full;
-                    dimensionSummary[key] = (dimensionSummary[key] || 0) + 1;
-                } else if (summaryType === 'meter') {
-                    const key = parsed.meterFormat;
-                    dimensionSummary[key] = (dimensionSummary[key] || 0) + (parsed.length || 0);
-                }
-            });
-            return dimensionSummary;
-        }
-
         function renderCurrentTaskSummary() {
             if (!currentTask) {
                 currentTaskSummary.innerHTML = '';
                 return;
             }
 
-            const date = currentTask.createdAt ? new Date(currentTask.createdAt.toDate()) : null;
-            const dateStr = date ? date.toLocaleString() : '-';
             const totalItems = window.allItems ? window.allItems.filter(item => item.taskId === currentTask.id && !item.isDeleted).length : 0;
-            const scopeName = window.allScopes ? (window.allScopes.find(s => s.id === currentTask.scopeId)?.name || currentTask.scopeId) : currentTask.scopeId;
-
-            /** PERUBAHAN BARU: Menambahkan tampilan status di ringkasan */
             const statusText = currentTask.status === 'close' ? 'Ditutup (Closed)' : 'Terbuka (Open)';
             const statusColor = currentTask.status === 'close' ? 'text-red-600' : 'text-green-600';
 
-            let currentSelectedSummaryType = 'roll';
-            const existingSelect = document.getElementById('summary-type-select');
-            if (existingSelect) {
-                currentSelectedSummaryType = existingSelect.value;
+            // Logika baru untuk mengelompokkan item
+            const dimensionGroups = {};
+            if (currentTask.items) {
+                currentTask.items.forEach(item => {
+                    if (item.isDeleted) return;
+
+                    const parsed = parseDimensionString(item.dimensi);
+                    if (!parsed) return;
+
+                    const groupKey = parsed.meterFormat; // e.g., "CPP L01 25 MC X 1220 MM"
+                    const lengthKey = parsed.length;     // e.g., 12000
+
+                    // Inisialisasi grup jika belum ada
+                    if (!dimensionGroups[groupKey]) {
+                        dimensionGroups[groupKey] = {
+                            totalMeters: 0,
+                            totalRolls: 0,
+                            breakdown: {}
+                        };
+                    }
+
+                    // Inisialisasi sub-grup (breakdown) jika belum ada
+                    if (!dimensionGroups[groupKey].breakdown[lengthKey]) {
+                        dimensionGroups[groupKey].breakdown[lengthKey] = {
+                            totalMeters: 0,
+                            totalRolls: 0
+                        };
+                    }
+
+                    // Akumulasi total
+                    dimensionGroups[groupKey].totalMeters += lengthKey;
+                    dimensionGroups[groupKey].totalRolls += 1;
+                    dimensionGroups[groupKey].breakdown[lengthKey].totalMeters += lengthKey;
+                    dimensionGroups[groupKey].breakdown[lengthKey].totalRolls += 1;
+                });
             }
 
             let summaryHtml = `
                 <h2 class="text-xl font-bold mb-2 text-blue-700">Detail Tugas</h2>
                 <p><strong>ID Unik:</strong> ${currentTask.id}</p>
-                <p><strong>Tanggal & Waktu:</strong> ${dateStr}</p>
                 <p><strong>No Dokumen:</strong> ${currentTask.documentNumber}</p>
                 <p><strong>Tujuan:</strong> ${currentTask.purpose}</p>
-                <p><strong>Keterangan:</strong> ${currentTask.description || '-'}</p>
-                <p><strong>Dibuat Oleh:</strong> ${currentTask.createdByUserDisplayName || '-'}</p>
-                <p><strong>Scope:</strong> ${scopeName}</p>
                 <p><strong>Status Tugas:</strong> <span class="font-bold ${statusColor}">${statusText}</span></p>
                 <p><strong>Total Item Ter-scan:</strong> ${totalItems}</p>
-                <div class="summary-control-group flex items-center gap-2 mt-3 pt-2 border-t border-gray-200">
-                    <label for="summary-type-select" class="text-sm font-medium text-gray-700">Tipe Ringkasan:</label>
-                    <select id="summary-type-select" class="flex-grow max-w-[150px] px-2 py-1 border border-gray-300 rounded-md text-sm">
-                        <option value="roll" ${currentSelectedSummaryType === 'roll' ? 'selected' : ''}>Per Roll</option>
-                        <option value="meter" ${currentSelectedSummaryType === 'meter' ? 'selected' : ''}>Per Meter</option>
-                    </select>
-                </div>
             `;
 
-            const selectedSummaryType = currentSelectedSummaryType;
-            const dimensionTotals = calculateDimensionSummary(selectedSummaryType);
-
-            if (Object.keys(dimensionTotals).length > 0) {
-                summaryHtml += `
-                    <h3 class="text-lg font-semibold mt-4 mb-2 text-blue-600">Ringkasan Dimensi (${selectedSummaryType === 'roll' ? 'Per Roll' : 'Per Meter'}):</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                `;
-                for (const dim in dimensionTotals) {
-                    const value = dimensionTotals[dim];
+            if (Object.keys(dimensionGroups).length > 0) {
+                summaryHtml += `<h3 class="text-lg font-semibold mt-4 mb-2 text-blue-600">Ringkasan Dimensi:</h3>`;
+                let groupIndex = 0;
+                for (const groupName in dimensionGroups) {
+                    const group = dimensionGroups[groupName];
+                    const targetId = `details-${groupIndex}`;
                     summaryHtml += `
-                        <div class="bg-blue-50 p-2 rounded-md text-center text-sm border border-blue-200">
-                            ${dim}<br><strong class="text-base text-blue-800">${value}${selectedSummaryType === 'meter' ? 'M' : ''}</strong>
-                        </div>
+                        <div class="summary-group">
+                            <div class="summary-group-header" data-target="${targetId}">
+                                <span class="flex items-center">
+                                    <i class="fas fa-chevron-right expand-icon mr-3"></i>
+                                    ${groupName}
+                                </span>
+                                <span class="summary-totals">(${group.totalMeters.toLocaleString()}M, ${group.totalRolls} Roll)</span>
+                            </div>
+                            <div id="${targetId}" class="summary-group-details hidden">
                     `;
+
+                    // Tambahkan breakdown
+                    for (const length in group.breakdown) {
+                        const detail = group.breakdown[length];
+                        summaryHtml += `
+                            <div class="summary-detail-item">
+                                <span>= ${length.toLocaleString()}</span>
+                                <span class="totals">(${detail.totalMeters.toLocaleString()}M, ${detail.totalRolls} Roll)</span>
+                            </div>
+                        `;
+                    }
+
+                    summaryHtml += `</div></div>`;
+                    groupIndex++;
                 }
-                summaryHtml += `</div>`;
             } else {
                 summaryHtml += `<p class="mt-4 text-gray-600">Belum ada item yang di-scan untuk tugas ini.</p>`;
             }
 
             currentTaskSummary.innerHTML = summaryHtml;
-
-            const reSelectedSummaryTypeSelect = document.getElementById('summary-type-select');
-            if (reSelectedSummaryTypeSelect) {
-                reSelectedSummaryTypeSelect.removeEventListener('change', renderCurrentTaskSummary);
-                reSelectedSummaryTypeSelect.addEventListener('change', renderCurrentTaskSummary);
-            }
         }
 
         function renderItemsTable() {
