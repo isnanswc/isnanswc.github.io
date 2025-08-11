@@ -444,6 +444,15 @@
   -webkit-print-color-adjust: exact;
 }
 
+.B-grade {
+  background-color: #ae0fd6;
+  color: white;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 3px;
+  -webkit-print-color-adjust: exact;
+}
+
 .machine-rewind {
   background-color: #2196F3;
   color: white;
@@ -1534,7 +1543,7 @@ function updateLocalStorageAndMonitor() {
       // --- AWAL MODIFIKASI ---
       let firstCellHTML = '';
       if (item.jenisPrint === 'B-GRADE') {
-        firstCellHTML = `<td style="background-color: purple; color: white; font-weight: bold; text-align: center;"> B-GRADE </td>`;
+        firstCellHTML = `<td class="B-grade"> B-GRADE </td>`;
       } else if (item.mesin === 'SML') {
         firstCellHTML = `<td class="machine-slitting"> IN LINE SML </td>`;
       } else {
