@@ -911,7 +911,7 @@ table td[style*="color: red"] {
             <div class="radio-option">
               <input type="radio" name="subKodeType" value="numeric" checked onchange="handleSubKode()" />
               <label>
-                Angka
+                PASS
                 <input type="text" name="subKodeNumeric" id="subKodeNumeric"
                        oninput="formatSubKode(this)" maxlength="4"
                        class="radio-numeric-input" style="width: 70px;" />
@@ -929,6 +929,15 @@ table td[style*="color: red"] {
           </div>
         </div>
          <div class="form-section">
+
+           <div class="form-row">
+            <label for="jenisPrint">Jenis Print</label>
+            <select name="jenisPrint" id="jenisPrint">
+              <option value="FINISH GOODS">FINISH GOODS</option>
+              <option value="B-GRADE">B-GRADE</option>
+            </select>
+          </div>
+
           <div class="form-row">
             <label for="uniqID">Label ID</label>
             <input name="uniqId" id="uniqId" class="auto-input" readonly />
@@ -1521,14 +1530,23 @@ function updateLocalStorageAndMonitor() {
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const dateTimeString = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+
+      // --- AWAL MODIFIKASI ---
+      let firstCellHTML = '';
+      if (item.jenisPrint === 'B-GRADE') {
+        firstCellHTML = `<td style="background-color: purple; color: white; font-weight: bold; text-align: center;"> B-GRADE </td>`;
+      } else if (item.mesin === 'SML') {
+        firstCellHTML = `<td class="machine-slitting"> IN LINE SML </td>`;
+      } else {
+        firstCellHTML = '<td></td>';
+      }
+      // --- AKHIR MODIFIKASI ---
     
       return `
         <div class="label-preview-content">
           <table class="label-table" style="margin:0; padding:0; font-size:12px;">
             <tr>
-              ${item.mesin === 'SML' ? `
-                <td class="machine-slitting"> IN LINE SML </td>
-              ` : '<td></td>'}
+              ${firstCellHTML} 
               <td colspan="4" style="padding:2px; text-align:center;">
                 <text style="font-family:'Impact', sans-serif; font-size:24px; color:#d61c1c;">PT. SAPTAWARNA CEMERLANG</text><br>
                 <text style="font-family:'Open Sans', sans-serif; font-size:10px; color:black;"></text>
