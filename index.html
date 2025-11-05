@@ -691,7 +691,7 @@ table td[style*="color: red"] {
   <nav>
   <div class="nav-left">
     <h2>Manajemen Label</h2>
-    <button class="nav-toggle" onclick="toggleNav()">☰</button>
+    <button class="nav-toggle" onclick="toggleNav()">?</button>
   </div>
 
   <div class="nav-links" id="navLinks">
@@ -1026,6 +1026,59 @@ const rowsPerPage = 50;
         // Ketika tanggalManual diubah, panggil updateAutoFields untuk memperbarui tanggal otomatis lainnya.
         updateAutoFields();
       });
+
+      // ===== MULAI KODE BARU =====
+      // Validasi live untuk No. Lot dan Kode Formula
+      const lotInput = form.lot;
+      const kodeInput = form.kode;
+
+      // Fungsi untuk validasi styling (warna)
+      const validateLotKodeStyle = () => {
+        const lotValue = lotInput.value.trim().toUpperCase();
+        const kodeValue = kodeInput.value.trim().toUpperCase();
+        
+        const errorStyle = "background-color: #ffe0e0; border-color: red;";
+        const normalStyle = "background-color: ''; border-color: '';";
+
+        // Hanya validasi jika kedua field memiliki setidaknya 3 karakter
+        if (lotValue.length >= 3 && kodeValue.length >= 3) {
+          if (lotValue.substring(0, 3) !== kodeValue.substring(0, 3)) {
+            // Jika tidak cocok, buat merah
+            lotInput.style = errorStyle;
+            kodeInput.style = errorStyle;
+          } else {
+            // Jika cocok, kembalikan ke normal
+            lotInput.style = normalStyle;
+            kodeInput.style = normalStyle;
+          }
+        } else {
+          // Jika salah satu field terlalu pendek, pastikan kembali normal
+          lotInput.style = normalStyle;
+          kodeInput.style = normalStyle;
+        }
+      };
+
+      // Fungsi untuk notifikasi (toast)
+      const notifyOnMismatch = () => {
+        const lotValue = lotInput.value.trim().toUpperCase();
+        const kodeValue = kodeInput.value.trim().toUpperCase();
+
+        // Tampilkan notifikasi hanya jika tidak cocok saat pengguna selesai mengisi
+        if (lotValue.length >= 3 && kodeValue.length >= 3 && lotValue.substring(0, 3) !== kodeValue.substring(0, 3)) {
+          showToast("Kode formula berbeda", "warning");
+        }
+      };
+
+      // Terapkan listener:
+      // 1. 'input': Mengubah warna secara live saat mengetik
+      lotInput.addEventListener('input', validateLotKodeStyle);
+      kodeInput.addEventListener('input', validateLotKodeStyle);
+
+      // 2. 'blur': Menampilkan notifikasi saat pengguna pindah field (lebih baik dari 'input')
+      lotInput.addEventListener('blur', notifyOnMismatch);
+      kodeInput.addEventListener('blur', notifyOnMismatch);
+      // ===== AKHIR KODE BARU =====
+
     }
     
     // ===== NAVIGATION FUNCTIONS =====
@@ -1381,7 +1434,7 @@ function showStorageFullWarning() {
     text-align: center;
   `;
   warning.innerHTML = `
-    ⚠️ Penyimpanan hampir penuh.<br/>
+    ?? Penyimpanan hampir penuh.<br/>
     Pertimbangkan ekspor atau migrasi data.
     <button onclick="this.parentElement.remove()" style="
       margin-top: 10px;
@@ -1872,4 +1925,3 @@ function updateLocalStorageAndMonitor() {
 </div>
 </body>
 </html>
-
