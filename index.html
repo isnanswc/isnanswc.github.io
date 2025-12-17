@@ -1935,6 +1935,7 @@ function updateLocalStorageAndMonitor() {
     }
 
     // Check for missing/skipped sub-pack codes for a specific pack code
+    // Only validates sub-codes in range 0-4999, ignores 5000-9999
     function checkMissingSubCodes(kodePack, newSubKode, data) {
       // Filter data for same pack code, excluding HOLD and REJECT status
       const samePackItems = data.filter(item => 
@@ -1950,27 +1951,34 @@ function updateLocalStorageAndMonitor() {
         return { hasMissing: false, missingNumbers: [] };
       }
 
-      // Get all numeric sub codes
+      // Get all numeric sub codes and filter only 0-4999 range
       const existingSubCodes = samePackItems
         .map(item => parseInt(item.subKode, 10))
-        .filter(num => !isNaN(num));
+        .filter(num => !isNaN(num) && num >= 0 && num <= 4999);
 
       // Add the new sub code to check
       const newSubCodeNum = parseInt(newSubKode, 10);
-      if (isNaN(newSubCodeNum)) {
+      
+      // Skip validation if the new sub code is not in 0-4999 range
+      if (isNaN(newSubCodeNum) || newSubCodeNum < 0 || newSubCodeNum > 4999) {
         return { hasMissing: false, missingNumbers: [] };
       }
 
-      // Combine existing and new
+      // If no existing codes in valid range, no problem
+      if (existingSubCodes.length === 0) {
+        return { hasMissing: false, missingNumbers: [] };
+      }
+
+      // Combine existing and new (all in 0-4999 range)
       const allSubCodes = [...existingSubCodes, newSubCodeNum].sort((a, b) => a - b);
 
-      // Check for gaps
+      // Check for gaps only within 0-4999 range
       const missingNumbers = [];
       const min = Math.min(...allSubCodes);
       const max = Math.max(...allSubCodes);
 
       for (let i = min; i <= max; i++) {
-        if (!allSubCodes.includes(i)) {
+        if (!allSubCodes.includes(i) && i >= 0 && i <= 4999) {
           missingNumbers.push(i);
         }
       }
@@ -1978,7 +1986,8 @@ function updateLocalStorageAndMonitor() {
       return {
         hasMissing: missingNumbers.length > 0,
         missingNumbers: missingNumbers,
-        existingRange: `${min}-${max}`
+        existingRange: `${min}-${max}`,
+        validRange: '0-4999'
       };
     }
 
