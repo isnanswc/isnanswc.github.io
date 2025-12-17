@@ -886,7 +886,7 @@ table td[style*="color: red"] {
             </select>
           </div>
           <div class="form-row">
-            <label for="od">OD  + Plasma</label>
+            <label for="od">OD + Plasma</label>
             <input name="od" id="odInput" value="OD2.4+PLASMA" />
           </div>
         </div>
@@ -938,6 +938,10 @@ table td[style*="color: red"] {
               <label>HOLD</label>
             </div>
             <input type="hidden" name="subKode" id="subKodeValue" />
+          </div>
+          <!-- Warning message for missing sub codes -->
+          <div id="subKodeWarning" style="margin-top: 8px; padding: 8px; border-radius: 4px; display: none; background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; font-size: 11px;">
+            <strong>⚠️ Peringatan:</strong> <span id="subKodeWarningText"></span>
           </div>
         </div>
          <div class="form-section">
@@ -1023,6 +1027,7 @@ const rowsPerPage = 50;
       document.getElementById('subKodeNumeric').addEventListener('input', function(e) {
         this.value = this.value.replace(/[^0-9]/g, '');
         handleSubKode();
+        validateSubKodeSequence(); // Add real-time validation
       });
 
       document.getElementById('tanggalManual').addEventListener('change', function() {
@@ -1162,6 +1167,11 @@ const rowsPerPage = 50;
           break;
       }
       
+      // Hide warning for non-numeric types
+      if (selectedType !== 'numeric') {
+        document.getElementById('subKodeWarning').style.display = 'none';
+      }
+      
       updateStatusBasedOnSubKode();
     }
     
@@ -1175,6 +1185,38 @@ const rowsPerPage = 50;
         statusField.value = 'HOLD';
       } else {
         statusField.value = 'PASS';
+      }
+    }
+
+    // Real-time validation for sub-code sequence
+    function validateSubKodeSequence() {
+      const warningDiv = document.getElementById('subKodeWarning');
+      const warningText = document.getElementById('subKodeWarningText');
+      const subKodeNumeric = document.getElementById('subKodeNumeric');
+      const kodePack = form.kodePack.value;
+      
+      // Hide warning by default
+      warningDiv.style.display = 'none';
+      
+      // Only validate if we have a pack code and numeric sub code
+      if (!kodePack || !subKodeNumeric.value || subKodeNumeric.value.length === 0) {
+        return;
+      }
+
+      const newSubKode = subKodeNumeric.value.padStart(4, '0');
+      const data = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+      
+      // Exclude current edit item if editing
+      const dataForCheck = currentEditIndex >= 0 
+        ? data.filter((_, idx) => idx !== currentEditIndex)
+        : data;
+
+      const checkResult = checkMissingSubCodes(kodePack, newSubKode, dataForCheck);
+      
+      if (checkResult.hasMissing) {
+        const missingStr = checkResult.missingNumbers.join(', ');
+        warningText.textContent = `Nomor yang hilang/lompat: ${missingStr} (Range: ${checkResult.existingRange})`;
+        warningDiv.style.display = 'block';
       }
     }
     
@@ -1229,6 +1271,9 @@ const rowsPerPage = 50;
       form.tanggalManual.value = '';
       currentEditIndex = index;
       document.getElementById("modal").style.display = "flex";
+      
+      // Hide warning message
+      document.getElementById('subKodeWarning').style.display = 'none';
       
       // Initialize type and sub kode handling
       handleTypeChange();
@@ -1524,6 +1569,42 @@ function updateLocalStorageAndMonitor() {
 
   // Tetapkan tanggal utama data: jika tanggalManual ada, gunakan itu, jika tidak, gunakan tanggalShift
   newData.tanggal = form.tanggalManual.value || form.tanggalShift.value;
+
+  // === CHECK FOR MISSING SUB CODES ===
+  // Only check for new entries or if kodePack/subKode changed during edit
+  const shouldCheckMissing = currentEditIndex < 0 || 
+    (currentEditIndex >= 0 && 
+     (data[currentEditIndex].kodePack !== newData.kodePack || 
+      data[currentEditIndex].subKode !== newData.subKode));
+
+  if (shouldCheckMissing && 
+      newData.status === 'PASS' && 
+      newData.subKode && 
+      !isNaN(parseInt(newData.subKode, 10))) {
+    
+    // Create a copy of data excluding current edit item
+    const dataForCheck = currentEditIndex >= 0 
+      ? data.filter((_, idx) => idx !== currentEditIndex)
+      : data;
+
+    const checkResult = checkMissingSubCodes(newData.kodePack, newData.subKode, dataForCheck);
+    
+    if (checkResult.hasMissing) {
+      const missingStr = checkResult.missingNumbers.join(', ');
+      const message = `⚠️ PERINGATAN: Nomor sub kode pack yang hilang!\n\n` +
+        `Kode Pack: ${newData.kodePack}\n` +
+        `Sub Kode baru: ${newData.subKode}\n` +
+        `Range yang ada: ${checkResult.existingRange}\n\n` +
+        `Nomor yang hilang/lompat: ${missingStr}\n\n` +
+        `Apakah Anda yakin ingin melanjutkan?`;
+      
+      if (!confirm(message)) {
+        showToast("Penyimpanan dibatalkan - pastikan sub kode berurutan", "warning");
+        return; // Cancel submission
+      }
+    }
+  }
+  // === END CHECK ===
 
   if (currentEditIndex >= 0 && currentEditIndex < data.length) {
     data[currentEditIndex] = newData;
@@ -1853,6 +1934,54 @@ function updateLocalStorageAndMonitor() {
       return duplicates;
     }
 
+    // Check for missing/skipped sub-pack codes for a specific pack code
+    function checkMissingSubCodes(kodePack, newSubKode, data) {
+      // Filter data for same pack code, excluding HOLD and REJECT status
+      const samePackItems = data.filter(item => 
+        item.kodePack === kodePack && 
+        item.status !== 'HOLD' && 
+        item.status !== 'REJECT' &&
+        item.subKode && 
+        !isNaN(parseInt(item.subKode, 10))
+      );
+
+      // If no existing items, no problem
+      if (samePackItems.length === 0) {
+        return { hasMissing: false, missingNumbers: [] };
+      }
+
+      // Get all numeric sub codes
+      const existingSubCodes = samePackItems
+        .map(item => parseInt(item.subKode, 10))
+        .filter(num => !isNaN(num));
+
+      // Add the new sub code to check
+      const newSubCodeNum = parseInt(newSubKode, 10);
+      if (isNaN(newSubCodeNum)) {
+        return { hasMissing: false, missingNumbers: [] };
+      }
+
+      // Combine existing and new
+      const allSubCodes = [...existingSubCodes, newSubCodeNum].sort((a, b) => a - b);
+
+      // Check for gaps
+      const missingNumbers = [];
+      const min = Math.min(...allSubCodes);
+      const max = Math.max(...allSubCodes);
+
+      for (let i = min; i <= max; i++) {
+        if (!allSubCodes.includes(i)) {
+          missingNumbers.push(i);
+        }
+      }
+
+      return {
+        hasMissing: missingNumbers.length > 0,
+        missingNumbers: missingNumbers,
+        existingRange: `${min}-${max}`
+      };
+    }
+
     function showDeleteAllModal() {
       document.getElementById("deletePasswordInput").value = '';
       document.getElementById("deleteAllModal").style.display = "flex";
@@ -1928,4 +2057,3 @@ function updateLocalStorageAndMonitor() {
 </div>
 </body>
 </html>
-
