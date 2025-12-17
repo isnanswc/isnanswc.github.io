@@ -880,11 +880,14 @@ table td[style*="color: red"] {
           </div>
           <div class="form-row">
             <label for="treatment">Treatment</label>
-            <select name="treatment"><option>INSIDE</option></select>
+            <select name="treatment">
+                <option>INSIDE</option>
+                <option>OUTSIDE</option>
+            </select>
           </div>
           <div class="form-row">
             <label for="od">OD</label>
-            <input name="od" id="odInput" value="OD2.4" />
+            <input name="od" id="odInput" value="OD2.4+PLASMA" />
           </div>
         </div>
 
@@ -1184,7 +1187,7 @@ const rowsPerPage = 50;
         odInput.readOnly = false;
         odInput.classList.remove('auto-input');
         odInput.required = true;
-        odInput.value = "OD2.4";
+        odInput.value = "OD2.4+PLASMA";
       } else {
         odInput.required = false;
         odInput.value = "";
@@ -1639,8 +1642,8 @@ function updateLocalStorageAndMonitor() {
               <td style="padding:0.5px; font-size:20px;"><strong>${item.width}</strong></td>
               <td style="padding:2px; font-size:11px;"><strong>Paper Core</strong></td>
               <td style="padding:2px; font-size:20px;">${item.paperCore}</td>
-              <td style="padding:2px; font-size:11px;"><strong>OD</strong></td>
-              <td style="padding:2px; color:red; font-weight:bold; font-size:11px;">${item.od}</td>
+              <td style="padding:2px; font-size:11px;"><strong>OD+Plasma</strong></td>
+              <td style="padding:2px; color:red; font-weight:bold; font-size:16px; word-wrap: break-word; white-space: normal; max-width: 150px;">${item.od}</td>
             </tr>
             <tr>
               <td style="padding:2px; font-size:11px;"><strong>Length</strong></td>
